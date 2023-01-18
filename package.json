@@ -1,0 +1,46 @@
+{
+  "name": "mgmt-iot-web",
+  "version": "1.0.0",
+  "description": "web platform to configure and interact with iot devices using mqtt",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "iot",
+    "mqtt",
+    "device",
+    "esp32"
+  ],
+  "author": "João Silva",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.1",
+    "console-log-level": "^1.4.1",
+    "cookie-parser": "^1.4.6",
+    "cookie-session": "^2.0.0",
+    "crypto-js": "^4.1.1",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
+    "express-jwt": "^8.2.1",
+    "express-useragent": "^1.0.15",
+    "express-validation": "^4.1.0",
+    "googleapis": "^110.0.0",
+    "http-status-codes": "^2.2.0",
+    "joi": "^17.7.0",
+    "markdown": "^0.5.0",
+    "mysql2": "^2.3.3",
+    "path": "^0.12.7",
+    "serve-index": "^1.9.1"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zimbora/mgmt-iot-web.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zimbora/mgmt-iot-web/issues"
+  },
+  "homepage": "https://github.com/zimbora/mgmt-iot-web#readme"
+}

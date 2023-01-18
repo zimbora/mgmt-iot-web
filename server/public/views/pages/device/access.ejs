@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../../partials/device/scripts.ejs') %>
+
+  <%- include('../../partials/device/navbar.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></link>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/device/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="row">
+              <div class="col-sm-8 mb-3 mb-sm-0">
+                <div class="content-header">
+                  <h5>Clients with access</h5>
+                </div>
+                <div class="card">
+                  <!--<h5 class="card-title">Special title treatment</h5>-->
+                  <table id="clients" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>clientID</th>
+                            <th>level</th>
+                        </tr>
+                    </thead>
+                  </table>
+                </div>
+              </div>
+              <div class="col-sm-4 mb-2 mb-sm-0">
+                <div class="card">
+                  <div class="card-header">
+                    <p>Add something</p>
+                  </div>
+                  <div class="card-body">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- check link to more import options https://cdnjs.com/libraries/ace -->
+  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.js" integrity="sha512-s57ywpCtz+4PU992Bg1rDtr6+1z38gO2mS92agz2nqQcuMQ6IvgLWoQ2SFpImvg1rbgqBKeSEq0d9bo9NtBY0w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.js" integrity="sha512-WYlXqL7GPpZL2ImDErTX0RMKy5hR17vGW5yY04p9Z+YhYFJcUUFRT31N29euNB4sLNNf/s0XQXZfzg3uKSoOdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js" integrity="sha512-42PE0rd+wZ2hNXftlM78BSehIGzezNeQuzihiBCvUEB3CVxHvsShF86wBWwQORNxNINlBPuq7rG4WWhNiTVHFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+  <script>
+    var t;
+    var deviceID = api.getDeviceID();
+    $(document).ready(()=>{
+
+      t = $('#clients').DataTable();
+      console.log(deviceID);
+      api.getClientsWithAccessToDevice(deviceID,(err,res)=>{
+        if(err) console.log("err:",err)
+        else{
+          res.forEach((item, i) => {
+            console.log(item)
+            addRow(item.clients_idclients,item.level);
+          });
+        }
+      });
+
+    });
+
+    function addRow(clientID,level){
+
+      t.row.add([`
+        <a href="../../client/`+clientID+`">`+clientID+`</a>
+        `,level]).draw(true);
+    }
+  </script>
+
+</body>
+</html>

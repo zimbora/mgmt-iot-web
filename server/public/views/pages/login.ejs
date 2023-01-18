@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>
+    MQTT Device Manager
+  </title>
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+
+  <link href="../assets/css/bootstrap.min.css" rel="stylesheet" />
+
+</head>
+
+<style type="text/css">
+  body{ min-height: 100vh; margin:0; }
+
+  header{ min-height:50px; background:lightcyan; }
+  footer{ min-height:50px; background:PapayaWhip; }
+
+  /* The article fills all the space between header & footer */
+  body{ display:flex; flex-direction:column; }
+  article{ flex:1; }
+
+</style>
+
+<body>
+
+  <article contentEditable>
+    <div class="py-5" >
+      <div class="row py-4 g-0 align-items-center">
+
+          <div class="d-flex mb-5 mb-lg-0 align-items-center justify-content-center">
+            <!--<div class="col-md-4 ml-auto mr-auto">-->
+              <form class="form" method="" action="">
+
+                <div class="card align-items-center shadow p-3 mb-5 bg-body rounded">
+
+                  <div class="card-body p-5 shadow-5 text-center">
+                  <!--<div class="card-header ">-->
+                    <div class="typography-line text-center">
+                      <h1 style="color:black">MQTT Device Manager</h1>
+                    </div>
+                    <div class="logo-container">
+                      <img src="./assets/img/avatar.png" alt="">
+                    </div>
+                  <!--</div>-->
+                  <!--<div class="card-body p-5 shadow-5 text-center">-->
+                    <div class="input-group no-border form-control-lg">
+                      <span class="input-group-prepend">
+                        <div class="input-group-text">
+                          <i class="fa-regular fa-user"></i>
+                        </div>
+                      </span>
+                      <input id="user" type="text" class="form-control" placeholder="user...">
+                    </div>
+                    <div class="input-group no-border form-control-lg">
+                      <div class="input-group-prepend">
+                        <div class="input-group-text">
+                          <i class="fa-solid fa-key"></i>
+                        </div>
+                      </div>
+                      <input id="password" class="form-control" placeholder="password.." type="password" required="true" />
+                    </div>
+                  <!--</div>-->
+                    <div class="typography-line">
+                      <h7 id="login-msg" style="color:blue"></h7>
+                    </div>
+                  <!--<div class="card-footer">-->
+                    <div class="text-center py-4">
+                      <a id="submit" class="btn btn-primary btn-round btn-lg btn-block mb-3">Log in</a>
+                    </div>
+                  <!--</div>-->
+
+                </div>
+
+              </form>
+            <!--</div>-->
+          </div>
+
+
+      </div>
+    </div>
+
+  </article>
+
+  <footer class="contentEditable text-center text-white" style="background-color: #f1f1f1;">
+    <!-- Grid container -->
+    <div class="container pt-4">
+      <!-- Section: Social media -->
+      <section class="mb-4">
+
+        <!-- Instagram -->
+        <a
+        class="btn btn-link btn-floating btn-lg text-dark m-1"
+        href="."
+        role="button"
+        data-mdb-ripple-color="dark"
+        ><i class="fab fa-instagram"></i
+          ></a>
+
+          <!-- Linkedin -->
+          <a
+          class="btn btn-link btn-floating btn-lg text-dark m-1"
+          href="."
+          role="button"
+          data-mdb-ripple-color="dark"
+          ><i class="fab fa-linkedin"></i
+            ></a>
+
+            <!-- Github -->
+            <a
+            class="btn btn-link btn-floating btn-lg text-dark m-1"
+            href="https://github.com/zimbora?tab=repositories"
+            role="button"
+            data-mdb-ripple-color="dark"
+            ><i class="fab fa-github"></i
+              ></a>
+            </section>
+            <!-- Section: Social media -->
+          </div>
+          <!-- Grid container -->
+
+          <!-- Copyright -->
+          <div class="text-center text-dark p-3" id="copyright" style="background-color: rgba(0, 0, 0, 0.2);">
+            <script>
+              document.getElementById('copyright').appendChild(document.createTextNode(new Date().getFullYear()))
+            </script>, All rights reserved to the owner
+          </div>
+          <!-- Copyright -->
+  </footer>
+
+
+  <script src="https://kit.fontawesome.com/d69c68b380.js" crossorigin="anonymous"></script>
+
+  <!--</div>-->
+
+  <script src="./assets/js/jquery.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+
+      $("#submit").on("click",function(e){
+        console.log("login")
+        console.log(window.location.protocol)
+        console.log(window.location.hostname)
+        let user=$("#user").val();
+        let pass=$("#password").val();
+        //$.post("http://"+window.location.hostname+":"+window.location.port+"/login",{user: user,password: pass}, function(data){
+        $.post(window.location.protocol+"//"+window.location.hostname+":"+window.location.port+"/login",{user: user,password: pass}, function(data){
+          if(data.message!='Success'){
+            $("#login-msg").text("Wrong credentials");
+          }else{
+            location.href = location.href
+          }
+        });
+      });
+    });
+
+  </script>
+
+
+</body>
+
+
+</html>

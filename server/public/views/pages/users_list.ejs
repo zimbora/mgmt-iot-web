@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../partials/scripts.ejs') %>
+
+  <%- include('../partials/navbar.ejs') %>
+
+  <%- include('../partials/modal/confirmation.ejs') %>
+  <%- include('../partials/modal/error.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></link>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="https://kit.fontawesome.com/d69c68b380.js" crossorigin="anonymous"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../partials/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="row">
+              <div class="col-sm-6 mb-3 mb-sm-0">
+                <div class="content-header">
+                  <h5>MQTT Users</h5>
+                </div>
+                <div class="card">
+                  <!--<h5 class="card-title">Special title treatment</h5>-->
+                  <table id="users" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>user</th>
+                            <th>password</th>
+                            <th>level</th>
+                        </tr>
+                    </thead>
+                  </table>
+                </div>
+              </div>
+              <div class="col-sm-6 mb-2 mb-sm-0">
+                <div class="card">
+                  <div class="card-header">
+                    <p>Add new User</p>
+                  </div>
+                  <div class="card-body style="overflow:scroll"">
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" >user</span>
+                      <input type="text" id="userID" class="form-control" placeholder="mqtt user" aria-label="Username" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" >password</span>
+                      <input type="text" id="passwordID" class="form-control" placeholder="mqtt user password" aria-label="Password" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group mb-3">
+                      <label class="input-group-text" for="inputGroupSelect01">level</label>
+                      <select class="form-select" id="levelID">
+                        <option default>1</option>
+                        <option value="5">5</option>
+                        <option value="4">4</option>
+                        <option value="3">3</option>
+                        <option value="2">2</option>
+                        <option value="1">1</option>
+                      </select>
+                    </div>
+                    <button id="submit" type="button" class="btn btn-primary btn-sm">submit</button>
+                    <br>
+                    <br>
+                    <div id="privelleges">
+                    </div>
+                    <div id="mqtt_users_table">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- check link to more import options https://cdnjs.com/libraries/ace -->
+  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.js" integrity="sha512-s57ywpCtz+4PU992Bg1rDtr6+1z38gO2mS92agz2nqQcuMQ6IvgLWoQ2SFpImvg1rbgqBKeSEq0d9bo9NtBY0w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.js" integrity="sha512-WYlXqL7GPpZL2ImDErTX0RMKy5hR17vGW5yY04p9Z+YhYFJcUUFRT31N29euNB4sLNNf/s0XQXZfzg3uKSoOdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js" integrity="sha512-42PE0rd+wZ2hNXftlM78BSehIGzezNeQuzihiBCvUEB3CVxHvsShF86wBWwQORNxNINlBPuq7rG4WWhNiTVHFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script src="lib/markdown.js"></script>
+
+  <script>
+    var t;
+    var id;
+
+    privelleges.innerHTML = markdown.toHTML(
+    `#### Users Privelleges:
+
+    Users listed on this section are the only ones available to access mqtt broker.
+    In clients section, mqtt clients can be created and associated to the respective user type
+    Clients are used by mqtt broker to manage privelleges on subscribe and publish topics.
+    Besides that, this platform is also managed by mqtt clients accounts.
+    So, to manage clients and users privelleges you need an account (mqtt client, associated to a user type with all privelleges).
+    mqtt client account can be created on Clients section.
+
+    Check below tables to choose users type level on its creation.`);
+
+
+    mqtt_users_table.innerHTML = markdown.toHTML(`
+##### Platform permissions
+    |       |      users      |              clients              |     devices     |
+    | level | create | delete | create | delete | associate device| list   | edit   |
+    | ----- | :----: | -----: | -----: | -----: | --------------: | -----: | -----: |
+    |   5   |    x   |    x   |    x   |    x   |    x   |    x   |   x    |    x   |
+    |   4   |    x   |        |    x   |    x   |    x   |    x   |   x    |    x   |
+    |   3   |        |        |        |        |        |        |   x    |        |
+    |   2   |        |        |        |        |        |        |        |        |
+    |   1   |        |        |        |        |        |        |        |        |
+
+##### MQTT permissions
+    |       |  subscribe |  publish   |
+    | level | all topics | all topics |
+    | ----- | ---------- | ---------- |
+    |   5   |      x     |      x     |
+    |   4   |      x     |      x     |
+    |   3   |      x     |            |
+    |   2   |            |            |
+    |   1   |            |            |
+
+    Devices also need an user account to connect to the mqtt broker. However, they do not need to have an mqtt client registered.
+    They always have access to own topic
+    `);
+
+
+    $(document).ready(function () {
+      t = $('#users').DataTable();
+      api.getUsers((err,res)=>{
+        if(err) console.log("err:",err)
+        else{
+          res.forEach((item, i) => {
+            addRow(item.idusers,item.password,item.level);
+          });
+        }
+      });
+    });
+
+    function addRow(user,pwd,level){
+
+      t.row.add([`<button id="`+user+`" onclick="deleteUser('`+user+`');" type="button" class="delete btn btn-secondary btn-sm">
+          <i class="fa-solid fa-user-xmark"></i>
+        </button>`
+        ,user,pwd,level]).draw(true);
+    }
+
+    function deleteUser(user){
+      $('#modalConfirmation').modal('show');
+      id = user;
+    }
+
+    $("#modalProceed").click(()=>{
+      api.deleteUser(id,(err,res)=>{
+        if(err){
+          //$('#modalErrorBody').text(err);
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text("Check if there aren't mqtt clients associated to this user");
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    })
+
+    $("#submit").click(()=>{
+      let user = $("#userID").val();
+      let pwd = $("#passwordID").val();
+      let level = $("#levelID").val();
+      api.addUser(user,pwd,level,(err,res)=>{
+        if(err) console.log(err);
+        else location.reload();
+      });
+    });
+
+  </script>
+
+</body>
+</html>

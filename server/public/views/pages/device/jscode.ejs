@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../../partials/head.ejs') %>
+
+  <style type="text/css" media="screen">
+      #editor {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+      }
+
+      .card {
+        height: 500px;
+      }
+  </style>
+</head>
+<body>
+
+  <%- include('../../partials/scripts.ejs') %>
+
+  <%- include('../../partials/device/navbar.ejs') %>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/device/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="row">
+              <div class="col-sm-8 mb-3 mb-sm-0">
+                <div class="content-header">
+                  <h5>JS editor
+                    <button id="mqtt_status" type="button" class="btn btn-secondary" disabled></button
+                  </h5>
+                </div>
+                <div class="card">
+                  <!--<h5 class="card-title">Special title treatment</h5>-->
+                    <div id="editor">
+                    </div>
+                </div>
+                <div class="mb-3">
+                  <button id="sendScript" type="button" class="btn btn-primary">send script</button>
+                </div>
+              </div>
+              <div class="col-sm-4 mb-2 mb-sm-0">
+                <div class="content-header">
+                  <h5>Device available
+                    <button id="status" type="button" class="btn btn-secondary" disabled></button
+                  </h5>
+                </div>
+                <div class="card">
+                  <div class="card-header">
+                    <p>JS Functions</p>
+                  </div>
+                  <div class="card-body" style="overflow-y:scroll">
+                    <div id="base"> </div>
+                    <div id="proprietary"> </div>
+                    <div id="examples"> </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="mb-3">
+                <label for="exampleFormControlTextarea1" class="form-label">Device Logs</label>
+                <textarea class="form-control bg-dark text-info" id="consoleArea" rows="15"></textarea>
+              </div>
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script src="lib/markdown.js"></script>
+
+  <!-- check link to more import options https://cdnjs.com/libraries/ace -->
+  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.js" integrity="sha512-s57ywpCtz+4PU992Bg1rDtr6+1z38gO2mS92agz2nqQcuMQ6IvgLWoQ2SFpImvg1rbgqBKeSEq0d9bo9NtBY0w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.js" integrity="sha512-WYlXqL7GPpZL2ImDErTX0RMKy5hR17vGW5yY04p9Z+YhYFJcUUFRT31N29euNB4sLNNf/s0XQXZfzg3uKSoOdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+  <script>
+
+      var editor = ace.edit("editor");
+      editor.setValue(`
+function foo(items) {
+  var x = "All this is syntax highlighted";
+  return x;
+}`)
+
+      editor.setTheme("ace/theme/monokai");
+      editor.session.setMode("ace/mode/javascript");
+
+      deviceID = api.getDeviceID();
+      var project = "";
+
+      //new Editor($("text-input"), $("preview"));
+      base.innerHTML = markdown.toHTML(`#####C API imported to JS (Default):
+      - gpio.mode(pin, mode) set pin mode
+      - gpio.write(pin, value) set pin state
+      - gpio.read(pin) read pin state
+      - timer.create(milli, func, null) create timer
+      - timer.delete(timerID) delete timer
+      - log(strval) log a message`);
+
+      proprietary.innerHTML = markdown.toHTML(`#####C API imported to JS (Proprietary):
+      - sensor.read(ref) get last value of sensor mapped with ref id string
+      - sensor.read_rs485(unit_id,fc,address,len) real time reads directly from bus
+      - sensor.write_rs485(unit_id,fc,address,len,data_str) real time reads directly from bus
+      - sensor.read_rs485_all() read all registered rs485 sensors
+      - date.now() unix timestamp
+      - date.millis() millis()
+      - mqtt.send(topic,payload,retain) send messages to mqtt broker
+      `);
+
+      examples.innerHTML = markdown.toHTML(`
+#####Example 1:
+- let led = { pin: 26, on: 0 };  // LED state
+- gpio.mode(led.pin, 2);         // Set LED pin to output mode
+
+- let timer_fn = function() {
+led.on = led.on ? 0 : 1;
+gpio.write(led.pin, led.on);
+};
+
+- // Start a timer that toggles LED every 1000 milliseconds. This timer is a C resource. It is cleaned automatically on JS code refresh
+- let timer_id = timer.create(1000, 'timer_fn');
+
+#####Example 2:
+- let doIt = function(){
+  mqtt.send("/sensor/uptime",date.now(),0);
+};
+- timer.create(2000,'doIt');
+
+#####Example 3:
+- let event = {
+  - onReadSensor : function(ref,value){
+    log("js sensor: "+ref);
+    log(value);
+    if(typeof(value) === 'number'){
+      if(value < 300.0)
+        log("value is safe");
+    }else{
+      log("invalid value");
+    }
+  },
+  - onAlarmSensor : function(ref,value){
+    log("js alarm: "+ref);
+  },
+  - onAlarmTrigger : function(ref,value){
+    log("js alarm state changed: "+ref);
+  }
+};
+
+#####Example 4:
+
+- //Read all rs485 autorequests, stores on eeprom and sends to mqtt broker as soon as connection is available
+- let timer_fn = function() {
+  sensor.read_rs485_all();
+};
+- let timer_id = timer.create(60000, 'timer_fn');
+
+#####Example 5:
+- let res = sensor.read_rs485(1,4,0,2);
+- log(res);
+
+#####Example 6:
+- sensor.write_rs485(1,16,22,2,"043F800000");
+
+  `);
+
+      $(document).ready(()=>{
+
+        api.getDeviceInfo(deviceID,(err,res)=>{
+          if(err) console.log(err);
+          else if(res != null && res.length > 0){
+            project = res[0].project;
+
+            api.getMqttCredentials((err,res)=>{
+
+              // connect the client
+              if(res != null && res.length > 0){
+
+                client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, res[0].idclients);
+
+                // set callback handlers
+                client.onConnectionLost = onConnectionLost;
+                client.onMessageArrived = onMessageArrived;
+
+                client.connect({
+                  userName:res[0].idusers,
+                  password:res[0].password,
+                  onSuccess:onConnect
+                });
+              }
+            })
+          }
+        });
+        api.getDeviceJSCode(deviceID,(err,res)=>{
+          if(err) console.log(err)
+          else if(res != null && res.length > 0){
+            if(res[0] != null)
+              editor.setValue(res[0].js_program);
+          }
+        })
+
+      });
+
+      // called when the client connects
+      function onConnect() {
+        // Once a connection has been made, make a subscription and send a message.
+        let button = document.querySelector('#mqtt_status');
+        button.classList.toggle("btn-secondary",false);
+        button.classList.toggle("btn-success",true);
+        client.subscribe(project+"/"+deviceID+"/status");
+        client.subscribe(project+"/"+deviceID+"/fw/js/#");
+        client.subscribe(project+"/"+deviceID+"/js/#");
+      }
+
+      function onConnectionLost(responseObject) {
+        button.classList.toggle("btn-secondary",false);
+        button.classList.toggle("btn-danger",true);
+        if (responseObject.errorCode !== 0) {
+          console.log("onConnectionLost:"+responseObject.errorMessage);
+        }
+      }
+
+      function onMessageArrived(message) {
+
+        let topic = message.destinationName;
+        let payload = message.payloadString;
+
+        if(topic.includes("status")){
+          let button = document.querySelector('#status');
+          button.classList.toggle("btn-secondary",false);
+          if(payload == "online")
+            button.classList.toggle("btn-success",true);
+          else
+            button.classList.toggle("btn-danger",true);
+        }
+
+        let currentText = $('#consoleArea').val();
+        let date = new Date()
+        if(topic.endsWith("console"))
+          $('#consoleArea').val(date.toJSON()+" [log]: "+payload+"\n"+currentText);
+        else if(topic.endsWith("debug"))
+          $('#consoleArea').val(date.toJSON()+" [debug] : "+payload+currentText);
+      }
+
+      function sendScript(payload){
+        message = new Paho.MQTT.Message(payload);
+        message.destinationName = project+"/"+deviceID+"/fw/js/code/set";
+        client.send(message);
+      }
+
+      $("#sendScript").click(()=>{
+        let data = editor.getValue()
+        //let text = data.replace(/\n/g,'');
+        sendScript(data);
+      })
+  </script>
+</body>
+</html>

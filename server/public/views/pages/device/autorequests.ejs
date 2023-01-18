@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../../partials/head.ejs') %>
+
+  <style type="text/css" media="screen">
+      #editor {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+      }
+
+      .card {
+        height: 500px;
+      }
+  </style>
+</head>
+<body>
+
+  <%- include('../../partials/scripts.ejs') %>
+
+  <%- include('../../partials/device/navbar.ejs') %>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/device/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="row">
+              <div class="col-sm-8 mb-3 mb-sm-0">
+                <div class="content-header">
+                  <h5>Autorequests editor
+                    <button id="mqtt_status" type="button" class="btn btn-secondary" disabled></button
+                  </h5>
+                </div>
+                <div class="card">
+                  <!--<h5 class="card-title">Special title treatment</h5>-->
+                    <div id="editor">
+                    </div>
+                </div>
+                <button id="sendARs" type="button" class="btn btn-primary">update</button>
+              </div>
+              <div class="col-sm-4 mb-2 mb-sm-0">
+                <div class="content-header">
+                  <h5>Device available
+                    <button id="status" type="button" class="btn btn-secondary" disabled></button
+                  </h5>
+                </div>
+                <div class="card">
+                  <div class="card-header">
+                    <p>Documentation</p>
+                  </div>
+                  <div class="card-body" style="overflow-y:scroll">
+                    <div id="documentation">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script src="lib/markdown.js"></script>
+
+  <!-- check link to more import options https://cdnjs.com/libraries/ace -->
+  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.js" integrity="sha512-s57ywpCtz+4PU992Bg1rDtr6+1z38gO2mS92agz2nqQcuMQ6IvgLWoQ2SFpImvg1rbgqBKeSEq0d9bo9NtBY0w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.js" integrity="sha512-WYlXqL7GPpZL2ImDErTX0RMKy5hR17vGW5yY04p9Z+YhYFJcUUFRT31N29euNB4sLNNf/s0XQXZfzg3uKSoOdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+      var editor = ace.edit("editor");
+
+      editor.setValue(`
+//Example - remove this line
+{
+  "autorequests":
+  {
+    "rs485": [
+      {
+        "ref": "Itemp",
+        "modbus": [1,3,834,2],
+        "type": "UINT32BE",
+        "period":60
+      },
+      {
+        "ref": "Ipress",
+        "modbus": [1,3,836,2],
+        "type": "UINT16BE",
+        "period":60
+      },
+      {
+        "ref": "Ivb",
+        "modbus": [1,3,806,4],
+        "type": "INT16BE",
+        "period":60
+      },
+      {
+        "ref": "Ivc",
+        "modbus": [1,3,810,4],
+        "type": "FLOATBE",
+        "period":60
+      }]
+  }
+}
+      `)
+
+      editor.setTheme("ace/theme/monokai");
+      editor.session.setMode("ace/mode/javascript");
+
+      deviceID = api.getDeviceID();
+      var project = "";
+
+      $(document).ready(()=>{
+
+
+        documentation.innerHTML = markdown.toHTML(`
+##### Autorequest
+
+    This module configures autorequests on respective device.
+
+    Each autorequest is associated to a sensor that must be configured.
+    A sensor is configured with a ref and a period field and must be contained on a category
+
+    For now only sensors of rs485 category are available
+
+
+##### RS485
+
+      - ref (mandatory)
+      - period (mandatory)
+      - type (mandatory)
+      - modbus (mandatory)
+
+    Modbus is an array with the modbus packet [unit_id,fc,address,length].
+    Only fc 3 and 4 are available for now for autorequests.
+
+##### Type
+
+    Type identifies the type of the value read. It can be:
+
+      - UINT8
+      - INT16BE
+      - INT16LE
+      - UINT16BE
+      - UINT16LE
+      - INT32BE
+      - INT32LE
+      - UINT32BE
+      - UINT32LE
+      - FLOATBE
+      - FLOATLE
+      - HEX*
+      - CHAR*
+
+      `);
+
+        console.log("deviceID:",deviceID)
+        api.getDeviceInfo(deviceID,(err,res)=>{
+          if(err) console.log(err);
+          else if(res != null && res.length > 0){
+            project = res[0].project;
+            // connect the client
+            api.getMqttCredentials((err,res)=>{
+              // connect the client
+              if(res != null && res.length > 0){
+
+                client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, res[0].idclients);
+
+                // set callback handlers
+                client.onConnectionLost = onConnectionLost;
+                client.onMessageArrived = onMessageArrived;
+
+                client.connect({
+                  userName:res[0].idusers,
+                  password:res[0].password,
+                  onSuccess:onConnect
+                });
+              }
+            })
+          }
+        });
+        api.getDeviceAutorequests(deviceID,(err,res)=>{
+          if(err) console.log(err)
+          else if(res != null && res.length > 0){
+            if(res[0].autorequests != null)
+              editor.setValue(JSON.stringify(res[0].autorequests,null,2));
+          }
+        })
+
+      });
+
+      // called when the client connects
+      function onConnect() {
+        // Once a connection has been made, make a subscription and send a message.
+        let button = document.querySelector('#mqtt_status');
+        button.classList.toggle("btn-secondary",false);
+        button.classList.toggle("btn-success",true);
+        client.subscribe(project+"/"+deviceID+"/status");
+        client.subscribe(project+"/"+deviceID+"/fw/ar/#");
+      }
+
+      function onConnectionLost(responseObject) {
+        button.classList.toggle("btn-secondary",false);
+        button.classList.toggle("btn-danger",true);
+        if (responseObject.errorCode !== 0) {
+          console.log("onConnectionLost:"+responseObject.errorMessage);
+        }
+      }
+
+      function onMessageArrived(message) {
+
+        let topic = message.destinationName;
+        let payload = message.payloadString;
+        console.log(topic);
+        if(topic.includes("status")){
+          let button = document.querySelector('#status');
+          button.classList.toggle("btn-secondary",false);
+          if(payload == "online")
+            button.classList.toggle("btn-success",true);
+          else
+            button.classList.toggle("btn-danger",true);
+        }
+      }
+
+      function sendARs(payload){
+        message = new Paho.MQTT.Message(payload);
+        message.destinationName = project+"/"+deviceID+"/fw/ar/set";
+        client.send(message);
+      }
+
+      $("#sendARs").click(()=>{
+        // call JSON validator
+        let data = editor.getValue()
+        let text = data.replace(/ /g,'');
+        text = text.replace(/\n/g,'');
+        sendARs(JSON.stringify(text));
+      })
+  </script>
+</body>
+</html>
