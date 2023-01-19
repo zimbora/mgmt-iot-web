@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../../partials/firmware/scripts.ejs') %>
+  <%- include('../../partials/firmware/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="https://kit.fontawesome.com/d69c68b380.js" crossorigin="anonymous"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/firmware/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="content-header">
+              <h3 id="title"></h3>
+            </div>
+            <div class="row">
+              <div class="col-sm-8 mb-3 mb-sm-0">
+                <div class="card py-3">
+                  <h5 class="card-title">Firmwares list</h5>
+                  <table id="firmwares" class="display" style="width:100%" overflow-x:scroll>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>version</th>
+                            <th>release</th>
+                            <th>filename</th>
+                        </tr>
+                    </thead>
+                  </table>
+                </div>
+              </div>
+              <div class="col-sm-4 mb-3 mb-sm-0">
+                <div class="card py-3">
+                  <div class="card-header">
+                    <h5 class="card-title">Add new firmware image</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="mb-3">
+                      <div class="input-group py-2">
+                        <label class="input-group-text" for="inputGroupSelect21">FW model</label>
+                        <select class="form-select" id="_fwmodel_">
+                          <option selected>Choose...</option>
+                        </select>
+                      </div>
+                      <div class="input-group py-2">
+                        <label class="input-group-text" for="inputGroupSelect23">FW version</label>
+                        <input type="text" id="_fwversion_" class="form-control" placeholder="type your version in format xx.yy.zz">
+                      </div>
+                      <div class="py-2">
+                        <input class="form-control" type="file" id="formFile">
+                      </div>
+                      <div class="py-2">
+                        <button id="submit_fw" type="button" class="btn btn-primary btn-sm">submit</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+
+    var t;
+    var modelID = api.getModelID();
+    $("#title").text("FW Model "+modelID)
+    $(document).ready(function () {
+
+      t = $('#firmwares').DataTable();
+
+
+      api.getFirmwares(modelID,(err,res)=>{
+        if(err) console.log("err:",err)
+        else{
+          res.forEach((item, i) => {
+            addRow(item.id,item.version,item.release,item.originalname);
+            if(i == res.length-1){
+              $(".fwReleaseOption").change((event)=>{
+                console.log("option changed")
+                let id = event.target.id;
+                $( ".fwReleaseOption option:selected" ).each(function() {
+                  let release = $( this ).text();
+                  api.updateFwRelease(modelID,id,release,(err,res)=>{
+                    if(err) console.log(err);
+                    else location.reload();
+                  });
+                });
+              });
+            }
+          });
+        }
+      });
+
+      api.getFWModels((err,res)=>{
+        if(err)console.log(err)
+        else{
+          res.forEach((item, i) => {
+            addOption(item.name);
+          });
+        }
+      });
+
+    });
+
+    $("#submit_fw").click(()=>{
+      let model = $("#_fwmodel_").val();
+      let version = $("#_fwversion_").val();
+      var input = document.getElementById("formFile");
+      var file = input.files[0];
+      api.addFirmware(file,model,version,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    });
+
+    function addOption(model){
+
+      $('#_fwmodel_').append(`<option value="${model}">
+                                 ${model}
+                            </option>`);
+    }
+
+    function addRow(id,version,release,filename){
+
+      t.row.add([`
+        <button id="`+id+`" onclick="deleteFirmware('`+id+`');" type="button" class="delete btn btn-danger btn-sm">
+          <i class="fa-sharp fa-solid fa-trash"></i>
+        </button>`,
+        version,
+        `<select class="form-select fwReleaseOption" id="`+id+`">
+          <option selected>`+release+`</option>
+          <option value="nightmare">nightmare</option>
+          <option value="stable">stable</option>
+        </select>`,
+        filename]).draw(true);
+
+    }
+
+    function deleteFirmware(id){
+
+      api.removeFirmware(modelID,id,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    }
+
+  </script>
+</body>
+</html>

@@ -107,14 +107,14 @@
 
     mqtt_users_table.innerHTML = markdown.toHTML(`
 ##### Platform permissions
-    |       |      users      |              clients              |     devices     |
-    | level | create | delete | create | delete | associate device| list   | edit   |
-    | ----- | :----: | -----: | -----: | -----: | --------------: | -----: | -----: |
-    |   5   |    x   |    x   |    x   |    x   |    x   |    x   |   x    |    x   |
-    |   4   |    x   |        |    x   |    x   |    x   |    x   |   x    |    x   |
-    |   3   |        |        |        |        |        |        |   x    |        |
-    |   2   |        |        |        |        |        |        |        |        |
-    |   1   |        |        |        |        |        |        |        |        |
+    |       |      users      |              clients              |     devices     | firmwares |
+    | level | create | delete | create | delete | associate device| list   | edit   |  manage   |
+    | ----- | :----: | -----: | -----: | -----: | --------------: | -----: | -----: | --------: |
+    |   5   |    x   |    x   |    x   |    x   |    x   |    x   |   x    |    x   |     x     |
+    |   4   |    x   |        |    x   |    x   |    x   |    x   |   x    |    x   |     x     |
+    |   3   |        |        |        |        |        |        |   x    |        |     x     |
+    |   2   |        |        |        |        |        |        |        |        |     x     |
+    |   1   |        |        |        |        |        |        |        |        |           |
 
 ##### MQTT permissions
     |       |  subscribe |  publish   |

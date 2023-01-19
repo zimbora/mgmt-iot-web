@@ -85,22 +85,4 @@ module.exports = {
     });
   },
 
-  checkAdminAccess : (id,cb)=>{
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        var query = `select * from ?? where ?? = ?`;
-        var table = ["user_type","id",id];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else if(rows.length > 0) cb(null,rows[0]);
-          else cb(null,null);
-        });
-      }
-    });
-  },
-
 }

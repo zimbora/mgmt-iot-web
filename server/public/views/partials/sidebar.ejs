@@ -33,7 +33,7 @@
                   class="active"
                 <% } %>
                 class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-person-lines-fill"></i> <span class="ms-1 d-none d-sm-inline">Users</span></a>
+                    <i class="fs-4 bi-people"></i> <span class="ms-1 d-none d-sm-inline">Users</span></a>
             </li>
             <% } %>
             <% if(user.level >= 4){%>
@@ -44,6 +44,16 @@
                 <% } %>
                 class="nav-link px-0 align-middle">
                     <i class="fs-4 bi-person-lines-fill"></i> <span class="ms-1 d-none d-sm-inline">Clients</span></a>
+            </li>
+            <% } %>
+            <% if(user.level >= 4){%>
+            <li>
+                <a href="../firmwares"
+                <% if(page == "Firmwares"){%>
+                  class="active"
+                <% } %>
+                class="nav-link px-0 align-middle">
+                    <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Firmwares</span></a>
             </li>
             <% } %>
             <li>

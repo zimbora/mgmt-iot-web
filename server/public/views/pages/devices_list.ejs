@@ -30,7 +30,7 @@
                   <h5>Display Devices</h5>
                 </div>
                 <div class="card">
-                  <table id="devices" class="display" style="width:100%">
+                  <table id="devices" class="display" style="width:100%" overflow-x:scroll>
                     <thead>
                         <tr>
                             <th>uid</th>
@@ -68,17 +68,6 @@
       t.row.add([`
         <a href="./device/`+uid+`">`+uid+`</a>
         `,model,fwV,appV,status]).draw(true);
-      /*
-      $('#devices tbody').append(
-        `<tr>`,
-        `<td>`+uid+`</td>`,
-        `<td>`+model+`</td>`,
-        `<td>`+fwV+`</td>`,
-        `<td>`+appV+`</td>`,
-        `<td>`+status+`</td>`,
-        `</tr>`
-      );
-      */
     }
   </script>
 </body>

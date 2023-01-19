@@ -6,13 +6,13 @@ var useragent = require('express-useragent');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var httpStatus = require('http-status-codes');
-const fileUpload = require('express-fileupload');
 
 var auth = require('./server/controllers/auth');
 var routes = require('./server/routes');
 var validate = require('./server/controllers/params_validator');
 var user = require('./server/controllers/users');
 var client = require('./server/controllers/clients');
+var firmware = require('./server/controllers/firmwares');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -27,6 +27,9 @@ app.use(session({secret: config.jwtSecret}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+
+app.get('api/firmware',firmware.get)
+
 app.use('/api', auth.api_check_authentication,routes);
 
 app.use('/api', (req,res) => {
@@ -36,8 +39,6 @@ app.use('/api', (req,res) => {
       message: 'path not available'
     });
 });
-
-//app.use(fileUpload());
 
 app.set('view engine', 'ejs');  // set the view engine to ejs
 
@@ -125,6 +126,22 @@ app.get('/client/:client_id/access',(req,res,next)=>{
 //app.get('/client/:client_id/access',(req,res,next)=>{
   if(req.user.level >= 4)
     res.render(path.join(__dirname, config.public_path+'/views/pages/client/access'),{user:req.user,page:'Access'});
+});
+
+// --- firmwares ---
+app.get('/firmwares',(req,res)=>{
+  if(req.user.level >= 2)
+    res.render(path.join(__dirname, config.public_path+'/views/pages/fw_models'),{user:req.user,page:'Firmwares'});
+});
+
+app.get('/firmware/:model_id/list',(req,res)=>{
+  if(req.user.level >= 2)
+    res.render(path.join(__dirname, config.public_path+'/views/pages/firmware/list'),{user:req.user,page:'FwList'});
+});
+
+app.get('/firmware/:model_id/access',firmware.checkModelOwnership,(req,res)=>{
+  if(req.user.level >= 2)
+    res.render(path.join(__dirname, config.public_path+'/views/pages/firmware/access'),{user:req.user,page:'FwAccess'});
 });
 
 // --- devices ---

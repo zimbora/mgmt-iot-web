@@ -1,6 +1,12 @@
+var path = require('path');
 var express = require('express');
 var httpStatus = require('http-status-codes');
 var config = require('../../config/env');
+
+// set up multer
+const multer = require('multer')
+const upload = multer({ dest: path.join(__dirname, "../../"+config.public_path + "/firmwares/") })
+console.log("fw path:",path.join(__dirname, config.public_path + "/firmwares/"))
 
 var users = require('./users');
 var clients = require('./clients');
@@ -11,6 +17,7 @@ var Response = require('../controllers/response');
 var User = require('../controllers/users');
 var Client = require('../controllers/clients');
 var Device = require('../controllers/devices');
+var Firmware = require('../controllers/firmwares');
 
 const router = express.Router();
 
@@ -56,16 +63,36 @@ router.use('/device', devices);
 router.route('/devices/list')
   .get(Device.list);
 
+router.route('/firmwares/models')
+  .get(Firmware.listModels)
+  .post(Firmware.addModel)
+  .delete(Firmware.deleteModel)
+  .put(Firmware.updateModel)
+
+router.route('/firmware/:model_id',Firmware.checkModelAccess)
+  .get(Firmware.list)
+  .post(upload.single('file'),Firmware.add)
+  .delete(Firmware.delete)
+  .put(Firmware.update)
+
+router.route('/firmware/:model_id/release',Firmware.checkModelAccess)
+  .put(Firmware.updateRelease);
+
+router.route('/firmware/:model_id/permission',Firmware.checkModelAccess)
+  .get(Firmware.listModelPermission)
+  .post(Firmware.grantModelPermission)
+  .delete(Firmware.removeModelPermission)
+
 //router.use('/user/:user_id',users); // use it to access to other user content - only for admin
 router.use('/auth', authRoutes);
 
 router.route('/mqtt/credentials')
-  .get(Client.getMqttCredentials)
+  .get(Client.getMqttCredentials);
 
 router.use((req,res,next) => {
   var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
   log.trace("route not found: "+fullUrl);
-  Response.error(httpStatus.NOT_FOUND,"request not implemented");
+  Response.error(res,httpStatus.NOT_FOUND,"request not implemented");
 });
 
 module.exports =  router;

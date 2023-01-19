@@ -241,7 +241,14 @@ module.exports =  {
         });
       }
     });
-  }
+  },
+
+  isAdmin : (level)=>{
+    if(level >= 4)
+      return true;
+    else return false;
+
+  },
 };
 
 // check if there is at least one admin registered. If not it creates a temporary one

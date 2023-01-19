@@ -19,6 +19,14 @@ var api = {
     return clientID;
   },
 
+  getModelID : function(cb){
+    let path = "firmware/"
+    let indexB = location.pathname.indexOf(path);
+    let indexF = location.pathname.lastIndexOf("/");
+    let modelID = location.pathname.substring(indexB+path.length,indexF);
+    return modelID;
+  },
+
   // get all registered devices
   getDevices : function(cb){
 
@@ -332,6 +340,7 @@ var api = {
       return parseError(error,cb);
     });
   },
+
   // remove permission from client to access device
   removePermission : (clientID,device,cb)=>{
     fetch(Settings.api+"/client/"+clientID+"/permissions", {
@@ -353,6 +362,7 @@ var api = {
       return parseError(error,cb);
     });
   },
+
   // update permission to client to access device
   updatePermission : (clientID,device,level,cb)=>{
     fetch(Settings.api+"/client/"+clientID+"/permissions", {
@@ -393,6 +403,241 @@ var api = {
 
 
   // --- ----- ---
+
+  // --- firmwares ---
+
+  // get all firmwares
+  getFWModels : function(cb){
+
+    $.ajax({
+      url : Settings.api+'/firmwares/models',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+
+  },
+
+  // add fw model
+  addFWModel : (model,description,cb)=>{
+    fetch(Settings.api+"/firmwares/models", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: model,
+        description: description
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // add fw model
+  removeFWModel : (model,cb)=>{
+    fetch(Settings.api+"/firmwares/models", {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: model
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // get all firmwares
+  getFirmwares : function(model,cb){
+
+    $.ajax({
+      url : Settings.api+'/firmware/'+model,type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+
+  },
+
+  // add FW Model Permission to client
+  listFWModelPermission : (model,cb)=>{
+    fetch(Settings.api+"/firmware/"+model+"/permission", {
+      method: 'GET',
+      headers: {},
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+
+  // add FW Model Permission to client
+  grantFWModelPermission : (model,clientID,cb)=>{
+    fetch(Settings.api+"/firmware/"+model+"/permission", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        clientID: clientID
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // remove FW Model Permission from client
+  removeFWModelPermission : (model,id,cb)=>{
+    fetch(Settings.api+"/firmware/"+model+"/permission", {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: id
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // add permission to client to access device
+  addFirmware : (file,model,version,cb)=>{
+
+    const formData = new FormData();
+
+    formData.append('version', version);
+    formData.append('file', file);
+
+    fetch(Settings.api+"/firmware/"+model, {
+      method: 'POST',
+      body: formData
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // remove permission from client to access device
+  removeFirmware : (model,id,cb)=>{
+    fetch(Settings.api+"/firmware/"+model, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: id
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  updateFwRelease : (model,id,release,cb)=>{
+
+    fetch(Settings.api+"/firmware/"+model+"/release", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: id,
+        release: release,
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // update permission to client to access device
+  updateFirmware : (file,model,release,version,cb)=>{
+
+    const formData = new FormData();
+
+    formData.append('version', version);
+    formData.append('file', file);
+
+    fetch(Settings.api+"/firmware/"+model, {
+      method: 'PUT',
+      body: formData
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
 };
 
 function parseResponse(data,cb){
