@@ -77,8 +77,15 @@ module.exports =  {
             db.close_db_connection(conn);
             return cb("this version already exists for this model, try increase it",null)
           }else{
-            let query = "INSERT INTO ?? (??,??,??,??) VALUES (?,?,?,?)";
-            let table = ["firmwares","filename","originalname","version","fwModel_name",filename,originalname,version,model];
+
+            var SHA256 = require("crypto-js/sha256");
+            let message = originalname+"\º~"+version;
+            let key = String(Date.now()/3621)
+            var token = CryptoJS.HmacSHA256(message, key).toString();
+            //let token = CryptoJS.AES.encrypt(originalname,version).toString();
+
+            let query = "INSERT INTO ?? (??,??,??,??,??) VALUES (?,?,?,?,?)";
+            let table = ["firmwares","filename","originalname","version","fwModel_name","token",filename,originalname,version,model,token];
             query = mysql.format(query,table);
             conn.query(query,function(err,rows){
               db.close_db_connection(conn);
@@ -94,6 +101,7 @@ module.exports =  {
 
   delete : (id,cb)=>{
 
+    var filename = "";
     db.getConnection((err,conn) => {
       if(err) cb(err,null)
       else{
@@ -109,18 +117,23 @@ module.exports =  {
             db.close_db_connection(conn);
             return cb(null,null);
           }else{
-
+            filename = rows[0].filename;
             try {
-              let file_path = path.join(__dirname, "../"+config.public_path+"/firmwares/"+rows[0].filename);
-              fs.unlinkSync(file_path)
-              console.log("file removed");
               let query = "DELETE FROM ?? where ?? = ?";
               let table = ["firmwares","id",id];
               query = mysql.format(query,table);
               conn.query(query,function(err,rows){
                 db.close_db_connection(conn);
                 if(err) return cb(err,null);
-                else return cb(null,rows);
+                else{
+                  try{
+                    let file_path = path.join(__dirname, "../"+config.public_path+"/firmwares/"+filename);
+                    fs.unlinkSync(file_path)
+                  }catch(e){
+                    console.log(e);
+                  }
+                  return cb(null,rows);
+                }
               });
             } catch(err) {
               console.error(err)

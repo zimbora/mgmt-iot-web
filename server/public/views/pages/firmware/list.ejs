@@ -123,7 +123,10 @@
       api.addFirmware(file,model,version,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
-          $('#suggestion').text(err);
+          if(err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
           $('#modalError').modal('show');
         }else location.reload();
       });
