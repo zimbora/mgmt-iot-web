@@ -12,7 +12,9 @@
 
   <%- include('../../partials/modal/confirmation.ejs') %>
   <%- include('../../partials/modal/error.ejs') %>
-
+  <%- include('../../partials/modal/loading.ejs') %>
+  <%- include('../../partials/modal/timeout.ejs') %>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
 
   <div class="container-fluid">
@@ -77,20 +79,6 @@
                   <select class="form-select fwReleaseOption" id="_fwrelease_">
                   </select>
                 </div>
-                <!--
-                <div class="card">
-                  <div class="card-header">
-                    <p>Firmware</p>
-                  </div>
-                  <div class="card-body">
-                    <form class="row g-3 needs-validation" novalidate>
-                      <div class="col-sm-6">
-
-                      </div>
-                    </form>
-                  </div>
-                </div>
-                -->
               </div>
 
               <div class="col-sm-12 mb-4 mb-sm-4">
@@ -102,33 +90,16 @@
                     <form class="row g-3 needs-validation" novalidate>
                       <div class="col-sm-6">
                         <div class="btn-group">
-                          <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            keepalive
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li>15s</li>
-                            <li>30s</li>
-                            <li>1min</li>
-                            <li>15min</li>
-                            <li>1h</li>
-                            <li>6h</li>
-                            <li>24h</li>
-                          </ul>
+                          <label class="input-group-text" for="inputGroupSelect31">keepalive</label>
+                          <select class="form-select fwKeepaliveOption" id="_fwkeepalive_">
+                          </select>
                         </div>
                       </div>
                       <div class="col-sm-6">
                         <div class="btn-group">
-                          <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            logs level
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li>Disabled</li>
-                            <li>Error</li>
-                            <li>Warn</li>
-                            <li>Info</li>
-                            <li>Debug</li>
-                            <li>Verbose</li>
-                          </ul>
+                          <label class="input-group-text" for="inputGroupSelect31">logs level</label>
+                          <select class="form-select fwLogsLevelOption" id="_fwlogslevel_">
+                          </select>
                         </div>
                       </div>
                     </form>
@@ -151,7 +122,7 @@
                     <div class="mb-3 row">
                       <label for="staticEmail" class="col-sm-8 col-form-label">Reset</label>
                       <div class="col-sm-4">
-                        <button type="button" class="btn btn-warning btn-sm">set</button>
+                        <button id="reset" type="button" class="btn btn-warning btn-sm">set</button>
                       </div>
                     </div>
 
@@ -189,6 +160,13 @@
                 </div>
               </div>
               <div class="col-sm-12 mb-4 mb-sm-4">
+                <div class="btn-group">
+                  <label class="input-group-text" for="inputGroupSelect21">configuration</label>
+                  <select disabled class="form-select fwConfigurationOption" id="_fwconfiguration_">
+                  </select>
+                </div>
+              </div>
+              <div class="col-sm-12 mb-4 mb-sm-4">
                 <div class="card">
                   <div class="card-header">
                     <p>WiFi</p>
@@ -210,6 +188,7 @@
                         </div>
                       </div>
                       <div class="col-md-4">
+                        <button id="wifiget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
                         <button id="wifiset" class="btn btn-primary btn-sm" type="submit" onclick="return false;">set</button>
                       </div>
                     </form>
@@ -219,7 +198,7 @@
               <div class="col-sm-12 mb-4 mb-sm-4">
                 <div class="card">
                   <div class="card-header">
-                    <p>MQTT</p>
+                    <p>MQTT Second Connection</p>
                   </div>
                   <div class="card-body">
                     <form class="row g-3 needs-validation" novalidate>
@@ -252,6 +231,7 @@
                         </div>
                       </div>
                       <div class="col-md-4">
+                        <button id="mqttget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
                         <button id="mqttset" class="btn btn-primary btn-sm" type="submit" onclick="return false;">set</button>
                       </div>
                     </form>
@@ -270,13 +250,34 @@
 
     var deviceID = api.getDeviceID();
     var project = "";
+    var action = "";
+    var data = {}
+    var loading = $('#modalLoading');
+    var keepalive_arr = [
+      {value:15,description:"15s"},
+      {value:30,description:"30s"},
+      {value:60,description:"60s"},
+      {value:900,description:"15min"},
+      {value:3600,description:"1h"},
+      {value:21600,description:"6h"},
+      {value:86400,description:"24h"},
+    ]
+
+    var logs_level_arr = [
+      {value:0,description:"Disabled"},
+      {value:1,description:"Verbose"},
+      {value:2,description:"Debug"},
+      {value:3,description:"Info"},
+      {value:4,description:"Warn"},
+      {value:5,description:"Error"}
+    ]
 
     $(document).ready(()=>{
 
       api.getDeviceInfo(deviceID,(err,res)=>{
         if(err) console.log(err.responseJSON.Message)
         else if(res.length > 0){
-          console.log(res)
+          console.log(res[0])
           document.querySelector('#project').value = res[0].project;
           document.querySelector('#model').value = res[0].model;
           document.querySelector('#fw_version').value = res[0].fw_version;
@@ -300,9 +301,27 @@
           addOption('#_fwrelease_',"stable");
           addOption('#_fwrelease_',"nightmare");
 
+          if(res[0].fw_settings.hasOwnProperty("keepalive") && res[0].fw_settings.keepalive.hasOwnProperty("period")){
+            keepalive_arr.forEach((item,i)=>{
+              if(item.value == res[0].fw_settings.keepalive.period)
+                addSelectedOption2('#_fwkeepalive_',item.value,item.description);
+            });
+          }
+          keepalive_arr.forEach((item,i)=>{
+            addOption2('#_fwkeepalive_',item.value,item.description);
+          })
+
+          if(res[0].fw_settings.hasOwnProperty("log") && res[0].fw_settings.log.hasOwnProperty("level")){
+            logs_level_arr.forEach((item,i)=>{
+              if(item.value == res[0].fw_settings.log.level)
+                addSelectedOption2('#_fwlogslevel_',item.value,item.description);
+            });
+          }
+          logs_level_arr.forEach((item,i)=>{
+            addOption2('#_fwlogslevel_',item.value,item.description);
+          })
+
           $(".fwReleaseOption").change((event)=>{
-            console.log("option changed")
-            let id = event.target.id;
             $( ".fwReleaseOption option:selected" ).each(function() {
               let release = $( this ).text();
               api.updateDeviceRelease(deviceID,release,(err,res)=>{
@@ -315,6 +334,26 @@
                   $('#modalError').modal('show');
                 }
               });
+            });
+          });
+
+          $(".fwKeepaliveOption").change((event)=>{
+            $( ".fwKeepaliveOption option:selected" ).each(function(item) {
+              let keepalive = $( this ).val();
+              data = {
+                period : keepalive
+              }
+              sendMessage("fw/keepalive/set",JSON.stringify(data));
+            });
+          });
+
+          $(".fwLogsLevelOption").change((event)=>{
+            $( ".fwLogsLevelOption option:selected" ).each(function() {
+              let level = $( this ).val();
+              data = {
+                level : level
+              }
+              sendMessage("fw/log/set",JSON.stringify(data));
             });
           });
 
@@ -341,6 +380,16 @@
       })
     });
 
+
+    $("#modalProceed").click(()=>{
+      if(action == "reset"){
+        sendMessage("fw/reset/set","1");
+      }else if(action == "set_wifi"){
+        sendMessage("fw/wifi/set",JSON.stringify(data));
+      }
+      action = "";
+    })
+
     $("#reboot").click(()=>{
       console.log("reboot button clicked");
       sendMessage("fw/reboot/set","1");
@@ -348,30 +397,33 @@
 
     $("#reset").click(()=>{
       console.log("reset button clicked");
-      //sendMessage("fw/reset/set","1");
+      action = "reset"
+      $('#modal_warning_message').text("If you proceed all settings configured on the device will be restored for default settings")
+      $('#modalConfirmation').modal('show');
     });
 
     $("#wifiset").click(()=>{
-      console.log("wifiset button clicked");
       let ssid = document.querySelector('#wifissid').value;
       let pwd = document.querySelector('#wifipassword').value;
-      let data = {
+      data = {
         ssid : ssid,
         pwd : pwd
       }
-      sendMessage("fw/wifi/set",JSON.stringify(data));
-      // call waiting event
-      // on received msg with publish null
-      // stop waiting event
+      action = "set_wifi";
+      $('#modal_warning_message').text("If wrong credentials were set, device can become offline after reboot")
+      $('#modalConfirmation').modal('show');
+    });
+
+    $("#wifiget").click(()=>{
+      sendMessage("fw/wifi/get","");
     });
 
     $("#mqttset").click((event)=>{
-      console.log("mqttset button clicked");
       let host = document.querySelector('#mqtt_host').value;
       let port = document.querySelector('#mqtt_port').value;
       let user = document.querySelector('#mqtt_user').value;
       let pwd = document.querySelector('#mqtt_pwd').value;
-      let data = {
+      data = {
         host : host,
         port : port,
         user : user,
@@ -379,9 +431,11 @@
         active : 1
       }
       sendMessage("fw/mqtt/set",JSON.stringify(data));
-      // call waiting event
-      // on received msg with publish null
-      // stop waiting event
+    });
+
+    $("#mqttget").click(()=>{
+      console.log("mqttget button clicked");
+      sendMessage("fw/mqtt/get","");
     });
 
     // called when the client connects
@@ -433,12 +487,57 @@
         rssi.value = payload;
       }
 
+      if(topic.endsWith("wifi")){
+        try{
+          payload = JSON.parse(payload)
+          document.querySelector('#wifissid').value = payload.ssid;
+          document.querySelector('#wifipassword').value = payload.pwd;
+        }catch(e){ console.log(e)}
+        $(document).trigger("closeModalLoading"); // get confirmation
+      }
+
+      if(topic.includes("mqtt")){
+        if(payload == "" || payload == null)
+          $('#modalLoading').modal('hide'); // set confirmation
+        else{
+          try{
+            payload = JSON.parse(payload)
+            document.querySelector('#mqtt_host').value = payload.host;
+            document.querySelector('#mqtt_port').value = payload.port;
+            document.querySelector('#mqtt_user').value = payload.user;
+            document.querySelector('#mqtt_pwd').value = payload.pass;
+            $('#modalLoading').modal('hide'); // get confirmation
+          }catch(e){ console.log(e);}
+        }
+      }
+
+      if(topic.endsWith("set")){
+        if(payload == "" || payload == null || payload === 'undefined'){
+          $(document).trigger("closeModalLoading"); // set confirmation
+        }
+      }
     }
 
     function sendMessage(topic,payload){
       message = new Paho.MQTT.Message(payload);
       message.destinationName = project+"/"+deviceID+"/"+topic;
-      client.send(message);
+
+      loading.modal('show');
+      setTimeout(()=>{
+        client.send(message);
+      },500)
+
+      var timeoutId = setTimeout(()=>{
+        loading.modal('hide'); // set confirmation
+        $('#modalTimeout').modal('show');
+      },15000);
+
+      $(document).on("closeModalLoading", function() {
+        loading.modal('hide'); // set confirmation
+        clearTimeout(timeoutId);
+      });
+
+
     }
 
     function addSelectedOption(id,release){
@@ -450,8 +549,22 @@
 
     function addOption(id,release){
 
-      $(id).append(`<option select value="${release}">
+      $(id).append(`<option value="${release}">
                                  ${release}
+                            </option>`);
+    }
+
+    function addSelectedOption2(id,value,description){
+
+      $(id).append(`<option select value="${value}">
+                                 ${description}
+                            </option>`);
+    }
+
+    function addOption2(id,value,description){
+
+      $(id).append(`<option value="${value}">
+                                 ${description}
                             </option>`);
     }
 

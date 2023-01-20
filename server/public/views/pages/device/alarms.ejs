@@ -21,8 +21,12 @@
 <body>
 
   <%- include('../../partials/scripts.ejs') %>
-
   <%- include('../../partials/device/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/loading.ejs') %>
+  <%- include('../../partials/modal/timeout.ejs') %>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
 
@@ -200,19 +204,45 @@
         else
           button.classList.toggle("btn-danger",true);
       }
+
+      if(topic.endsWith("alarm/set")){
+        $(document).trigger("closeModalLoading"); // get confirmation
+      }
     }
 
     function sendAlarms(payload){
       message = new Paho.MQTT.Message(payload);
       message.destinationName = project+"/"+deviceID+"/fw/alarm/set";
-      client.send(message);
+
+      var loading = $('#modalLoading');
+      loading.modal('show');
+      setTimeout(()=>{
+        client.send(message);
+      },500)
+
+      var timeoutId = setTimeout(()=>{
+        loading.modal('hide'); // set confirmation
+        $('#modalTimeout').modal('show');
+      },15000);
+
+      $(document).on("closeModalLoading", function() {
+        loading.modal('hide'); // set confirmation
+        clearTimeout(timeoutId);
+      });
     }
 
     $("#sendAlarm").click(()=>{
         let data = editor.getValue()
         let text = data.replace(/ /g,'');
         text = text.replace(/\n/g,'');
-        sendAlarms(JSON.stringify(text));
+        try{
+          JSON.parse(text)
+          sendAlarms(JSON.stringify(text));
+        }catch(e){
+          $('#error').text("Not JSON");
+          $('#suggestion').text("check if file has comments");
+          $('#modalError').modal('show');
+        }
       })
 
   </script>
