@@ -1,7 +1,7 @@
 
 var device = require('../models/devices');
 
-//var Joi = require('joi');
+var Joi = require('joi');
 var httpStatus = require('http-status-codes');
 var response = require('./response');
 
@@ -113,6 +113,23 @@ module.exports = {
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
+  },
+
+  // update type of release that should be used by this device
+  updateDeviceRelease : (req, res, next)=>{
+
+    const val = Joi.object({
+      release: Joi.string().required(),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.updateDeviceRelease(req.params.device_id,req.body.release,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
 };

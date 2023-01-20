@@ -128,6 +128,27 @@ var api = {
 
   },
 
+  updateDeviceRelease : (deviceID,release, cb)=>{
+    fetch(Settings.api+"/device/"+deviceID+"/release", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        release: release
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   // --- ----- ---
 
   // --- user ---

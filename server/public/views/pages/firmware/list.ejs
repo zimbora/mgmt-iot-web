@@ -94,8 +94,14 @@
                 $( ".fwReleaseOption option:selected" ).each(function() {
                   let release = $( this ).text();
                   api.updateFwRelease(modelID,id,release,(err,res)=>{
-                    if(err) console.log(err);
-                    else location.reload();
+                    if(err){
+                      $('#error').text("Your request cannot be executed");
+                      if(err.hasOwnProperty("sqlMessage"))
+                        $('#suggestion').text(err.sqlMessage);
+                      else
+                        $('#suggestion').text(err);
+                      $('#modalError').modal('show');
+                    }
                   });
                 });
               });

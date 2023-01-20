@@ -109,7 +109,7 @@ module.exports =  {
       if(err)
         cb(err,null)
       else{
-        var query = `select project,model,fw_version,app_version,status,fw_settings from devices where uid = ?`;
+        var query = `select project,model,fw_version,app_version,status,fw_settings,fw_release from devices where uid = ?`;
         var table = [deviceID]
         query = mysql.format(query,table);
         conn.query(query,function(err,rows){
@@ -191,5 +191,23 @@ module.exports =  {
         });
       }
     });
-  }
+  },
+
+  updateDeviceRelease : (deviceid,release,cb)=>{
+
+    db.getConnection((err,conn) => {
+      if(err)
+        cb(err,null)
+      else{
+        let query = "UPDATE ?? set ?? = ? where ?? = ?";
+        let table = ["devices","fw_release",release,"uid",deviceid];
+        query = mysql.format(query,table);
+        conn.query(query,function(err,rows){
+          db.close_db_connection(conn);
+          if(err) cb(err,null);
+          else cb(null,rows);
+        });
+      }
+    });
+  },
 };

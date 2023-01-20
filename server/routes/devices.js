@@ -42,4 +42,7 @@ router.route("/:device_id/jscode")
 
   .get(Device.getJSCode)
 
+router.route("/:device_id/release")
+  .put(Device.updateDeviceRelease)
+
 module.exports =  router;
