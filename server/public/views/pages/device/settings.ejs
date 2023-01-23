@@ -14,7 +14,7 @@
   <%- include('../../partials/modal/error.ejs') %>
   <%- include('../../partials/modal/loading.ejs') %>
   <%- include('../../partials/modal/timeout.ejs') %>
-  
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
 
   <div class="container-fluid">
@@ -434,7 +434,6 @@
     });
 
     $("#mqttget").click(()=>{
-      console.log("mqttget button clicked");
       sendMessage("fw/mqtt/get","");
     });
 
@@ -496,19 +495,16 @@
         $(document).trigger("closeModalLoading"); // get confirmation
       }
 
-      if(topic.includes("mqtt")){
-        if(payload == "" || payload == null)
-          $('#modalLoading').modal('hide'); // set confirmation
-        else{
-          try{
-            payload = JSON.parse(payload)
-            document.querySelector('#mqtt_host').value = payload.host;
-            document.querySelector('#mqtt_port').value = payload.port;
-            document.querySelector('#mqtt_user').value = payload.user;
-            document.querySelector('#mqtt_pwd').value = payload.pass;
-            $('#modalLoading').modal('hide'); // get confirmation
-          }catch(e){ console.log(e);}
-        }
+      if(topic.endsWith("mqtt")){
+        try{
+          payload = JSON.parse(payload)
+          document.querySelector('#mqtt_host').value = payload.host;
+          document.querySelector('#mqtt_port').value = payload.port;
+          document.querySelector('#mqtt_user').value = payload.user;
+          document.querySelector('#mqtt_pwd').value = payload.pass;
+          $('#modalLoading').modal('hide'); // get confirmation
+        }catch(e){ console.log(e);}
+        $(document).trigger("closeModalLoading"); // get confirmation
       }
 
       if(topic.endsWith("set")){

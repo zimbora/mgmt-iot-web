@@ -1,6 +1,8 @@
 var path = require('path');
 var Joi = require('joi');
 var httpStatus = require('http-status-codes');
+const fs = require('fs');
+const crypto = require('crypto');
 
 var response = require('./response');
 
@@ -119,8 +121,11 @@ module.exports = {
   get : (req, res, next)=>{
 
     // send file
-    var file = path.join(__dirname, "../"+config.public_path+"/firmwares/"+req.params.fwId);
-    res.sendFile(file);
+    var filePath = path.join(__dirname, "../"+config.public_path+"/firmwares/"+req.params.fwId);
+    const file = fs.readFileSync(filePath);
+    const hash = crypto.createHash('md5').update(file).digest('hex');
+    res.set('Content-MD5', hash);
+    res.sendFile(filePath);
 
   },
 
