@@ -1,9 +1,12 @@
 var jwt = require('jsonwebtoken');
+var httpStatus = require('http-status-codes');
 
+var response = require('./response');
 var config = require('../../config/env');
 var User = require('../models/users');
 var Client = require('../models/clients');
 var Auth = require('../models/auth');
+var Firmware = require('../models/firmwares');
 
 function check_authentication(req, res, next) {
 
@@ -103,6 +106,27 @@ function respondJWT(req, res) {
   }
 }
 
+function fw_check_token(req,res,next){
+
+  let token = req.headers.token || req.query.token;
+  if(token == null)
+    response.error(res,httpStatus.BAD_REQUEST,"No token defined");
+  else{
+    Firmware.getFirmwareToken(token,req.params.fwId,(err,rows)=>{
+      if(err) response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      else if(rows == null || rows.length == 0) response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"token not valid");
+      else next();
+    })
+  }
+}
+
 module.exports = {
-  check_authentication, api_check_authentication, authenticate_email, authenticate, deauth, generateToken, respondJWT
+  check_authentication,
+  api_check_authentication,
+  authenticate_email,
+  authenticate,
+  deauth,
+  generateToken,
+  respondJWT,
+  fw_check_token
 };

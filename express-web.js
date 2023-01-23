@@ -28,7 +28,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 
-app.get('api/firmware',firmware.get)
+app.get('/api/firmware/:fwId',auth.fw_check_token,firmware.get)
 
 app.use('/api', auth.api_check_authentication,routes);
 

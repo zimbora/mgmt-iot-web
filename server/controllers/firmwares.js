@@ -1,4 +1,4 @@
-
+var path = require('path');
 var Joi = require('joi');
 var httpStatus = require('http-status-codes');
 
@@ -119,12 +119,9 @@ module.exports = {
   get : (req, res, next)=>{
 
     // send file
-    /*
-    Firmware.getDevices(req.params.client_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
-    */
+    var file = path.join(__dirname, "../"+config.public_path+"/firmwares/"+req.params.fwId);
+    res.sendFile(file);
+
   },
 
   addModel : (req,res,next)=>{

@@ -6,15 +6,13 @@ var CryptoJS = require("crypto-js");
 
 module.exports =  {
 
-  getFirmwareToken : (api_token,cb)=>{
-
-    return cb(false,false);
-    /*
+  getFirmwareToken : (fw_token,fwId,cb)=>{
+    
     db.getConnection((err,conn) => {
       if(err) cb(err,null)
       else{
-        var query = `select users.level,users.idusers,clients.idclients from ?? inner join clients where clients.api_token = ? and users.idusers = clients.users_idusers`;
-        var table = ["users",api_token];
+        var query = `select * from ?? where token = ? and filename = ?`;
+        var table = ["firmwares",fw_token,fwId];
         query = mysql.format(query,table);
         conn.query(query,function(err,rows){
           db.close_db_connection(conn);
@@ -23,7 +21,6 @@ module.exports =  {
         });
       }
     });
-    */
   },
 
   list : (cb)=>{
