@@ -1,18 +1,29 @@
 
 # mgmt-iot IoT device management platform
 
-mgmt-iot is a module to enable a web platform to configure and intereact with IoT devices.
-A special firmware have to be running on those IoT devices.
+mgmt-iot is a module to enable a web platform to configure and interact with IoT devices.
+A special firmware have to be running on those IoT devices [link](not_available_yet).
 For now, only esp32 architecture is supported.
 It can be used with wifi or bg95 modem.
 A link will be published here to download firmware, as soon as it is available
 
 This module also relies on a dedicated mqtt broker.
 This broker was developed to check authorizations before subscribe or publish calls.
-Please check this [link](not available for now) for more information about mqtt broker operation
+Please check this [link](https://github.com/zimbora/mqtt-broker-auth) for more information about mqtt broker operation
 The purpose of this broker is to allow users to connect directly to devices in which they have permissions for that.
 
 This module will enable the management of those permissions, as well as configure and interact with iot devices.
+
+Furthermore, without any development a device can be configured to have it's own Autorequests, Alarms or even a dedicated JavaScript code running in real time.
+JavaScript code can be changed at any time. The code is limited to some internal calls and JavaScript functions.
+
+All devices will have the most recent available firmware version. They can be configured to receive any version (nightmare) or only stable versions (stable).
+Firmware download can be done over http or https, it depends on how this platform was setup. This download is made automatically and is protected with SHA256 tokens.
+
+All devices are visible only to admin accounts. However, dedicated accounts can be created and configured to have access to one or more devices.
+
+It is not need to use this platform to interact with devices, yet only mqtt clients with the right granted permissions can have access to devices.
+Connecting to the mqtt broker auth service, any client can interact and acquire data in real time.
 
 ## MySql
 
