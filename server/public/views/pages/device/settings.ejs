@@ -93,6 +93,9 @@
                           <label class="input-group-text" for="inputGroupSelect31">keepalive</label>
                           <select class="form-select fwKeepaliveOption" id="_fwkeepalive_">
                           </select>
+                          <button id="keepaliveget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">
+                            <i class="bi bi-search"></i>
+                          </button>
                         </div>
                       </div>
                       <div class="col-sm-6">
@@ -100,6 +103,9 @@
                           <label class="input-group-text" for="inputGroupSelect31">logs level</label>
                           <select class="form-select fwLogsLevelOption" id="_fwlogslevel_">
                           </select>
+                          <button id="logLevelget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">
+                            <i class="bi bi-search"></i>
+                          </button>
                         </div>
                       </div>
                     </form>
@@ -189,7 +195,7 @@
                       </div>
                       <div class="col-md-4">
                         <button id="wifiget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
-                        <button id="wifiset" class="btn btn-primary btn-sm" type="submit" onclick="return false;">set</button>
+                        <button id="wifiset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
                       </div>
                     </form>
                   </div>
@@ -232,7 +238,7 @@
                       </div>
                       <div class="col-md-4">
                         <button id="mqttget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
-                        <button id="mqttset" class="btn btn-primary btn-sm" type="submit" onclick="return false;">set</button>
+                        <button id="mqttset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
                       </div>
                     </form>
                   </div>
@@ -277,7 +283,6 @@
       api.getDeviceInfo(deviceID,(err,res)=>{
         if(err) console.log(err.responseJSON.Message)
         else if(res.length > 0){
-          console.log(res[0])
           document.querySelector('#project').value = res[0].project;
           document.querySelector('#model').value = res[0].model;
           document.querySelector('#fw_version').value = res[0].fw_version;
@@ -391,12 +396,10 @@
     })
 
     $("#reboot").click(()=>{
-      console.log("reboot button clicked");
       sendMessage("fw/reboot/set","1");
     });
 
     $("#reset").click(()=>{
-      console.log("reset button clicked");
       action = "reset"
       $('#modal_warning_message').text("If you proceed all settings configured on the device will be restored for default settings")
       $('#modalConfirmation').modal('show');
@@ -435,6 +438,14 @@
 
     $("#mqttget").click(()=>{
       sendMessage("fw/mqtt/get","");
+    });
+
+    $("#keepaliveget").click(()=>{
+      sendMessage("fw/keepalive/get","");
+    });
+
+    $("#logLevelget").click(()=>{
+      sendMessage("fw/log/get","");
     });
 
     // called when the client connects
@@ -502,9 +513,30 @@
           document.querySelector('#mqtt_port').value = payload.port;
           document.querySelector('#mqtt_user').value = payload.user;
           document.querySelector('#mqtt_pwd').value = payload.pass;
-          $('#modalLoading').modal('hide'); // get confirmation
         }catch(e){ console.log(e);}
         $(document).trigger("closeModalLoading"); // get confirmation
+      }
+
+      if(topic.endsWith("keepalive")){
+        try{
+          payload = JSON.parse(payload)
+
+          var select = document.getElementById("_fwkeepalive_");
+          select.value = payload.period;
+
+        }catch(e){ console.log(e);}
+        $(document).trigger("closeModalLoading"); // set confirmation
+      }
+
+      if(topic.endsWith("log")){
+        try{
+          payload = JSON.parse(payload)
+
+          var select = document.getElementById("_fwlogslevel_");
+          select.value = payload.level;
+
+        }catch(e){ console.log(e);}
+        $(document).trigger("closeModalLoading"); // set confirmation
       }
 
       if(topic.endsWith("set")){
