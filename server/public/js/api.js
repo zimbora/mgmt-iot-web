@@ -427,7 +427,7 @@ var api = {
 
   // --- firmwares ---
 
-  // get all firmwares
+  // get all firmwares models
   getFWModels : function(cb){
 
     $.ajax({

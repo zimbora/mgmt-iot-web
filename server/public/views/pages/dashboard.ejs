@@ -8,43 +8,265 @@
 <body>
 
   <%- include('../partials/scripts.ejs') %>
-
   <%- include('../partials/navbar.ejs') %>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
 
   <div class="container-fluid">
       <div class="row flex-nowrap">
           <%- include('../partials/sidebar.ejs') %>
           <div class="col py-3">
+            <div class="content-header">
+              <h3>MQTT Broker Statistics</h3>
+            </div>
             <div class="row">
-              <div class="col-sm-8 mb-3 mb-sm-0">
-                <div class="content-header">
-                  <h5>Display MQTT Broker Statistics</h5>
-                </div>
-                <div class="card">
-                  <!--<h5 class="card-title">Special title treatment</h5>-->
-                    <div id="editor">
+
+                <div class="row" style="margin-top:2%">
+                  <div class="col-sm-3 mb-3 mb-sm-0">
+                  </div>
+                  <div class="col-sm-3 mb-3 mb-sm-0">
+                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
+                      <br>
+                      <h6 class="card-title" style="margin-left:5%">Registered devices:</h6>
+                      <br>
+                      <h2 id="registeredDevices" style="margin-left:30%" class="card-text"><b>10</b></h2>
                     </div>
-                </div>
-              </div>
-              <div class="col-sm-4 mb-2 mb-sm-0">
-                <div class="card">
-                  <div class="card-header">
-                    <p>Add something</p>
                   </div>
-                  <div class="card-body">
+                  <div class="col-sm-3 mb-3 mb-sm-0">
+                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
+                      <br>
+                      <h6 class="card-title" style="margin-left:5%">Registered clients:</h6>
+                      <br>
+                      <h2 id="registeredClients" style="margin-left:30%" class="card-text"><b>10</b></h2>
+                    </div>
                   </div>
                 </div>
-              </div>
+                <div class="row">
+                  <div class="col-sm-3 mb-3 mb-sm-0">
+                  </div>
+                  <div class="col-sm-3 mb-3 mb-sm-0">
+                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
+                      <br>
+                      <h6 class="card-title" style="margin-left:5%">Available Users</h6>
+                      <br>
+                      <h2 id="registeredUsers" style="margin-left:30%" class="card-text"><b>10</b></h2>
+                    </div>
+                  </div>
+                  <div class="col-sm-3 mb-3 mb-sm-0">
+                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
+                      <br>
+                      <h6 class="card-title" style="margin-left:5%">Available Devices Models:</h6>
+                      <br>
+                      <h2 id="registeredModels" style="margin-left:30%" class="card-text"><b>10</b></h2>
+                    </div>
+                  </div>
+                </div>
+
+            </div>
+            <div class="row py-3">
+              <!--<div class="col-sm-8 mb-3 mb-sm-0">-->
+                <!--<div class="card">-->
+                    <div class="row">
+                      <div class="col-sm-6 mb-3 mb-sm-0 mx-auto d-flex align-items-center" style="max-height:30rem; max-width:30rem;">
+                        <canvas id="myChart"></canvas>
+                      </div>
+                      <div class="col-sm-6 mb-3 mb-sm-0 mx-auto d-flex align-items-center" style="max-height:30rem;">
+                        <canvas id="myChart2"></canvas>
+                      </div>
+                    </div>
+                <!--</div>-->
+              <!--</div>-->
             </div>
           </div>
       </div>
   </div>
 
-  <!-- check link to more import options https://cdnjs.com/libraries/ace -->
-  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.js" integrity="sha512-s57ywpCtz+4PU992Bg1rDtr6+1z38gO2mS92agz2nqQcuMQ6IvgLWoQ2SFpImvg1rbgqBKeSEq0d9bo9NtBY0w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.js" integrity="sha512-WYlXqL7GPpZL2ImDErTX0RMKy5hR17vGW5yY04p9Z+YhYFJcUUFRT31N29euNB4sLNNf/s0XQXZfzg3uKSoOdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+
+  var ctx = document.getElementById('myChart');
+  var ctx2 = document.getElementById('myChart2');
+  var online_count = 0;
+  var offline_count = 0;
+  var switchedOff_count = 0;
+
+  const Utils = {
+    CHART_COLORS : {
+      red: 'rgb(255, 99, 132)',
+      orange: 'rgb(255, 159, 64)',
+      yellow: 'rgb(255, 205, 86)',
+      green: 'rgb(75, 192, 192)',
+      blue: 'rgb(54, 162, 235)',
+      purple: 'rgb(153, 102, 255)',
+      grey: 'rgb(201, 203, 207)'
+    }
+  }
+
+  $(document).ready(()=>{
+
+    api.getDevices((err,rows)=>{
+      if(err) console.log(err)
+      else{
+        document.getElementById('registeredDevices').innerHTML = rows.length
+        rows.forEach((item,i)=>{
+          if(item.status == "online")
+            online_count++;
+          else
+            offline_count++;
+          if(i == rows.length-1){
+            const data = {
+              labels: [
+                'Online',
+                'Offline',
+                'Switched Off'
+              ],
+              datasets: [{
+                label: 'Devices Status',
+                data: [online_count, offline_count, switchedOff_count],
+                backgroundColor: [
+                  Utils.CHART_COLORS.blue,
+                  Utils.CHART_COLORS.orange,
+                  Utils.CHART_COLORS.red
+                ],
+                hoverOffset: 4
+              }]
+            };
+
+            const config = {
+              type: 'doughnut',
+              data: data,
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: 'top',
+                  },
+                  title: {
+                    display: true,
+                    text: 'Devices Statistics'
+                  }
+                }
+              },
+            };
+
+            new Chart(ctx, config);
+          }
+        })
+      }
+    })
+
+    const DATA_COUNT = 7;
+    const NUMBER_CFG = {count: DATA_COUNT, min: -100, max: 100};
+
+    const labels = [6,5,4,3,2,1,0];
+    const data2 = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'MQTT Messages',
+          fill: false,
+          backgroundColor: Utils.CHART_COLORS.blue,
+          borderColor: Utils.CHART_COLORS.blue,
+          data: [6,4,3,6,4,5,4],
+        }, {
+          label: 'DB requests',
+          fill: false,
+          backgroundColor: Utils.CHART_COLORS.grey,
+          borderColor: Utils.CHART_COLORS.grey,
+          borderDash: [5, 5],
+          data: [8,9,8,7,6,8,9],
+        }, {
+          label: 'MQTT user data',
+          backgroundColor: Utils.CHART_COLORS.orange,
+          borderColor: Utils.CHART_COLORS.orange,
+          data: [3,2,3,3,2,0,1],
+          fill: true,
+        }
+      ]
+    };
+
+    const config2 = {
+      type: 'line',
+      data: data2,
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Server load'
+          },
+        },
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true,
+              text: 'last hours'
+            }
+          },
+          y: {
+            display: true,
+            title: {
+              display: true,
+              text: 'kB/s'
+            }
+          }
+        }
+      },
+    };
+
+    new Chart(ctx2, config2);
+
+    api.getUsers((err,rows)=>{
+      document.getElementById('registeredClients').innerHTML = rows.length
+    })
+
+    api.getClients((err,rows)=>{
+      document.getElementById('registeredUsers').innerHTML = rows.length
+    })
+
+    api.getFWModels((err,rows)=>{
+      document.getElementById('registeredModels').innerHTML = rows.length
+    })
+
+
+    api.getMqttCredentials((err,res)=>{
+
+      // connect the client
+      if(res != null && res.length > 0){
+
+        client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, res[0].idclients);
+
+        // set callback handlers
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
+
+        client.connect({
+          userName:res[0].idusers,
+          password:res[0].password,
+          onSuccess:onConnect
+        });
+      }
+    })
+
+    // called when the client connects
+    function onConnect() {
+      // Once a connection has been made, make a subscription and send a message.
+      console.log("connected")
+    }
+
+    // called when the client loses its connection
+    function onConnectionLost(responseObject) {
+      console.log("disconnected")
+    }
+
+    function onMessageArrived(message) {}
+
+  });
 
   </script>
 </body>
