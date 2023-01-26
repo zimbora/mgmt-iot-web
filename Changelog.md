@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.0.5
+  - Security issue fix
+  
 ## Version 1.0.4
   - supports keepalive and log read in device/settings page
   - adds main dashboard, removes db packets out of order warning

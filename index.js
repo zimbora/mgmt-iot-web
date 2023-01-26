@@ -1,6 +1,8 @@
 
 var web = require('./express-web');
 
+var device = require('./server/models/devices.js');
+
 module.exports = {
 
   init : (config)=>{
@@ -16,5 +18,11 @@ module.exports = {
 
   path : ()=>{
     return __dirname+'/server/public/views';
+  },
+
+  deviceInfo : (deviceID,cb)=>{
+    device.getInfo(deviceID,(err,rows)=>{
+      return cb(err,rows);
+    })
   }
 }

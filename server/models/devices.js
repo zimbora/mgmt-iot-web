@@ -109,7 +109,7 @@ module.exports =  {
       if(err)
         cb(err,null)
       else{
-        var query = `select project,model,fw_version,app_version,status,fw_settings,fw_release from devices where uid = ?`;
+        var query = `select project,model,fw_version,app_version,status,fw_settings,app_settings,fw_release from devices where uid = ?`;
         var table = [deviceID]
         query = mysql.format(query,table);
         conn.query(query,function(err,rows){
