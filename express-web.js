@@ -183,10 +183,6 @@ app.get('/device/:device_id/jscode',(req,res)=>{
   res.render(path.join(__dirname, config.public_path+'/views/pages/device/jscode'),{user:req.user,page:'JSCODE'});
 });
 
-app.get('/device/:device_id/rs485',(req,res)=>{
-  res.render(path.join(__dirname, config.public_path+'/views/pages/device/rs485'),{user:req.user,page:'RS485'});
-});
-
 if(typeof middleware !== 'undefined')
   app.use(middleware);
 else{
