@@ -7,7 +7,7 @@ var CryptoJS = require("crypto-js");
 module.exports =  {
 
   getFirmwareToken : (fw_token,fwId,cb)=>{
-    
+
     db.getConnection((err,conn) => {
       if(err) cb(err,null)
       else{
@@ -57,14 +57,14 @@ module.exports =  {
     });
   },
 
-  add : (filename,originalname,version,model,cb)=>{
+  add : (filename,originalname,fw_version,app_version,model,cb)=>{
 
     db.getConnection((err,conn) => {
       if(err)
         cb(err,null)
       else{
-        let query = "select * from ?? where ?? = ? and ?? = ?";
-        let table = ["firmwares","version",version,"fwModel_name",model];
+        let query = "select * from ?? where ?? = ? and ?? = ? and ?? = ?";
+        let table = ["firmwares","fw_version",fw_version,"app_version",app_version,"fwModel_name",model];
         query = mysql.format(query,table);
         conn.query(query,function(err,rows){
           if(err){
@@ -76,13 +76,13 @@ module.exports =  {
           }else{
 
             var SHA256 = require("crypto-js/sha256");
-            let message = originalname+"\º~"+version;
+            let message = originalname+"\º~"+fw_version+app_version;
             let key = String(Date.now()/3621)
             var token = CryptoJS.HmacSHA256(message, key).toString();
             //let token = CryptoJS.AES.encrypt(originalname,version).toString();
 
-            let query = "INSERT INTO ?? (??,??,??,??,??) VALUES (?,?,?,?,?)";
-            let table = ["firmwares","filename","originalname","version","fwModel_name","token",filename,originalname,version,model,token];
+            let query = "INSERT INTO ?? (??,??,??,??,??,??) VALUES (?,?,?,?,?,?)";
+            let table = ["firmwares","filename","originalname","fw_version","app_version","fwModel_name","token",filename,originalname,fw_version,app_version,model,token];
             query = mysql.format(query,table);
             conn.query(query,function(err,rows){
               db.close_db_connection(conn);

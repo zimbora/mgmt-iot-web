@@ -17,23 +17,24 @@ module.exports = {
       response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"No files were uploaded");
     }
 
-    const { version } = req.body;
-    if(version == null){
-      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"version not defined");
+    const { fw_version,app_version } = req.body;
+    if(fw_version == null){
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"fw version not defined");
+    }
+    if(app_version == null){
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"app version not defined");
     }
 
-    //const file = req.file;
-    console.log(req.file)
-
-    console.log("version:",version)
+    //console.log(req.file)
 
     let firmware = req.file;
     console.log("filename:",firmware.filename)
     console.log("firmware name:",firmware.originalname)
-    console.log("version:",version)
+    console.log("fw_version:",fw_version)
+    console.log("app_version:",app_version)
     console.log("model:",req.params.model_id)
 
-    Firmware.add(firmware.filename,firmware.originalname,version,req.params.model_id,(err,rows)=>{
+    Firmware.add(firmware.filename,firmware.originalname,fw_version,app_version,req.params.model_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     })

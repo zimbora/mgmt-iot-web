@@ -569,11 +569,12 @@ var api = {
   },
 
   // add permission to client to access device
-  addFirmware : (file,model,version,cb)=>{
+  addFirmware : (file,model,fw_version,app_version,cb)=>{
 
     const formData = new FormData();
 
-    formData.append('version', version);
+    formData.append('fw_version', fw_version);
+    formData.append('app_version', app_version);
     formData.append('file', file);
 
     fetch(Settings.api+"/firmware/"+model, {

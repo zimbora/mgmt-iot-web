@@ -32,7 +32,8 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th>version</th>
+                            <th>fw version</th>
+                            <th>app version</th>
                             <th>release</th>
                             <th>filename</th>
                         </tr>
@@ -56,6 +57,10 @@
                       <div class="input-group py-2">
                         <label class="input-group-text" for="inputGroupSelect23">FW version</label>
                         <input type="text" id="_fwversion_" class="form-control" placeholder="type your version in format xx.yy.zz">
+                      </div>
+                      <div class="input-group py-2">
+                        <label class="input-group-text" for="inputGroupSelect23">App version</label>
+                        <input type="text" id="_appversion_" class="form-control" placeholder="type your app version in format xx.yy.zz">
                       </div>
                       <div class="py-2">
                         <input class="form-control" type="file" id="formFile">
@@ -86,7 +91,7 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.id,item.version,item.release,item.originalname);
+            addRow(item.id,item.fw_version,item.app_version,item.release,item.originalname);
             if(i == res.length-1){
               $(".fwReleaseOption").change((event)=>{
                 console.log("option changed")
@@ -123,10 +128,11 @@
 
     $("#submit_fw").click(()=>{
       let model = $("#_fwmodel_").val();
-      let version = $("#_fwversion_").val();
+      let fw_version = $("#_fwversion_").val();
+      let app_version = $("#_appversion_").val();
       var input = document.getElementById("formFile");
       var file = input.files[0];
-      api.addFirmware(file,model,version,(err,res)=>{
+      api.addFirmware(file,model,fw_version,app_version,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           if(err.hasOwnProperty("sqlMessage"))
@@ -145,13 +151,14 @@
                             </option>`);
     }
 
-    function addRow(id,version,release,filename){
+    function addRow(id,fw_version,app_version,release,filename){
 
       t.row.add([`
         <button id="`+id+`" onclick="deleteFirmware('`+id+`');" type="button" class="delete btn btn-danger btn-sm">
           <i class="fa-sharp fa-solid fa-trash"></i>
         </button>`,
-        version,
+        fw_version,
+        app_version,
         `<select class="form-select fwReleaseOption" id="`+id+`">
           <option selected>`+release+`</option>
           <option value="nightmare">nightmare</option>
