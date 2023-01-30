@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.0.7
+  - supports fw and app version control
+  
 ## Version 1.0.6
  - RS485 module removed
 

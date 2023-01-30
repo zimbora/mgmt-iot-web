@@ -6,6 +6,7 @@ function connect(config, cb){
   pool      =    mysql.createPool({
       connectionLimit : 100,
       host     : config.db.host,
+      port     : config.db.port,
       user     : config.db.user,
       password : config.db.pwd,
       database : config.db.name,
