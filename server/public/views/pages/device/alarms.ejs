@@ -237,7 +237,8 @@
         text = text.replace(/\n/g,'');
         try{
           JSON.parse(text)
-          sendAlarms(JSON.stringify(text));
+          //sendAlarms(JSON.stringify(text));
+          sendAlarms(text);
         }catch(e){
           $('#error').text("Not JSON");
           $('#suggestion').text("check if file has comments");

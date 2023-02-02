@@ -263,7 +263,8 @@
 
         try{
           JSON.parse(text)
-          sendARs(JSON.stringify(text));
+          //sendARs(JSON.stringify(text));
+          sendARs(text);
         }catch(e){
           $('#error').text("Not JSON");
           $('#suggestion').text("check if file has comments");
