@@ -282,7 +282,7 @@
 
       api.getDeviceInfo(deviceID,(err,res)=>{
         if(err) console.log(err.responseJSON.Message)
-        else if(res.length > 0){
+        else if(res.length > 0 && res[0] != null){
           document.querySelector('#project').value = res[0].project;
           document.querySelector('#model').value = res[0].model;
           document.querySelector('#fw_version').value = res[0].fw_version;
@@ -302,27 +302,29 @@
             }
           }
 
-          console.log(res[0])
           addSelectedOption('#_fwrelease_',res[0].fw_release);
           addOption('#_fwrelease_',"stable");
           addOption('#_fwrelease_',"nightmare");
 
-          if(res[0].fw_settings.hasOwnProperty("keepalive") && res[0].fw_settings.keepalive.hasOwnProperty("period")){
-            keepalive_arr.forEach((item,i)=>{
-              if(item.value == res[0].fw_settings.keepalive.period)
+          if(res[0].fw_settings != null){
+            if(res[0].fw_settings.hasOwnProperty("keepalive") && res[0].fw_settings.keepalive.hasOwnProperty("period")){
+              keepalive_arr.forEach((item,i)=>{
+                if(item.value == res[0].fw_settings.keepalive.period)
                 addSelectedOption2('#_fwkeepalive_',item.value,item.description);
-            });
+              });
+            }
+            if(res[0].fw_settings.hasOwnProperty("log") && res[0].fw_settings.log.hasOwnProperty("level")){
+              logs_level_arr.forEach((item,i)=>{
+                if(item.value == res[0].fw_settings.log.level)
+                addSelectedOption2('#_fwlogslevel_',item.value,item.description);
+              });
+            }
           }
+
           keepalive_arr.forEach((item,i)=>{
             addOption2('#_fwkeepalive_',item.value,item.description);
           })
 
-          if(res[0].fw_settings.hasOwnProperty("log") && res[0].fw_settings.log.hasOwnProperty("level")){
-            logs_level_arr.forEach((item,i)=>{
-              if(item.value == res[0].fw_settings.log.level)
-                addSelectedOption2('#_fwlogslevel_',item.value,item.description);
-            });
-          }
           logs_level_arr.forEach((item,i)=>{
             addOption2('#_fwlogslevel_',item.value,item.description);
           })
