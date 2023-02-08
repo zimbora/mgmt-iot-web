@@ -172,6 +172,7 @@
                   </select>
                 </div>
               </div>
+              <% if(device.model.endsWith("WIFI")){ %>
               <div class="col-sm-12 mb-4 mb-sm-4">
                 <div class="card">
                   <div class="card-header">
@@ -201,6 +202,56 @@
                   </div>
                 </div>
               </div>
+              <% }else if(device.model.endsWith("LTE")){ %>
+              <div class="col-sm-12 mb-4 mb-sm-4">
+                <div class="card">
+                  <div class="card-header">
+                    <p>LTE</p>
+                  </div>
+                  <div class="card-body">
+                    <form class="row g-3 needs-validation" validate>
+                      <div class="col-md-4">
+                        <label for="validationCustom11" class="form-label">APN</label>
+                        <input type="text" class="form-control" id="lteapn" value="" required>
+                        <div class="valid-feedback">
+                          Looks good!
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="validationCustom12" class="form-label">User</label>
+                        <input type="text" class="form-control" id="lteuser" value="">
+                        <div class="valid-feedback">
+                          Looks good!
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="validationCustom13" class="form-label">Password</label>
+                        <input type="text" class="form-control" id="ltepassword" value="">
+                        <div class="valid-feedback">
+                          Looks good!
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="validationCustom13" class="form-label">Cops</label>
+                        <input type="number" class="form-control" id="ltecops" value="">
+                        <div class="valid-feedback">
+                          Looks good!
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="validationCustom13" class="form-label">Tech</label>
+                        <select class="form-select fwTechOption" id="_lte_tech_">
+                        </select>
+                      </div>
+                      <div class="col-md-4">
+                        <button id="wifiget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
+                        <button id="wifiset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <% } %>
               <div class="col-sm-12 mb-4 mb-sm-4">
                 <div class="card">
                   <div class="card-header">
@@ -379,6 +430,8 @@
               client.connect({
                 userName:res[0].idusers,
                 password:res[0].password,
+                useSSL:Settings.mqtt.ssl,
+                timeout:3,
                 onSuccess:onConnect
               });
             }

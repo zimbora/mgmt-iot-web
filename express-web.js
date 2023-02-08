@@ -14,6 +14,8 @@ var user = require('./server/controllers/users');
 var client = require('./server/controllers/clients');
 var firmware = require('./server/controllers/firmwares');
 
+var Device = require('./server/models/devices');
+
 var serveIndex = require('serve-index'); // well known
 
 const app = express();
@@ -26,7 +28,6 @@ app.use(bodyParser.json());
 app.use(session({secret: config.jwtSecret}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-
 
 app.get('/api/firmware/:fwId/download',auth.fw_check_token,firmware.get)
 
@@ -163,7 +164,11 @@ app.get('/device/:device_id',(req,res)=>{
 //app.get('/device/:device_id/dashboard',(req,res)=>{
 
 app.get('/device/:device_id/settings',(req,res)=>{
-  res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{user:req.user,page:'Settings'});
+  Device.getInfo(req.params.device_id,(err,rows)=>{
+    rows[0].model = "SLIM_GW_LTE";
+    if(rows != null && rows.length > 0)
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{device:rows[0],user:req.user,page:'Settings'});
+  });
 });
 
 app.get('/device/:device_id/access',(req,res)=>{

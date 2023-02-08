@@ -1,8 +1,18 @@
 # Changelog
 
+## Version 1.0.11
+ - supports mqtt over wss on https connections
+
+## Version 1.0.10
+ - Not useful
+
+## Version 1.0.9
+  - fixes json struct send msg for alarms and ARs, adds new field on db for setpoints JSON file
+  - fixes null responses for device info
+
 ## Version 1.0.8
   - adds port var to mysql connection
-  
+
 ## Version 1.0.7
   - supports fw and app version control
 
