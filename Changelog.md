@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 1.0.13
+ - remove debug logs
+ - adds modem support
+ - fixes Autorequests, Alarms and JSCode acknowledgment
+
+## Version 1.0.12
+ - adds some debug logs
+
 ## Version 1.0.11
  - supports mqtt over wss on https connections
 

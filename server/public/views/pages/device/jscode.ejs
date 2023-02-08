@@ -224,6 +224,8 @@ gpio.write(led.pin, led.on);
                 client.connect({
                   userName:res[0].idusers,
                   password:res[0].password,
+                  useSSL:Settings.mqtt.ssl,
+                  timeout:3,
                   onSuccess:onConnect
                 });
               }
@@ -280,9 +282,11 @@ gpio.write(led.pin, led.on);
         else if(topic.endsWith("debug"))
           $('#consoleArea').val(date.toJSON()+" [debug] : "+payload+currentText);
 
-        if(topic.endsWith("js/code/set")){
-          $(document).trigger("closeModalLoading"); // get confirmation
-        }
+          if(topic.endsWith("set")){
+            if(payload == "" || payload == null || payload === 'undefined'){
+              $(document).trigger("closeModalLoading"); // set confirmation
+            }
+          }
       }
 
       function sendScript(payload){

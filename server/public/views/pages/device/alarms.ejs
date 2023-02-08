@@ -157,6 +157,8 @@
               client.connect({
                 userName:res[0].idusers,
                 password:res[0].password,
+                useSSL:Settings.mqtt.ssl,
+                timeout:3,
                 onSuccess:onConnect
               });
             }
@@ -205,8 +207,10 @@
           button.classList.toggle("btn-danger",true);
       }
 
-      if(topic.endsWith("alarm/set")){
-        $(document).trigger("closeModalLoading"); // get confirmation
+      if(topic.endsWith("set")){
+        if(payload == "" || payload == null || payload === 'undefined'){
+          $(document).trigger("closeModalLoading"); // set confirmation
+        }
       }
     }
 

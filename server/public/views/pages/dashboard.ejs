@@ -248,6 +248,8 @@
         client.connect({
           userName:res[0].idusers,
           password:res[0].password,
+          useSSL:Settings.mqtt.ssl,
+          timeout:3,
           onSuccess:onConnect
         });
       }

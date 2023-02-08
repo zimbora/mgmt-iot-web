@@ -212,28 +212,35 @@
                     <form class="row g-3 needs-validation" validate>
                       <div class="col-md-4">
                         <label for="validationCustom11" class="form-label">APN</label>
-                        <input type="text" class="form-control" id="lteapn" value="" required>
+                        <input type="text" class="form-control" id="_lte_apn_" value="" required>
                         <div class="valid-feedback">
                           Looks good!
                         </div>
                       </div>
                       <div class="col-md-4">
                         <label for="validationCustom12" class="form-label">User</label>
-                        <input type="text" class="form-control" id="lteuser" value="">
+                        <input type="text" class="form-control" id="_lte_user_" value="">
                         <div class="valid-feedback">
                           Looks good!
                         </div>
                       </div>
                       <div class="col-md-4">
                         <label for="validationCustom13" class="form-label">Password</label>
-                        <input type="text" class="form-control" id="ltepassword" value="">
+                        <input type="text" class="form-control" id="_lte_pwd_" value="">
                         <div class="valid-feedback">
                           Looks good!
                         </div>
                       </div>
                       <div class="col-md-4">
                         <label for="validationCustom13" class="form-label">Cops</label>
-                        <input type="number" class="form-control" id="ltecops" value="">
+                        <input type="number" class="form-control" id="_lte_cops_" value="">
+                        <div class="valid-feedback">
+                          Looks good!
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <label for="validationCustom13" class="form-label">Band</label>
+                        <input type="number" class="form-control" id="_lte_band_" value="">
                         <div class="valid-feedback">
                           Looks good!
                         </div>
@@ -244,8 +251,8 @@
                         </select>
                       </div>
                       <div class="col-md-4">
-                        <button id="wifiget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
-                        <button id="wifiset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
+                        <button id="lteget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
+                        <button id="lteset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
                       </div>
                     </form>
                   </div>
@@ -329,6 +336,15 @@
       {value:5,description:"Error"}
     ]
 
+    var lte_tech_arr = [
+      {value:0,description:"ND"},
+      {value:1,description:"GSM"},
+      {value:2,description:"GPRS"},
+      {value:3,description:"NB2"},
+      {value:4,description:"CATM1"},
+      {value:5,description:"AUTO"}
+    ]
+
     $(document).ready(()=>{
 
       api.getDeviceInfo(deviceID,(err,res)=>{
@@ -345,6 +361,16 @@
               document.querySelector('#wifissid').value = res[0].fw_settings.wifi.ssid;
               document.querySelector('#wifipassword').value = res[0].fw_settings.wifi.pwd;
             }
+
+            if(res[0].fw_settings.hasOwnProperty("modem") && res[0].fw_settings.modem != null){
+              document.querySelector('#_lte_apn_').value = res[0].fw_settings.modem.apn;
+              document.querySelector('#_lte_user_').value = res[0].fw_settings.modem.user;
+              document.querySelector('#_lte_pwd_').value = res[0].fw_settings.modem.pwd;
+              document.querySelector('#_lte_cops_').value = res[0].fw_settings.modem.cops;
+              document.querySelector('#_lte_band_').value = res[0].fw_settings.modem.band;
+              document.querySelector('#_lte_tech_').value = res[0].fw_settings.modem.tech;
+            }
+
             if(res[0].fw_settings.hasOwnProperty("mqtt") && res[0].fw_settings.mqtt != null){
               document.querySelector('#mqtt_host').value = res[0].fw_settings.mqtt.host;
               document.querySelector('#mqtt_port').value = res[0].fw_settings.mqtt.port;
@@ -370,6 +396,13 @@
                 addSelectedOption2('#_fwlogslevel_',item.value,item.description);
               });
             }
+
+            if(res[0].fw_settings.hasOwnProperty("modem") && res[0].fw_settings.modem.hasOwnProperty("tech")){
+              lte_tech_arr.forEach((item,i)=>{
+                if(item.value == res[0].fw_settings.modem.tech)
+                addSelectedOption2('#_lte_tech_',item.value,item.description);
+              });
+            }
           }
 
           keepalive_arr.forEach((item,i)=>{
@@ -378,6 +411,10 @@
 
           logs_level_arr.forEach((item,i)=>{
             addOption2('#_fwlogslevel_',item.value,item.description);
+          })
+
+          lte_tech_arr.forEach((item,i)=>{
+            addOption2('#_lte_tech_',item.value,item.description);
           })
 
           $(".fwReleaseOption").change((event)=>{
@@ -447,6 +484,8 @@
         sendMessage("fw/reset/set","1");
       }else if(action == "set_wifi"){
         sendMessage("fw/settings/wifi/set",JSON.stringify(data));
+      }else if(action == "set_lte"){
+        sendMessage("fw/settings/modem/set",JSON.stringify(data));
       }
       action = "";
     })
@@ -475,6 +514,30 @@
 
     $("#wifiget").click(()=>{
       sendMessage("fw/settings/wifi/get","");
+    });
+
+    $("#lteset").click(()=>{
+      let apn = document.querySelector('#_lte_apn_').value;
+      let user = document.querySelector('#_lte_user_').value;
+      let pwd = document.querySelector('#_lte_pwd_').value;
+      let cops = document.querySelector('#_lte_cops_').value;
+      let band = document.querySelector('#_lte_band_').value;
+      let tech = document.querySelector('#_lte_tech_').value;
+      data = {
+        apn : apn,
+        user : user,
+        pwd : pwd,
+        cops : cops,
+        band : band,
+        tech : tech
+      }
+      action = "set_lte";
+      $('#modal_warning_message').text("If wrong credentials were set, device can become offline after reboot")
+      $('#modalConfirmation').modal('show');
+    });
+
+    $("#lteget").click(()=>{
+      sendMessage("fw/settings/modem/get","");
     });
 
     $("#mqttset").click((event)=>{
@@ -558,6 +621,19 @@
           payload = JSON.parse(payload)
           document.querySelector('#wifissid').value = payload.ssid;
           document.querySelector('#wifipassword').value = payload.pwd;
+        }catch(e){ console.log(e)}
+        $(document).trigger("closeModalLoading"); // get confirmation
+      }
+
+      if(topic.endsWith("modem")){
+        try{
+          payload = JSON.parse(payload)
+          document.querySelector('#_lte_apn_').value = payload.apn;
+          document.querySelector('#_lte_user_').value = payload.user;
+          document.querySelector('#_lte_pwd_').value = payload.pwd;
+          document.querySelector('#_lte_cops_').value = payload.cops;
+          document.querySelector('#_lte_band_').value = payload.band;
+          document.querySelector('#_lte_tech_').value = payload.tech;
         }catch(e){ console.log(e)}
         $(document).trigger("closeModalLoading"); // get confirmation
       }
