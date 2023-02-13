@@ -350,6 +350,7 @@
       api.getDeviceInfo(deviceID,(err,res)=>{
         if(err) console.log(err.responseJSON.Message)
         else if(res.length > 0 && res[0] != null){
+
           document.querySelector('#project').value = res[0].project;
           document.querySelector('#model').value = res[0].model;
           document.querySelector('#fw_version').value = res[0].fw_version;
@@ -357,18 +358,24 @@
           project = res[0].project;
 
           if(res[0].hasOwnProperty("fw_settings") && res[0].fw_settings != null){
+
             if(res[0].fw_settings.hasOwnProperty("wifi") && res[0].fw_settings.wifi != null){
-              document.querySelector('#wifissid').value = res[0].fw_settings.wifi.ssid;
-              document.querySelector('#wifipassword').value = res[0].fw_settings.wifi.pwd;
+
+              if(document.querySelector('#wifissid') != null){
+                document.querySelector('#wifissid').value = res[0].fw_settings.wifi.ssid;
+                document.querySelector('#wifipassword').value = res[0].fw_settings.wifi.pwd;
+              }
             }
 
             if(res[0].fw_settings.hasOwnProperty("modem") && res[0].fw_settings.modem != null){
-              document.querySelector('#_lte_apn_').value = res[0].fw_settings.modem.apn;
-              document.querySelector('#_lte_user_').value = res[0].fw_settings.modem.user;
-              document.querySelector('#_lte_pwd_').value = res[0].fw_settings.modem.pwd;
-              document.querySelector('#_lte_cops_').value = res[0].fw_settings.modem.cops;
-              document.querySelector('#_lte_band_').value = res[0].fw_settings.modem.band;
-              document.querySelector('#_lte_tech_').value = res[0].fw_settings.modem.tech;
+              if(document.querySelector('#_lte_apn_') != null){
+                document.querySelector('#_lte_apn_').value = res[0].fw_settings.modem.apn;
+                document.querySelector('#_lte_user_').value = res[0].fw_settings.modem.user;
+                document.querySelector('#_lte_pwd_').value = res[0].fw_settings.modem.pwd;
+                document.querySelector('#_lte_cops_').value = res[0].fw_settings.modem.cops;
+                document.querySelector('#_lte_band_').value = res[0].fw_settings.modem.band;
+                document.querySelector('#_lte_tech_').value = res[0].fw_settings.modem.tech;
+              }
             }
 
             if(res[0].fw_settings.hasOwnProperty("mqtt") && res[0].fw_settings.mqtt != null){
@@ -420,6 +427,7 @@
           $(".fwReleaseOption").change((event)=>{
             $( ".fwReleaseOption option:selected" ).each(function() {
               let release = $( this ).text();
+              release = release.trim()
               api.updateDeviceRelease(deviceID,release,(err,res)=>{
                 if(err){
                   $('#error').text("Your request cannot be executed");
@@ -702,9 +710,7 @@
 
     function addSelectedOption(id,release){
 
-      $(id).append(`<option select value="${release}">
-                                 ${release}
-                            </option>`);
+      $(id).append(`<option select value="${release}">${release}</option>`);
     }
 
     function addOption(id,release){
@@ -716,9 +722,7 @@
 
     function addSelectedOption2(id,value,description){
 
-      $(id).append(`<option select value="${value}">
-                                 ${description}
-                            </option>`);
+      $(id).append(`<option select value="${value}">${description}</option>`);
     }
 
     function addOption2(id,value,description){

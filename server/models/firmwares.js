@@ -168,7 +168,7 @@ module.exports =  {
         cb(err,null)
       else{
         let query = "UPDATE ?? set ?? = ? where ?? = ?";
-        let table = ["firmwares","release",release,"id",id];
+        let table = ["firmwares","fw_release",release,"id",id];
         query = mysql.format(query,table);
         conn.query(query,function(err,rows){
           db.close_db_connection(conn);

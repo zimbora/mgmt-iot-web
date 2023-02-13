@@ -91,7 +91,7 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.id,item.fw_version,item.app_version,item.release,item.originalname);
+            addRow(item.id,item.fw_version,item.app_version,item.fw_release,item.originalname);
             if(i == res.length-1){
               $(".fwReleaseOption").change((event)=>{
                 console.log("option changed")
