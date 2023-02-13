@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 1.0.16
+- version to check if firmware download and upload was fixed
+
+## Version 1.0.15
+- fixes model forcing on express-web
+
+## Version 1.0.14
+- add logs for fileupload (already deleted for future versions)
+
 ## Version 1.0.13
  - remove debug logs
  - adds modem support

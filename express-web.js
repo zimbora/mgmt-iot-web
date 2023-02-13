@@ -165,7 +165,6 @@ app.get('/device/:device_id',(req,res)=>{
 
 app.get('/device/:device_id/settings',(req,res)=>{
   Device.getInfo(req.params.device_id,(err,rows)=>{
-    rows[0].model = "SLIM_GW_LTE";
     if(rows != null && rows.length > 0)
       res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{device:rows[0],user:req.user,page:'Settings'});
   });

@@ -25,15 +25,20 @@ module.exports = {
       response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"app version not defined");
     }
 
-    //console.log(req.file)
 
     let firmware = req.file;
+
+    if(!firmware.hasOwnProperty("filename"))
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"filename not defined");
+    if(!firmware.hasOwnProperty("filename"))
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"originalname not defined");
+    /*
     console.log("filename:",firmware.filename)
     console.log("firmware name:",firmware.originalname)
     console.log("fw_version:",fw_version)
     console.log("app_version:",app_version)
     console.log("model:",req.params.model_id)
-
+    */
     Firmware.add(firmware.filename,firmware.originalname,fw_version,app_version,req.params.model_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
@@ -122,7 +127,8 @@ module.exports = {
   get : (req, res, next)=>{
 
     // send file
-    var filePath = path.join(__dirname, "../"+config.public_path+"/firmwares/"+req.params.fwId);
+    var filePath = path.join(__dirname, "../public/firmwares/"+req.params.fwId);
+    console.log("filePath:",filePath)
     const file = fs.readFileSync(filePath);
     const hash = crypto.createHash('md5').update(file).digest('hex');
     res.set('Content-MD5', hash);

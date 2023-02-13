@@ -4,7 +4,10 @@ var config = require('../../config/env');
 
 // set up multer
 const multer = require('multer')
-const upload = multer({ dest: path.join(__dirname, "../../"+config.public_path + "/firmwares/") })
+
+//var upload;
+
+const  upload = multer({ dest: path.join(__dirname, "../public/firmwares/") })
 
 var Firmware = require('../controllers/firmwares')
 
@@ -12,6 +15,8 @@ const router = express.Router();
 
 router.use((req,res,next) => {
   //log.debug("firmware route");
+  console.log("current dir",__dirname);
+  console.log("dest:",path.join(__dirname, "../public/firmwares/"));
   next();
 });
 
