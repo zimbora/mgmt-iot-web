@@ -1,0 +1,27 @@
+<!-- Modal -->
+<div class="modal fade" id="modalEditClient" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalErrorHeader">Change Client Settings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <span class="input-group-text" >password</span>
+          <input type="text" id="_modalPasswordID_" class="form-control" placeholder="leave in blank to block access to platform" aria-label="Password" aria-describedby="basic-addon1">
+        </div>
+        <div class="input-group mb-3">
+          <label class="input-group-text" for="inputGroupSelect01">user type</label>
+          <select class="form-select users" id="_modalUserType_">
+            <!--<option default>client</option>-->
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="modalChangeClientSettings" class="btn btn-primary" data-bs-dismiss="modal">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>

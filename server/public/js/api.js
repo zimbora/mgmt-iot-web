@@ -302,7 +302,7 @@ var api = {
     });
   },
   // update mqtt client
-  updateClient : (client,user,cb)=>{
+  updateClient : (client,pwd,user,cb)=>{
     fetch(Settings.api+"/clients", {
       method: 'PUT',
       headers: {
@@ -310,6 +310,7 @@ var api = {
       },
       body: JSON.stringify({
         clientID: client,
+        password: pwd,
         user: user
       })
     })

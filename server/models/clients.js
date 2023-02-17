@@ -9,7 +9,7 @@ var self = module.exports =  {
     db.getConnection((err,conn) => {
       if(err) cb(err,null)
       else{
-        var query = `select users.level,users.idusers,clients.idclients from ?? inner join clients where clients.idclients = ? and clients.token = ? and users.idusers = clients.users_idusers`;
+        var query = `select users.level,users.idusers,clients.idclients,clients.name,clients.avatar from ?? inner join clients where clients.idclients = ? and clients.token = ? and users.idusers = clients.users_idusers`;
         var table = ["users",id,pwd];
         query = mysql.format(query,table);
         conn.query(query,function(err,rows){
@@ -96,7 +96,7 @@ var self = module.exports =  {
     });
   },
 
-  update : (clientid,user,cb)=>{
+  update : (clientid,user,password,cb)=>{
 
     db.getConnection((err,conn) => {
       if(err)
@@ -169,8 +169,8 @@ var self = module.exports =  {
     db.getConnection((err,conn) => {
       if(err) cb(err,null)
       else{
-        var query = `select * from ?? where ?? = ?`;
-        var table = ["clients","gmail",email];
+        var query = `select users.level,users.idusers,clients.idclients,clients.name,clients.avatar from ?? inner join clients where clients.gmail = ? and users.idusers = clients.users_idusers`;
+        var table = ["users",email];
         query = mysql.format(query,table);
         conn.query(query,function(err,rows){
           db.close_db_connection(conn);

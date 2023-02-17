@@ -84,6 +84,7 @@
 
   <%- include('../partials/modal/confirmation.ejs') %>
   <%- include('../partials/modal/error.ejs') %>
+  <%- include('../partials/modal/editClient.ejs') %>
 
   <script src="lib/markdown.js"></script>
 
@@ -106,6 +107,7 @@
     `);
 
     $(document).ready(function () {
+
       t = $('#clients').DataTable();
       api.getClients((err,res)=>{
         if(err) console.log("err:",err)
@@ -120,48 +122,96 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addOption(item.idusers)
+            addOption("#_userID_",item.idusers)
           });
         }
       })
     });
 
-    function addOption(user_id){
+    function addOption(element, user_id){
 
-      $('#_userID_').append(`<option value="${user_id}">
+      $(element).append(`<option value="${user_id}">
                                  ${user_id}
                             </option>`);
     }
 
     function addRow(client_id,password,api_token,user,registered){
       t.row.add([`
-        <button id="`+client_id+`" onclick="deleteClient('`+client_id+`');" type="button" class="delete btn btn-secondary btn-sm">
-          <i class="fa-solid fa-user-xmark"></i>
-        </button>`,
+        <div class="btn-group">
+          <button onclick="deleteClient('`+client_id+`');" type="button" class="delete btn btn-secondary btn-sm">
+            <i class="fa-solid fa-user-xmark"></i>
+          </button>
+          <button onclick="editClient('`+client_id+`,`+password+`,`+user+`');" type="button" class="edit btn btn-primary btn-sm">
+            <i class="fa-solid fa-user-pen"></i>
+          </button>
+        </div>`,
         `<a href="./client/`+client_id+`">`+client_id+`</a>`,
-        password,user,registered]).draw(true);
-
-        //password,api_token,user,registered]).draw(true);
+        password,
+        user,
+        registered]).draw(true);
     }
 
     function deleteClient(client_id){
-      console.log(client_id)
       id = client_id;
       $('#modalConfirmation').modal('show');
     }
 
+    function editClient(args){
+      let arr = args.split(",");
+      let client_id = arr[0];
+      let pwd = arr[1];
+      let user_type = arr[2];
+      id = client_id;
+
+      const myInput = document.getElementById('_modalPasswordID_');
+      // Change the value of the input element
+      if(typeof pwd !== "undefined")
+        myInput.value = pwd;
+
+      const mySelect = document.getElementById('_modalUserType_');
+      while (mySelect.options.length > 0) {
+        mySelect.remove(0);
+    }
+      api.getUsers((err,res)=>{
+        if(err) console.log("err:",err)
+        else{
+          res.forEach((item, i) => {
+            addOption("#_modalUserType_",item.idusers)
+            if(i == res.length-1){
+              mySelect.value = user_type;
+            }
+          });
+        }
+      })
+
+      $('#modalEditClient').modal('show');
+    }
+
     $("#modalProceed").click(()=>{
-      console.log("id:",id)
       api.deleteClient(id,(err,res)=>{
         if(err){
-          console.log(err)
-          //$('#modalErrorBody').text(err);
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);
           $('#modalError').modal('show');
         }else location.reload();
       });
     })
+
+    $("#modalChangeClientSettings").click(()=>{
+      let pwd = $("#_modalPasswordID_").val();
+      let user_type = $("#_modalUserType_").val();
+      console.log("edit client:",id);
+      console.log("password:",pwd);
+      console.log("user_type:",user_type);
+
+      api.updateClient(id,pwd,user_type,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    });
 
     $("#submit").click(()=>{
       let client = $("#_clientID_").val();

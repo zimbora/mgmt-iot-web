@@ -47,7 +47,7 @@ module.exports = {
     const val = Joi.object({
       clientID: Joi.string().required(),
       user: Joi.string().required(),
-      password: Joi.string().required()
+      password: Joi.string().required().allow(""),
     }).validate(req.body);
 
     if(val.error){

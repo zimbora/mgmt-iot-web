@@ -75,7 +75,6 @@ function authenticate(req, res, next) {
 
 // web client
 async function authenticate_google(req,res,next){
-  console.log("authenticate_google")
 
   let access_token = "";
   if(req.query.token != null)
@@ -94,15 +93,14 @@ async function authenticate_google(req,res,next){
       audience: clientId
     });
     const data = ticket.getPayload();
-     log.debug(data.name);
-     log.debug(data.email);
+     //log.debug(data.name);
+     //log.debug(data.email);
      //log.debug(data.picture);
      Client.findGoogleClient(data.email,(err,result)=>{
        console.log(err);
        if(err) res.json({message:"Failure"});
        else if(result == null){
          // registe user
-         console.log(data);
          Client.registerGoogleClient(config.new_client.user_type,data,(err,result)=>{
            if(err){
              console.log(err);
@@ -145,7 +143,9 @@ function generateToken(req, res, next) {
   const jwtPayload = {
     id : req.user.idclients,
     type: req.user.idusers,
-    level: req.user.level
+    level: req.user.level,
+    name: req.user.name || req.user.idclients,
+    avatar: req.user.avatar,
   };
   const jwtData = {
     expiresIn: config.jwtDuration,
