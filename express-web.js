@@ -64,11 +64,18 @@ app.post('/login',validate.body([{
     validator_functions: [(param) => {return param.length > 1}]
   }]),auth.authenticate,auth.generateToken,auth.respondJWT);
 
+app.post('/login/google/user',validate.body([{
+    param_key: 'token',
+    required: true,
+    type: 'string',
+    validator_functions: [(param) => {return param.length > 1}]
+  }]),auth.authenticate_google,auth.generateToken,auth.respondJWT);
+
 app.use(auth.check_authentication,(req,res,next)=>{
   if(!req.user){
     log.warn("not authenticated")
     //res.render(path.join(__dirname, config.public_path+'/views/pages/login'));
-    res.render(path.join(__dirname, config.public_path+'/views/pages/login'));
+    res.render(path.join(__dirname, config.public_path+'/views/pages/login'),{googleclientID:config.googleClientId});
   }else{
     next()
   }
@@ -156,9 +163,9 @@ app.use('/device/:device_id',client.checkDeviceAccess,(req,res,next)=>{next()});
 app.get('/device/:device_id',(req,res)=>{
 //app.get('/device/:device_id',(req,res)=>{
   if(req.originalUrl.endsWith("/"))
-    res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "settings");
+    res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "dashboard");
   else
-    res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/settings");
+    res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/dashboard");
 });
 
 //app.get('/device/:device_id/dashboard',(req,res)=>{

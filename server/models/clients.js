@@ -2,7 +2,7 @@ var mysql = require('mysql2');
 var db = require('../controllers/db');
 var CryptoJS = require("crypto-js");
 
-module.exports =  {
+var self = module.exports =  {
 
   get : (id,pwd,cb)=>{
 
@@ -126,6 +126,57 @@ module.exports =  {
           db.close_db_connection(conn);
           if(err) cb(err,null);
           else cb(null,rows);
+        });
+      }
+    });
+  },
+
+  registerGoogleClient : (user,data,cb)=>{
+
+    let index = data.email.indexOf("@");
+
+    let clientId = "";
+    if(index > -1)
+      clientId = data.email.substring(0,index);
+    else return cb("something is wrong with your email",null);
+
+    self.add(clientId,user,"",(err,res)=>{
+      if(err)
+        return cb(err,null)
+        // get id associated to token
+      db.getConnection((err,conn) => {
+        if(err)
+          cb(err,null)
+        else{
+          let query = "UPDATE ?? set ??=?, ??=?, ??=? where idclients = ?";
+          let table = ["clients","gmail",data.email,"name",data.name,"avatar",data.picture,clientId];
+
+          query = mysql.format(query,table);
+          conn.query(query,function(err,rows){
+            db.close_db_connection(conn);
+            if(err) cb(err,null);
+            else if(rows.affectedRows > 0) cb(null,rows);
+            else cb(null,null);
+          });
+        }
+      });
+    })
+  },
+
+  findGoogleClient : (email,cb)=>{
+
+    // get id associated to token
+    db.getConnection((err,conn) => {
+      if(err) cb(err,null)
+      else{
+        var query = `select * from ?? where ?? = ?`;
+        var table = ["clients","gmail",email];
+        query = mysql.format(query,table);
+        conn.query(query,function(err,rows){
+          db.close_db_connection(conn);
+          if(err) cb(err,null);
+          else if(rows.length > 0) cb(null,rows[0]);
+          else cb(null,null);
         });
       }
     });

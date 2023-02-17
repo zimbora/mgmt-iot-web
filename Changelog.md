@@ -1,7 +1,10 @@
 # Changelog
 
+## Version 1.0.17
+- changes release field in firmware table to fw_release; edits respectives files to accommodate the new change
+
 ## Version 1.0.16
-- version to check if firmware download and upload was fixed
+- version to check if firmware download and upload was fixed (it was)
 
 ## Version 1.0.15
 - fixes model forcing on express-web

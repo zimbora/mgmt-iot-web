@@ -1,5 +1,8 @@
 var mysql = require('mysql2');
 
+var config = require('../../config/env');
+
+
 var pool;
 
 function connect(config, cb){

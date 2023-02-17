@@ -1,5 +1,6 @@
 var jwt = require('jsonwebtoken');
 var httpStatus = require('http-status-codes');
+const { OAuth2Client } = require('google-auth-library'); // android gauth
 
 var response = require('./response');
 var config = require('../../config/env');
@@ -58,6 +59,10 @@ function authenticate_email(req, res, next) {
 }
 
 function authenticate(req, res, next) {
+
+  if(req.body.password == "")
+    return res.json({message:"Failure"});
+
   Client.get(req.body.user,req.body.password,(err,result)=>{
     if(err) res.json({message:"Failure"});
     else if(result == null) res.json({message:"User and password doesn't match"});
@@ -66,6 +71,67 @@ function authenticate(req, res, next) {
       next();
     }
   });
+}
+
+// web client
+async function authenticate_google(req,res,next){
+  console.log("authenticate_google")
+
+  let access_token = "";
+  if(req.query.token != null)
+    access_token = req.query.token;
+  else if(req.body.token != null)
+    access_token = req.body.token;
+
+  // clientId has to be the same that was used in front end app
+  //const clientId = "72512997406-nbev1bnp4lhv9uauejrdsjni7ev1s7f3.apps.googleusercontent.com";
+  const clientId = config.googleClientId;
+  const client = new OAuth2Client(clientId);
+
+  try{
+    const ticket = await client.verifyIdToken({
+      idToken: access_token,
+      audience: clientId
+    });
+    const data = ticket.getPayload();
+     log.debug(data.name);
+     log.debug(data.email);
+     //log.debug(data.picture);
+     Client.findGoogleClient(data.email,(err,result)=>{
+       console.log(err);
+       if(err) res.json({message:"Failure"});
+       else if(result == null){
+         // registe user
+         console.log(data);
+         Client.registerGoogleClient(config.new_client.user_type,data,(err,result)=>{
+           if(err){
+             console.log(err);
+             res.json({message:"Failure"});
+           }
+           else if(result == null) res.json({message:"Couldn't register user"});
+           else{
+             Client.findGoogleClient(data.email,(err,result)=>{
+               if(err) res.json({message:"Failure"});
+               else if(result == null) res.json({message:"Something went wrong during user registration"});
+               else{
+                 req.user = result;
+                 next();
+               }
+             });
+           }
+         });
+       }
+       else{
+         //log.debug(result)
+         req.user = result;
+         next();
+       }
+     });
+
+  }catch(error){
+    log.warn("Google Unauthorized");
+    res.json({message:"Unauthorized"});
+  }
 }
 
 function deauth(req, res, cb) {
@@ -125,6 +191,7 @@ module.exports = {
   api_check_authentication,
   authenticate_email,
   authenticate,
+  authenticate_google,
   deauth,
   generateToken,
   respondJWT,

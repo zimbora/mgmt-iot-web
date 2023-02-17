@@ -1,7 +1,7 @@
 var mysql = require('mysql2');
 var db = require('../controllers/db');
 
-module.exports = {
+var self = module.exports = {
 
   add : (user,pwd,level,cb)=>{
 
@@ -85,4 +85,25 @@ module.exports = {
     });
   },
 
-}
+  addIfNotRegistered : (user,pwd,level,cb)=>{
+
+    db.getConnection((err,conn) => {
+      if(err)
+        cb(err,null)
+      else{
+        var query = `select * from users where idusers = ?`;
+        var table = [user];
+        query = mysql.format(query,table);
+        conn.query(query,function(err,rows){
+          db.close_db_connection(conn);
+          if(err) return cb(err,null);
+          else if(rows != null && rows.length == 0){
+            self.add(user,pwd,level,(err,res)=>{
+              return cb(err,res);
+            })
+          } else return cb(null,rows);
+        });
+      }
+    });
+  }
+};

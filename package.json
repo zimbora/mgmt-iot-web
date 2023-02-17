@@ -1,6 +1,6 @@
 {
   "name": "mgmt-iot-web",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "web platform to configure and interact with iot devices using mqtt",
   "main": "index.js",
   "scripts": {
@@ -42,5 +42,5 @@
   "bugs": {
     "url": "https://github.com/zimbora/mgmt-iot-web/issues"
   },
-  "homepage": "https://github.com/zimbora/mgmt-iot-web#readme"
+  "homepage": "iot.inloc.cloud"
 }

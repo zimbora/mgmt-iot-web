@@ -60,7 +60,6 @@ module.exports = {
     }
   },
 
-
   list : (req, res, next)=>{
     Client.list((err,rows)=>{
       if(!err) response.send(res,rows);

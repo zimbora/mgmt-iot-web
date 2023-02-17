@@ -73,7 +73,8 @@
                       <a id="submit" class="btn btn-primary btn-round btn-lg btn-block mb-3">Log in</a>
                     </div>
                   <!--</div>-->
-
+                    <div class="g_id_signin btn" data-type="filled_black" data-size="large" data-shape="pill" data-logo_alignment="center"></div>
+                    <!--<a id="signin" class="btn btn-primary btn-round btn-lg btn-block mb-3">Log in</a>-->
                 </div>
 
               </form>
@@ -136,11 +137,25 @@
   <script src="https://kit.fontawesome.com/d69c68b380.js" crossorigin="anonymous"></script>
 
   <!--</div>-->
-
   <script src="./assets/js/jquery.min.js"></script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <div id="g_id_onload"
+     data-client_id= <%= googleclientID %>
+     data-callback="handleCredentialResponse">
+     <!--
+     <a id="signin" class="btn btn-default btn-round btn-lg btn-block mb-3">
+       <img width="20px" style="margin-bottom:3px; margin-right:5px" alt="Google sign-in" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png" />
+       Sign In/Authorize
+     </a>
+      -->
+  </div>
+
 
   <script>
     $(document).ready(function() {
+
+      console.log($("#g_id_onload"));
 
       $("#submit").on("click",function(e){
         console.log("login")
@@ -158,6 +173,17 @@
         });
       });
     });
+
+    function handleCredentialResponse(googleUser){
+      var id_token = googleUser.credential;
+      $.post(window.location.protocol+"//"+window.location.hostname+"/login/google/user",{token: id_token}, function(data){
+        if(data.message!='Success'){
+          $("#login-msg").text("User not authorized");
+        }else{
+          location.href = location.href
+        }
+      });
+    }
 
   </script>
 
