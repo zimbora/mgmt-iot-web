@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.0.19
+- adds icon to delete devices
+- improves layout responsiveness
+
 ## Version 1.0.18
 - allows change user type of each client, shows name and avatar when signed with google
 - supports gauth login
