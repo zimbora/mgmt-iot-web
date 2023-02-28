@@ -171,7 +171,7 @@
       const mySelect = document.getElementById('_modalUserType_');
       while (mySelect.options.length > 0) {
         mySelect.remove(0);
-    }
+      }
       api.getUsers((err,res)=>{
         if(err) console.log("err:",err)
         else{

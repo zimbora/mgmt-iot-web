@@ -83,6 +83,14 @@ module.exports = {
     });
   },
 
+  // delete device
+  delete  : (req, res, next)=>{
+    device.delete(req.params.device_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
   // get device alarms
   getAutorequests : (req, res, next)=>{
     device.getAutorequests(req.params.device_id,(err,rows)=>{

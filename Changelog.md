@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.0.18
+- allows change user type of each client, shows name and avatar when signed with google
+- supports gauth login
+
 ## Version 1.0.17
 - changes release field in firmware table to fw_release; edits respectives files to accommodate the new change
 

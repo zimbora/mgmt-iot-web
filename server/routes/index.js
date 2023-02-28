@@ -14,6 +14,7 @@ var User = require('../controllers/users');
 var Client = require('../controllers/clients');
 var Device = require('../controllers/devices');
 var Firmware = require('../controllers/firmwares');
+var Database = require('../controllers/db');
 
 const router = express.Router();
 
@@ -72,6 +73,9 @@ router.use('/auth', authRoutes);
 
 router.route('/mqtt/credentials')
   .get(Client.getMqttCredentials);
+
+router.route('/db/load')
+  .get(Database.getLoad);
 
 router.use((req,res,next) => {
   var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;

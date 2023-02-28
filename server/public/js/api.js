@@ -149,6 +149,24 @@ var api = {
     });
   },
 
+  deleteDevice : (deviceID, cb)=>{
+
+    fetch(Settings.api+"/device/"+deviceID, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
   // --- ----- ---
 
   // --- user ---
@@ -666,6 +684,21 @@ var api = {
     });
   },
 
+  getDBLoad : (cb)=>{
+    fetch(Settings.api+"/db/load", {
+      method: 'GET',
+      headers: {},
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  }
 };
 
 function parseResponse(data,cb){

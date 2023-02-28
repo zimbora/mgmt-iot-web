@@ -102,6 +102,10 @@
     }
   }
 
+  var data2 = {}
+  var chart2;
+  var last_db_traffic_value = 0;
+
   $(document).ready(()=>{
 
     api.getDevices((err,rows)=>{
@@ -159,7 +163,7 @@
     const NUMBER_CFG = {count: DATA_COUNT, min: -100, max: 100};
 
     const labels = [6,5,4,3,2,1,0];
-    const data2 = {
+    data2 = {
       labels: labels,
       datasets: [
         {
@@ -174,7 +178,7 @@
           backgroundColor: Utils.CHART_COLORS.grey,
           borderColor: Utils.CHART_COLORS.grey,
           borderDash: [5, 5],
-          data: [8,9,8,7,6,8,9],
+          data: [],
         }, {
           label: 'MQTT user data',
           backgroundColor: Utils.CHART_COLORS.orange,
@@ -219,7 +223,7 @@
       },
     };
 
-    new Chart(ctx2, config2);
+    chart2 = new Chart(ctx2, config2);
 
     api.getUsers((err,rows)=>{
       document.getElementById('registeredClients').innerHTML = rows.length
@@ -233,6 +237,22 @@
       document.getElementById('registeredModels').innerHTML = rows.length
     })
 
+    const interval = 3000;
+    setInterval(()=>{
+      api.getDBLoad((err,rows)=>{
+        let traffic = (rows-last_db_traffic_value)/interval; //kB/s
+        if(data2.datasets[1].data.length>0){
+          data2.datasets[1].data.push(traffic);
+          //console.log("last value:",last_db_traffic_value);
+        }else{
+          data2.datasets[1].data.push(0);
+        }
+        if(data2.datasets[1].data.length > 8)
+          data2.datasets[1].data.shift();
+        chart2.update()
+        last_db_traffic_value = rows;
+      })
+    },interval);
 
     api.getMqttCredentials((err,res)=>{
 

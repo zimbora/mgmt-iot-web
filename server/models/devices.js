@@ -121,6 +121,34 @@ module.exports =  {
     });
   },
 
+  delete : (deviceID,cb)=>{
+
+    db.getConnection((err,conn) => {
+      if(err)
+        cb(err,null)
+      else{
+        let query = "DELETE FROM ?? where ?? = ?";
+        let table = ["permissions","devices_uid",deviceID];
+        query = mysql.format(query,table);
+        conn.query(query,function(err,rows){
+          if(err){
+            db.close_db_connection(conn);
+            return cb(err,null);
+          }
+          else{
+            let query = "DELETE FROM ?? where ?? = ?";
+            let table = ["devices","uid",deviceID];
+            query = mysql.format(query,table);
+            conn.query(query,function(err,rows){
+              if(err) return cb(err,null);
+              else return cb(null,rows);
+            });
+          }
+        });
+      }
+    });
+  },
+
   // get autorequests of device
   getAutorequests : (deviceID,cb)=>{
     db.getConnection((err,conn) => {
