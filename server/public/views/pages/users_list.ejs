@@ -147,8 +147,22 @@
 
       t.row.add([`<button id="`+user+`" onclick="deleteUser('`+user+`');" type="button" class="delete btn btn-secondary btn-sm">
           <i class="fa-solid fa-user-xmark"></i>
-        </button>`
-        ,user,pwd,level]).draw(true);
+        </button>`,
+        user,
+        `<div class="btn-group">
+          <label for="inputPassword2" class="sr-only">Password</label>
+          <input type="password" disabled class="form-control" id='`+user+`_pwd' name="password" value=`+pwd+`>
+          <button type="button" class="btn mb-2" onclick="togglePasswordVisibility('`+user+`_pwd')">
+            <i class="bi bi-eye-fill"></i>
+          </button>
+        </div>`,
+        level]).draw(true);
+    }
+
+    function togglePasswordVisibility(user) {
+      var passwordField = document.getElementById(user);
+      if (passwordField.type === "password") passwordField.type = "text";
+      else passwordField.type = "password";
     }
 
     function deleteUser(user){

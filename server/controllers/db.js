@@ -92,7 +92,6 @@ function getLoad(cb){
         if(err) cb(err,null);
         else if(rows.length > 0){
           let sum = Number(rows[0].VARIABLE_VALUE) + Number(rows[1].VARIABLE_VALUE)
-          console.log("bytes:",sum);
           cb(null,sum);
         }
         else cb(null,null);

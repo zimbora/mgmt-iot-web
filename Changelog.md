@@ -3,6 +3,7 @@
 ## Version 1.0.19
 - adds icon to delete devices
 - improves layout responsiveness
+- adds mysql traffic do dashboard
 
 ## Version 1.0.18
 - allows change user type of each client, shows name and avatar when signed with google

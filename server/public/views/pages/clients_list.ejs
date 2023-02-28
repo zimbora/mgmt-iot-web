@@ -146,9 +146,22 @@
           </button>
         </div>`,
         `<a href="./client/`+client_id+`">`+client_id+`</a>`,
-        password,
+        `<div class="btn-group">
+          <label for="inputPassword2" class="sr-only">Password</label>
+          <input type="password" disabled class="form-control" id='`+client_id+`' name="password" value=`+password+`>
+          <button type="button" class="btn mb-2" onclick="togglePasswordVisibility('`+client_id+`')">
+            <i class="bi bi-eye-fill"></i>
+          </button>
+        </div>`,
+        `<a href="./client/`+client_id+`">`+client_id+`</a>`,
         user,
         registered]).draw(true);
+    }
+
+    function togglePasswordVisibility(client_id) {
+      var passwordField = document.getElementById(client_id);
+      if (passwordField.type === "password") passwordField.type = "text";
+      else passwordField.type = "password";
     }
 
     function deleteClient(client_id){
