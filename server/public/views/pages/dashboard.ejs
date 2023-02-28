@@ -226,11 +226,11 @@
     chart2 = new Chart(ctx2, config2);
 
     api.getUsers((err,rows)=>{
-      document.getElementById('registeredClients').innerHTML = rows.length
+      document.getElementById('registeredUsers').innerHTML = rows.length
     })
 
     api.getClients((err,rows)=>{
-      document.getElementById('registeredUsers').innerHTML = rows.length
+      document.getElementById('registeredClients').innerHTML = rows.length
     })
 
     api.getFWModels((err,rows)=>{
