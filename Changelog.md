@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.0.20
+- hides passwords
+- fixes number of clients and users - dashboard
+
 ## Version 1.0.19
 - adds icon to delete devices
 - improves layout responsiveness
