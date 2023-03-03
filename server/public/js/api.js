@@ -380,7 +380,6 @@ var api = {
       return parseError(error,cb);
     });
   },
-
   // remove permission from client to access device
   removePermission : (clientID,device,cb)=>{
     fetch(Settings.api+"/client/"+clientID+"/permissions", {
@@ -402,7 +401,6 @@ var api = {
       return parseError(error,cb);
     });
   },
-
   // update permission to client to access device
   updatePermission : (clientID,device,level,cb)=>{
     fetch(Settings.api+"/client/"+clientID+"/permissions", {
