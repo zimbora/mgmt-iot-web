@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.0.21
+- adds functionality to allow associate client to device and remove client from device
+- fixes client_list table
+
 ## Version 1.0.20
 - hides passwords
 - fixes number of clients and users - dashboard
