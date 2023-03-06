@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.0.22
+ - changes cookie-express by session-express
+ - verify IP and user agent on authentication
+
 ## Version 1.0.21
 - adds functionality to allow associate client to device and remove client from device
 - fixes client_list table
