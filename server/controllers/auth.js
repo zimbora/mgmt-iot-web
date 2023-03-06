@@ -12,8 +12,10 @@ var Firmware = require('../models/firmwares');
 function check_authentication(req, res, next) {
 
   Auth.check_authentication(req.session.token,(authenticated,user)=>{
-    if(authenticated) {
-      req.user = user;
+    if(user && user.agent == req.get('User-Agent') && user.ip==req.ip){
+      if(authenticated) {
+        req.user = user;
+      }
     }
     next()
   });
@@ -145,6 +147,8 @@ function generateToken(req, res, next) {
     type: req.user.idusers,
     level: req.user.level,
     name: req.user.name || req.user.idclients,
+    ip : req.ip,
+    agent: req.get('User-Agent'),
     avatar: req.user.avatar,
   };
   const jwtData = {

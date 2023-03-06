@@ -1,10 +1,10 @@
 var path = require('path');
 var express = require('express');
-const session = require('cookie-session');
+const session = require('express-session');
 var expressValidation = require('express-validation');
 var useragent = require('express-useragent');
 var bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser');
+//var cookieParser = require('cookie-parser');
 var httpStatus = require('http-status-codes');
 
 var auth = require('./server/controllers/auth');
@@ -25,9 +25,14 @@ var config = require('./config/env');
 app.use(useragent.express());
 app.use(bodyParser.json());
 
-app.use(session({secret: config.jwtSecret}));
+app.use(session({
+  secret: config.jwtSecret,
+  resave: false,
+  saveUninitialized: false
+}));
+
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.set('trust proxy', true);
 
 app.get('/api/firmware/:fwId/download',auth.fw_check_token,firmware.get)
 
