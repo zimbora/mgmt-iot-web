@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.23
+ - formats received JSON struct for ARs and Alarms
+
 ## version 1.0.22
  - changes cookie-express by session-express
  - verify IP and user agent on authentication
