@@ -192,8 +192,10 @@
         api.getDeviceAutorequests(deviceID,(err,res)=>{
           if(err) console.log(err)
           else if(res != null && res.length > 0){
-            if(res[0].autorequests != null)
-              editor.setValue(JSON.stringify(res[0].autorequests,null,2));
+            if(res[0].autorequests != null && res[0].autorequests != ""){
+              let payload = JSON.parse(res[0].autorequests)
+              editor.setValue(JSON.stringify(payload,null,2));
+            }
           }
         })
 
@@ -266,7 +268,7 @@
         text = text.replace(/\n/g,'');
 
         try{
-          JSON.parse(text)
+          //JSON.parse(text)
           //sendARs(JSON.stringify(text));
           sendARs(text);
         }catch(e){

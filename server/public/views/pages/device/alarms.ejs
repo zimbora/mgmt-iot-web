@@ -169,8 +169,10 @@
       api.getDeviceAlarms(deviceID,(err,res)=>{
         if(err) console.log(err)
         else if(res != null && res.length > 0){
-          if(res[0].alarms != null)
-            editor.setValue(JSON.stringify(res[0].alarms,null,2));
+          if(res[0].alarms != null && res[0].alarms != ""){
+            let payload = JSON.parse(res[0].alarms)
+            editor.setValue(JSON.stringify(payload,null,2));
+          }
         }
       })
 
@@ -240,7 +242,7 @@
         let text = data.replace(/ /g,'');
         text = text.replace(/\n/g,'');
         try{
-          JSON.parse(text)
+          //JSON.parse(text)
           //sendAlarms(JSON.stringify(text));
           sendAlarms(text);
         }catch(e){
