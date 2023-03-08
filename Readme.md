@@ -2,14 +2,14 @@
 # mgmt-iot IoT device management platform
 
 mgmt-iot is a module to enable a web platform to configure and interact with IoT devices.
-A special firmware have to be running on those IoT devices [link](not_available_yet).
+A special firmware has to be running on those IoT devices [esp32-freeRTOS2](https://github.com/zimbora/esp32-freeRTOS2).
 For now, only esp32 architecture is supported.
 It can be used with wifi or bg95 modem.
 A link will be published here to download firmware, as soon as it is available
 
 This module also relies on a dedicated mqtt broker.
 This broker was developed to check authorizations before subscribe or publish calls.
-Please check this [link](https://github.com/zimbora/mqtt-broker-auth) for more information about mqtt broker operation
+Please check this [mqtt-broker-auth](https://github.com/zimbora/mqtt-broker-auth) for more information about mqtt broker operation
 The purpose of this broker is to allow users to connect directly to devices in which they have permissions for that.
 
 This module will enable the management of those permissions, as well as configure and interact with iot devices.
@@ -58,6 +58,8 @@ And that's it, your program is ready to run
 
 ## MQTT
 
+[mqtt-broker-auth](https://github.com/zimbora/mqtt-broker-auth)
+
 Note: This module must be used with a special mqtt broker. So, in order to have it working properly you need to run mqtt-broker-auth also
 
 ## Adding features to this module
@@ -65,6 +67,7 @@ Note: This module must be used with a special mqtt broker. So, in order to have 
  A middleware can be defined to customize this iot platform. For each page not served in the module, it is possible to serve it with a middleware like it.
 
  Create a file with middleware.js
+
  Copy the following code
 
 ```
@@ -98,6 +101,7 @@ global.middleware = module.exports =  middleware;
 
 ## How it works
 
+### Login
 At any moment if no login account exists or doesn't have admin privileges, the following credentials can be used
 - user: admin
 - password : admin
@@ -105,3 +109,14 @@ At any moment if no login account exists or doesn't have admin privileges, the f
 They will always work and grant admin access, until a new account with admin privileges is registered
 
 This can be done adding an user with level 5 and associate a client account to it
+
+### Google Auth
+Google Login is also supported.
+Define GOOGLE_CLIENT_ID env variable to set your google account id for your project.
+
+When a new user is registered with a google account a new a mqtt client will be
+created, using email prefix as the client id and the credentials defined in:
+- USER_TYPE
+- USER_PWD
+- USER_LVL
+for mqtt user and respective permissions.

@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.24
+ - Only documentation was added to readme file
+
 ## version 1.0.23
  - formats received JSON struct for ARs and Alarms
 
