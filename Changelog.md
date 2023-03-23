@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.25
+ - supports docker API and mqtt client. Get docker container db statistics from mqtt and represents on dashboard
+
 ## version 1.0.24
  - Only documentation was added to readme file
 
