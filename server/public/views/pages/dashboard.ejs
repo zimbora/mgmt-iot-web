@@ -167,23 +167,24 @@
       labels: labels,
       datasets: [
         {
-          label: 'MQTT Messages',
+          label: 'TX',
           fill: false,
           backgroundColor: Utils.CHART_COLORS.blue,
           borderColor: Utils.CHART_COLORS.blue,
-          data: [6,4,3,6,4,5,4],
+          data: [],
         }, {
-          label: 'DB requests',
+          label: 'RX',
           fill: false,
           backgroundColor: Utils.CHART_COLORS.grey,
           borderColor: Utils.CHART_COLORS.grey,
           borderDash: [5, 5],
           data: [],
         }, {
-          label: 'MQTT user data',
+          label: 'Memory',
           backgroundColor: Utils.CHART_COLORS.orange,
           borderColor: Utils.CHART_COLORS.orange,
-          data: [3,2,3,3,2,0,1],
+          data: [],
+          yAxisID: 'y1',
           fill: true,
         }
       ]
@@ -197,7 +198,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Server load'
+            text: 'dB load'
           },
         },
         interaction: {
@@ -208,8 +209,8 @@
           x: {
             display: true,
             title: {
-              display: true,
-              text: 'last hours'
+              display: false,
+              text: 'history'
             }
           },
           y: {
@@ -217,7 +218,18 @@
             title: {
               display: true,
               text: 'kB/s'
-            }
+            },
+            suggestedMin: 0,
+          },
+          y1: {
+            display: true,
+            position: 'right',
+            title: {
+              display: true,
+              text: 'MB'
+            },
+            suggestedMin: 0,
+            suggestedMax: 2000
           }
         }
       },
@@ -237,6 +249,7 @@
       document.getElementById('registeredModels').innerHTML = rows.length
     })
 
+    /*
     const interval = 3000;
     setInterval(()=>{
       api.getDBLoad((err,rows)=>{
@@ -253,6 +266,7 @@
         last_db_traffic_value = rows;
       })
     },interval);
+    */
 
     api.getMqttCredentials((err,res)=>{
 
@@ -279,6 +293,7 @@
     function onConnect() {
       // Once a connection has been made, make a subscription and send a message.
       console.log("connected")
+      client.subscribe("docker/#");
     }
 
     // called when the client loses its connection
@@ -286,7 +301,27 @@
       console.log("disconnected")
     }
 
-    function onMessageArrived(message) {}
+    function onMessageArrived(message) {
+      let topic = message.destinationName;
+      let payload = message.payloadString;
+
+      if(topic.endsWith("docker/container/mgmt-iot-devices_db_1/network/rx")){
+        if(data2.datasets[0].data.length > 8)
+          data2.datasets[0].data.shift();
+        data2.datasets[0].data.push(Number(payload));
+        chart2.update()
+      }else if(topic.endsWith("docker/container/mgmt-iot-devices_db_1/network/tx")){
+        if(data2.datasets[1].data.length > 8)
+          data2.datasets[1].data.shift();
+        data2.datasets[1].data.push(Number(payload));
+        chart2.update()
+      }else if(topic.endsWith("docker/container/mgmt-iot-devices_db_1/memory/usage")){
+        if(data2.datasets[2].data.length > 8)
+          data2.datasets[2].data.shift();
+        data2.datasets[2].data.push(Number(payload));
+        chart2.update()
+      }
+    }
 
   });
 

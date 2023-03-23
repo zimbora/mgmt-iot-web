@@ -43,6 +43,13 @@ let config = {
     pwd:'user_pwd',
     name:'mqtt-aedes', // db name
   },
+  mqtt: {
+    protocol:'MQTT',
+    host:'localhost',
+    port:'1883',
+    user:'admin',
+    pwd:'admin'
+  },
   debug:{
     level: "trace" // logs level (ignore it for now)
   },
@@ -115,8 +122,9 @@ Google Login is also supported.
 Define GOOGLE_CLIENT_ID env variable to set your google account id for your project.
 
 When a new user is registered with a google account a new a mqtt client will be
-created, using email prefix as the client id and the credentials defined in:
+created, using email prefix as the client id and the credentials set with env vars:
 - USER_TYPE
 - USER_PWD
 - USER_LVL
+
 for mqtt user and respective permissions.
