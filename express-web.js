@@ -99,7 +99,7 @@ app.get('/logout',(req,res)=>{
 
 // --- HOME ---
 app.get('/home',(req,res)=>{
-  res.render(path.join(__dirname, config.public_path+'/views/pages/dashboard'),{user:req.user,page:'Dashboard'});
+  res.render(path.join(__dirname, config.public_path+'/views/pages/dashboard'),{user:req.user,container:config.container,page:'Dashboard'});
 });
 
 // --- users ---

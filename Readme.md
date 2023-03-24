@@ -117,6 +117,9 @@ They will always work and grant admin access, until a new account with admin pri
 
 This can be done adding an user with level 5 and associate a client account to it
 
+### Dashboard
+Define DB_CONTAINER_NAME to get docker stats from that container and show on dashboard
+
 ### Google Auth
 Google Login is also supported.
 Define GOOGLE_CLIENT_ID env variable to set your google account id for your project.

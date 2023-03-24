@@ -106,6 +106,9 @@
   var chart2;
   var last_db_traffic_value = 0;
 
+  var container_db_name = "<%= container.db %>"
+  console.log("container:",container_db_name)
+
   $(document).ready(()=>{
 
     api.getDevices((err,rows)=>{
@@ -249,25 +252,6 @@
       document.getElementById('registeredModels').innerHTML = rows.length
     })
 
-    /*
-    const interval = 3000;
-    setInterval(()=>{
-      api.getDBLoad((err,rows)=>{
-        let traffic = (rows-last_db_traffic_value)/interval; //kB/s
-        if(data2.datasets[1].data.length>0){
-          data2.datasets[1].data.push(traffic);
-          //console.log("last value:",last_db_traffic_value);
-        }else{
-          data2.datasets[1].data.push(0);
-        }
-        if(data2.datasets[1].data.length > 8)
-          data2.datasets[1].data.shift();
-        chart2.update()
-        last_db_traffic_value = rows;
-      })
-    },interval);
-    */
-
     api.getMqttCredentials((err,res)=>{
 
       // connect the client
@@ -305,17 +289,17 @@
       let topic = message.destinationName;
       let payload = message.payloadString;
 
-      if(topic.endsWith("docker/container/mgmt-iot-devices_db_1/network/rx")){
+      if(topic.endsWith("docker/container/"+container_db_name+"/network/rx")){
         if(data2.datasets[0].data.length > 8)
           data2.datasets[0].data.shift();
         data2.datasets[0].data.push(Number(payload));
         chart2.update()
-      }else if(topic.endsWith("docker/container/mgmt-iot-devices_db_1/network/tx")){
+      }else if(topic.endsWith("docker/container/"+container_db_name+"/network/tx")){
         if(data2.datasets[1].data.length > 8)
           data2.datasets[1].data.shift();
         data2.datasets[1].data.push(Number(payload));
         chart2.update()
-      }else if(topic.endsWith("docker/container/mgmt-iot-devices_db_1/memory/usage")){
+      }else if(topic.endsWith("docker/container/"+container_db_name+"/memory/usage")){
         if(data2.datasets[2].data.length > 8)
           data2.datasets[2].data.shift();
         data2.datasets[2].data.push(Number(payload));

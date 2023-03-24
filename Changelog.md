@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.26
+ - pass docker container name for dashboard through env
+
 ## version 1.0.25
  - supports docker API and mqtt client. Get docker container db statistics from mqtt and represents on dashboard
 
