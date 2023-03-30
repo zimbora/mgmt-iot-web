@@ -38,6 +38,7 @@ var iot = require('mgmt-iot');
 
 let config = {
   db: {
+    conn_limit : 15,
     host:'localhost',
     user:'user',
     pwd:'user_pwd',

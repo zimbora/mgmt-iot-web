@@ -11,7 +11,7 @@ var self = module.exports = {
 
   connect : (config, cb)=>{
     pool      =    mysql.createPool({
-        connectionLimit : 100,
+        connectionLimit : config.db.conn_limit,
         host     : config.db.host,
         port     : config.db.port,
         user     : config.db.user,
@@ -48,7 +48,7 @@ var self = module.exports = {
 
   get_non_persistent_db_connection : (db_name,cb)=>{
     let pool2      =    mysql.createPool({
-        connectionLimit : 100,
+        connectionLimit : config.db.conn_limit,
         host     : config.db.host,
         user     : config.db.user,
         password : config.db.pwd,
