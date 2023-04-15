@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.28
+ - fixes db connections
+
 ## version 1.0.27
  - pass db parameter to limit db connections
 

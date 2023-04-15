@@ -63,7 +63,7 @@ var self = module.exports = {
 
   close_db_connection : (connection)=>{
     if(connection != null){
-      connection.release();
+      connection.destroy();
     }
   },
 
