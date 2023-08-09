@@ -28,6 +28,7 @@ module.exports = {
 
   delete : (req, res, next)=>{
 
+    console.log(req.user);
     const val = Joi.object({
       clientID: Joi.string().required()
     }).validate(req.body);
@@ -129,7 +130,8 @@ module.exports = {
   },
 
   getMqttCredentials : (req,res,next)=>{
-    Client.getMqttCredentials(req.user.id,(err,rows)=>{
+
+    Client.getMqttCredentials(req.user.client_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });

@@ -24,7 +24,7 @@ router.use((req,res,next) => {
     publicIP : req.header('x-forwarded-for') || req.connection.remoteAddress,
     platform : req.headers['user-agent']
   }
-  //log.trace("route url: "+fullUrl);
+  log.trace("route url: "+fullUrl);
   next();
 });
 
@@ -63,6 +63,9 @@ router.route('/devices/list')
 router.route('/firmwares/models')
   .get(Firmware.listModels)
   .post(Firmware.addModel)
+
+router.route('/firmwares/model/:model_id')
+  .get(Firmware.getModelInfo)
   .delete(Firmware.deleteModel)
   .put(Firmware.updateModel)
 

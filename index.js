@@ -3,17 +3,14 @@ var web = require('./express-web');
 
 var config = require('./config/env');
 var device = require('./server/models/devices.js');
-var user = require('./server/models/users');
-
-
 const mqtt = require('mqtt')
+
+var user = require('./server/models/users');
 
 'use strict';
 const {Docker} = require('node-docker-api');
 
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
-
-
 
 module.exports = {
 
@@ -28,13 +25,14 @@ module.exports = {
       log.info("connected to DB");
     });
 
-    var host = 'localhost';
+    var host = config.mqtt.host;
     const client  = mqtt.connect({
       protocolId: config.mqtt.protocol,
       host: config.mqtt.host,
       port:config.mqtt.port,
       username:config.mqtt.user,
-      password:config.mqtt.pwd
+      password:config.mqtt.pwd,
+      clientId: config.mqtt.client
     })
 
     docker.container.list()
@@ -55,24 +53,24 @@ module.exports = {
 
                   let topic = 'docker/container'+stats.name
 
-                  let rx_bytes = stats.networks.eth0.rx_bytes/1000
+                  let rx_bytes = stats.networks?.eth0?.rx_bytes/1000
                   rx_bytes = Math.round((rx_bytes + Number.EPSILON) * 1000) / 1000
                   client.publish(topic+"/network/rx",String(rx_bytes));
                   client.publish(topic+"/network/rx/str",rx_bytes+" kB/s");
 
-                  let tx_bytes = stats.networks.eth0.tx_bytes/1000;
+                  let tx_bytes = stats.networks?.eth0?.tx_bytes/1000;
                   tx_bytes = Math.round((tx_bytes + Number.EPSILON) * 1000) / 1000
                   client.publish(topic+"/network/tx",String(tx_bytes));
                   client.publish(topic+"/network/tx/str",tx_bytes+" kB/s");
 
                   client.publish(topic+"/cpus/online",String(stats.cpu_stats.online_cpus));
 
-                  let mem_usage = stats.memory_stats.usage/1000000;
+                  let mem_usage = stats.memory_stats?.usage/1000000;
                   mem_usage = Math.round((mem_usage + Number.EPSILON) * 1000) / 1000
                   client.publish(topic+"/memory/usage",String(mem_usage));
                   client.publish(topic+"/memory/usage/str",mem_usage+" MB");
 
-                  let cpu_usage = stats.cpu_stats.cpu_usage.total_usage/stats.cpu_stats.system_cpu_usage;
+                  let cpu_usage = stats.cpu_stats?.cpu_usage?.total_usage/stats.cpu_stats?.system_cpu_usage;
                   cpu_usage = Math.round((cpu_usage + Number.EPSILON) * 1000) / 1000
 
                   client.publish(topic+"/cpu/usage",String(cpu_usage));
@@ -99,17 +97,15 @@ module.exports = {
     client.on('connect', function () {
       console.log("mqtt connected to: ",host);
       /*
-      client.subscribe('presence', function (err) {
-        if (!err) {
-          client.publish('presence', 'Hello mqtt')
-        }
+      client.subscribe("#", function (err) {
+        if(err) console.log(err);
       })
       */
     })
 
     client.on('message', function (topic, message) {
       // message is Buffer
-      //console.log(message.toString())
+      console.log(topic.toString(),message.toString())
     })
 
     client.on('error', function (error) {
@@ -130,12 +126,21 @@ module.exports = {
     device.getInfo(deviceID,(err,rows)=>{
       return cb(err,rows);
     })
-  }
+  },
+
+  deviceLastValues : (deviceID,cb)=>{
+    device.getLastValues(deviceID,(err,object)=>{
+      return cb(err,object);
+    })
+  },
 }
 
 function db_setup(){
   let {user_type,user_pwd,user_lvl} = config.new_client;
   user.addIfNotRegistered(user_type,user_pwd,user_lvl,(err,res)=>{
-    if(err) console.log("error registering user type:",config.user_type,err)
+    if(err){
+      console.log(err);
+      console.log("error registering user type:",user_type)
+    }
   });
 }

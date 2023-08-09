@@ -77,6 +77,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.js" integrity="sha512-WYlXqL7GPpZL2ImDErTX0RMKy5hR17vGW5yY04p9Z+YhYFJcUUFRT31N29euNB4sLNNf/s0XQXZfzg3uKSoOdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
       var editor = ace.edit("editor");
+      var project = "";
+      var uid = "";
 
       editor.setValue(`
 //Example - remove this line
@@ -116,7 +118,6 @@
       editor.session.setMode("ace/mode/javascript");
 
       deviceID = api.getDeviceID();
-      var project = "";
 
       $(document).ready(()=>{
 
@@ -131,7 +132,7 @@
 
     For now only sensors of rs485 category are available
 
-
+    Send '{}' to clean autorequests on device
 ##### RS485
 
       - ref (mandatory)
@@ -162,42 +163,39 @@
 
       `);
 
-        console.log("deviceID:",deviceID)
-        api.getDeviceInfo(deviceID,(err,res)=>{
-          if(err) console.log(err);
-          else if(res != null && res.length > 0){
-            project = res[0].project;
-            // connect the client
-            api.getMqttCredentials((err,res)=>{
-              // connect the client
-              if(res != null && res.length > 0){
+        let device = <%- JSON.stringify(device) %>;
+        let mqtt = <%- JSON.stringify(mqtt) %>;
+        project = device.project;
+        uid = device.uid;
 
-                client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, res[0].idclients);
+        project = device.project;
+        // connect the client
 
-                // set callback handlers
-                client.onConnectionLost = onConnectionLost;
-                client.onMessageArrived = onMessageArrived;
+        if(window.location.protocol == "https:"){
+          Settings.mqtt.ssl = true;
+          Settings.mqtt.port = 443;
+        }
+        client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
 
-                client.connect({
-                  userName:res[0].idusers,
-                  password:res[0].password,
-                  useSSL:Settings.mqtt.ssl,
-                  timeout:3,
-                  onSuccess:onConnect
-                });
-              }
-            })
-          }
+        // set callback handlers
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
+
+        client.connect({
+          userName:mqtt.type,
+          password:mqtt.password,
+          useSSL:Settings.mqtt.ssl,
+          timeout:3,
+          onSuccess:onConnect
         });
-        api.getDeviceAutorequests(deviceID,(err,res)=>{
-          if(err) console.log(err)
-          else if(res != null && res.length > 0){
-            if(res[0].autorequests != null && res[0].autorequests != ""){
-              let payload = JSON.parse(res[0].autorequests)
-              editor.setValue(JSON.stringify(payload,null,2));
-            }
-          }
-        })
+
+        let ar = null;
+        try{
+          ar = JSON.parse(JSON.stringify(device.ar));
+        }catch(e){console.log(e)}
+
+        if(ar != null)
+          editor.setValue(JSON.stringify(ar,null,2));
 
       });
 
@@ -207,8 +205,8 @@
         let button = document.querySelector('#mqtt_status');
         button.classList.toggle("btn-secondary",false);
         button.classList.toggle("btn-success",true);
-        client.subscribe(project+"/"+deviceID+"/status");
-        client.subscribe(project+"/"+deviceID+"/fw/ar/#");
+        client.subscribe(project+"/"+uid+"/status");
+        client.subscribe(project+"/"+uid+"/fw/ar/#");
       }
 
       function onConnectionLost(responseObject) {
@@ -223,7 +221,6 @@
 
         let topic = message.destinationName;
         let payload = message.payloadString;
-        console.log(topic);
         if(topic.includes("status")){
           let button = document.querySelector('#status');
           button.classList.toggle("btn-secondary",false);
@@ -242,7 +239,7 @@
 
       function sendARs(payload){
         message = new Paho.MQTT.Message(payload);
-        message.destinationName = project+"/"+deviceID+"/fw/ar/set";
+        message.destinationName = project+"/"+uid+"/fw/ar/set";
 
         var loading = $('#modalLoading');
         loading.modal('show');

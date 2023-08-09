@@ -30,7 +30,7 @@
                     <thead>
                         <tr>
                           <th></th>
-                          <th>clientID</th>
+                          <th>nick</th>
                           <th>level</th>
                         </tr>
                     </thead>
@@ -76,17 +76,16 @@
 
   <script>
     var t;
-    var deviceID = api.getDeviceID();
+    var deviceId = api.getDeviceID();
     $(document).ready(()=>{
 
       t = $('#clients').DataTable();
-      console.log(deviceID);
-      api.getClientsWithAccessToDevice(deviceID,(err,res)=>{
+
+      api.getClientsWithAccessToDevice(deviceId,(err,res)=>{
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            console.log(item)
-            addRow(item.clients_idclients,item.level);
+            addRow(item.id,item.nick,item.level);
           });
         }
       });
@@ -97,7 +96,8 @@
           var datalist = document.getElementById('datalistOptions');
           res.forEach((item,i)=>{
             var option = document.createElement('option');
-            option.value = item.idclients;
+            option.id = item.id;
+            option.value = item.nick;
             datalist.appendChild(option);
           })
         }
@@ -105,7 +105,7 @@
 
     });
 
-    function addRow(clientID,level){
+    function addRow(clientID,nick,level){
 
       t.row.add([`
         <div class="btn-group">
@@ -113,7 +113,7 @@
             <i class="fa-solid fa-user-xmark"></i>
           </button>
         </div>`,
-        `<a href="../../client/`+clientID+`">`+clientID+`</a>`,
+        `<a href="../../client/`+clientID+`">`+nick+`</a>`,
         level]).draw(true);
     }
 
@@ -123,7 +123,7 @@
     }
 
     $("#modalProceed").click(()=>{
-      api.removePermission(id,deviceID,(err,res)=>{
+      api.removePermission(id,deviceId,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);
@@ -133,13 +133,22 @@
     })
 
     $("#submit").click(()=>{
-      let clientID = $("#_clientID_").val();
-      let level = $("#_permissionID_").val();
 
-      api.addPermission(clientID,deviceID,level,(err,res)=>{
+      let clientID = -1;
+      let client = $("#_clientID_").val();
+      $('#datalistOptions option').each(function() {
+        if(this.value === client) {
+          clientID = this.id;
+          return;
+        }
+      })
+
+      let level = $("#_permissionID_").val();
+      api.addPermission(clientID,deviceId,level,(err,res)=>{
         if(err) console.log(err);
         else location.reload();
       });
+
     });
 
   </script>

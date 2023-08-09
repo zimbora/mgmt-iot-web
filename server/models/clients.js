@@ -1,328 +1,309 @@
 var mysql = require('mysql2');
 var db = require('../controllers/db');
 var CryptoJS = require("crypto-js");
+const moment = require('moment');
 
 var self = module.exports =  {
 
-  get : (id,pwd,cb)=>{
+  get : async (nick,pwd,cb)=>{
 
-    db.getConnection((err,conn) => {
-      if(err) cb(err,null)
-      else{
-        var query = `select users.level,users.idusers,clients.idclients,clients.name,clients.avatar from ?? inner join clients where clients.idclients = ? and clients.token = ? and users.idusers = clients.users_idusers`;
-        var table = ["users",id,pwd];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else if(rows.length > 0) cb(null,rows[0]);
-          else{
-            if(id == "admin" && pwd == "admin"){
-              admin(cb)
-            }else cb(null,null)
-          }
-        });
-      }
-    });
-  },
+    let query = `select users.level,users.type,clients.nick,clients.name,clients.avatar from ?? inner join clients where clients.nick = ? and clients.token = ? and users.id = clients.user_id`;
+    let table = ["users",nick,pwd];
+    query = mysql.format(query,table);
 
-  getByApiToken : (api_token,cb)=>{
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length > 0) return cb(null,rows[0]);
 
-    db.getConnection((err,conn) => {
-      if(err) cb(err,null)
-      else{
-        var query = `select users.level,users.idusers,clients.idclients from ?? inner join clients where clients.api_token = ? and users.idusers = clients.users_idusers`;
-        var table = ["users",api_token];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(false,rows);
-        });
-      }
-    });
-  },
-
-  add : (clientid,user,password,cb)=>{
-
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        var SHA256 = require("crypto-js/sha256");
-        //let api_token = CryptoJS.AES.encrypt('my top secret', 'secret key ultrasecret').toString();
-        let message = clientid+"\º~"+password;
-        let key = String(Date.now()/3621)
-        var api_token = CryptoJS.HmacSHA256(message, key).toString();
-
-        let query = "INSERT INTO ?? (??,??,??,??) VALUES (?,?,?,?)";
-        let table = ["clients","idclients","users_idusers","token","api_token",clientid,user,password,api_token];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          if(err) console.log(err)
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(null,rows);
-        });
-      }
-    });
-  },
-
-  delete : (clientid,cb)=>{
-
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        let query = "DELETE FROM ?? where ?? = ?";
-        let table = ["permissions","clients_idclients",clientid];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          if(err){
-            db.close_db_connection(conn);
-            return cb(err,null);
-          }
-          else{
-            let query = "DELETE FROM ?? where ?? = ?";
-            let table = ["clients","idclients",clientid];
-            query = mysql.format(query,table);
-            conn.query(query,function(err,rows){
-              if(err) return cb(err,null);
-              else return cb(null,rows);
-            });
-          }
-        });
-      }
-    });
-  },
-
-  update : (clientid,user,password,cb)=>{
-
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        let query = "UPDATE ?? set ?? = ?, ?? = ? where ?? = ?";
-        let table = ["clients","users_idusers",user,"token",password,"idclients",clientid];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(null,rows);
-        });
-      }
-    });
-  },
-
-  list : (cb)=>{
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        var query = `select idclients,timestamp,users_idusers,token,api_token from clients inner join users where users.idusers = clients.users_idusers`;
-        var table = [];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(null,rows);
-        });
-      }
-    });
-  },
-
-  registerGoogleClient : (user,data,cb)=>{
-
-    let index = data.email.indexOf("@");
-
-    let clientId = "";
-    if(index > -1)
-      clientId = data.email.substring(0,index);
-    else return cb("something is wrong with your email",null);
-
-    self.add(clientId,user,"",(err,res)=>{
-      if(err)
-        return cb(err,null)
-        // get id associated to token
-      db.getConnection((err,conn) => {
-        if(err)
-          cb(err,null)
-        else{
-          let query = "UPDATE ?? set ??=?, ??=?, ??=? where idclients = ?";
-          let table = ["clients","gmail",data.email,"name",data.name,"avatar",data.picture,clientId];
-
-          query = mysql.format(query,table);
-          conn.query(query,function(err,rows){
-            db.close_db_connection(conn);
-            if(err) cb(err,null);
-            else if(rows.affectedRows > 0) cb(null,rows);
-            else cb(null,null);
-          });
-        }
-      });
+      if(id == "admin" && pwd == "admin")
+        return admin(cb)
+      else
+        return cb("not registered or password is invalid",null);
+    })
+    .catch(error => {
+      return cb(error,null);
     })
   },
 
-  findGoogleClient : (email,cb)=>{
+  getByApiToken : async (api_token,cb)=>{
 
-    // get id associated to token
-    db.getConnection((err,conn) => {
-      if(err) cb(err,null)
-      else{
-        var query = `select users.level,users.idusers,clients.idclients,clients.name,clients.avatar from ?? inner join clients where clients.gmail = ? and users.idusers = clients.users_idusers`;
-        var table = ["users",email];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else if(rows.length > 0) cb(null,rows[0]);
-          else cb(null,null);
-        });
-      }
+    let query = `select users.level,users.type,clients.nick from ?? inner join clients where clients.api_token = ? and users.id = clients.user_id`;
+    let table = ["users",api_token];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  add : async (nick,userId,password,cb)=>{
+
+    var SHA256 = require("crypto-js/sha256");
+    let message = nick+"\º~"+password;
+    let key = String(Date.now()/3621)
+    var api_token = CryptoJS.HmacSHA256(message, key).toString();
+
+    let obj = {
+      nick : nick,
+      user_id : userId,
+      token : password,
+      api_token : api_token,
+      createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+
+    db.insert("clients",obj)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
     });
   },
 
-  getDevices : (clientid,cb)=>{
-    db.getConnection((err,conn) => {
+  delete : async (id,cb)=>{
+
+    let filter = {
+      id : id,
+    }
+
+    db.delete("clients",filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
+  update : async (id,userId,password,cb)=>{
+
+    let obj = {
+      user_id : userId,
+      token : password,
+      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    let filter = {
+      id : id
+    };
+
+    db.update("clients",obj,filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
+  list : async (cb)=>{
+
+    let query = `select c.id,c.nick,c.createdAt,c.updatedAt,c.user_id,c.token,c.api_token,u.type from clients as c inner join users as u where u.id = c.user_id`;
+    let table = [];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  registerGoogleClient : async (userId,data,cb)=>{
+
+    let index = data.email.indexOf("@");
+
+    let nick = "";
+    if(index > -1)
+      nick = data.email.substring(0,index);
+    else return cb("something is wrong with your email",null);
+
+    self.add(nick,userId,"",(err,res)=>{
       if(err)
-        cb(err,null)
-      else{
-        var query = `select devices_uid,model,fw_version,app_version,status from ?? inner join ?? where ?? = ? and permissions.devices_uid = devices.uid`;
-        var table = ["permissions","devices","clients_idclients",clientid];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(null,rows);
-        });
-      }
+        return cb(err,null)
+
+      let obj = {
+        gmail: data.email,
+        name: data.name,
+        avatar: data.picture
+      };
+
+      let filter = {
+        nick: nick
+      };
+
+      db.update("clients",obj,filter)
+      .then( rows => {
+        if(rows.affectedRows > 0) return cb(null,rows);
+        else return cb(null,null);
+      })
+      .catch( error => {
+        return cb(error,null);
+      });
+
+    })
+  },
+
+  findGoogleClient : async (email,cb)=>{
+
+    let query = `select u.id as user_id,u.level,u.type,c.id as client_id,c.nick,c.name,c.avatar from users as u inner join clients as c where c.gmail = ? and u.id = c.user_id`;
+    let table = [email];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length > 0) return cb(null,rows[0]);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  getDevices : async (clientid,cb)=>{
+
+    let query = `select d.id as id,uid,project,status from permissions inner join devices as d where ?? = ? and permissions.device_id = d.id`;
+    let table = ["client_id",clientid];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  addPermission : async (clientId,deviceId,level,cb)=>{
+
+    let obj = {
+      client_id : clientId,
+      device_id : deviceId,
+      level : level,
+      createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+
+    db.insert("permissions",obj)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
     });
   },
 
-  addPermission : (clientid,device,level,cb)=>{
+  removePermission : async (clientId,deviceId,cb)=>{
 
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        let query = "INSERT INTO ?? (??,??,??) VALUES (?,?,?)";
-        let table = ["permissions","clients_idclients","devices_uid","level",clientid,device,level];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          if(err) console.log(err)
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(null,rows);
-        });
-      }
+    let filter = {
+      client_id : clientId,
+      device_id : deviceId,
+    }
+
+    db.delete("permissions",filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
     });
   },
 
-  removePermission : (clientid,device,cb)=>{
+  updatePermission : async (clientId,deviceId,level,cb)=>{
 
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        let query = "DELETE FROM ?? where ?? = ? and ?? = ?";
-        let table = ["permissions","clients_idclients",clientid,"devices_uid",device];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) return cb(err,null);
-          else return cb(null,rows);
-        });
-      }
+    let obj = {
+      level : level
+    };
+
+    let filter = {
+      client_id : clientId,
+      device_id : deviceId
+    };
+
+    db.update("permissions",obj,filter)
+    .then (rows => {
+      if(rows.affectedRows > 0) return cb(null,rows);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
     });
   },
 
-  updatePermission : (clientid,device,cb)=>{
-
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        let query = "UPDATE ?? set ?? = ?, ?? = ? where ?? = ?";
-        let table = ["permissions","clients_idclients",clientid,"devices_uid",device];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(null,rows);
-        });
-      }
-    });
-  },
-
-  checkDeviceAccess : (clientid,level,deviceid,cb)=>{
+  checkDeviceAccess : async (clientId,level,deviceId,cb)=>{
 
     if(level >= 4)
       return cb(null,true);
     else{
-      db.getConnection((err,conn) => {
-        if(err)
-          cb(err,null)
-        else{
-          var query = `select * from ?? where ?? = ? and ?? = ?`;
-          var table = ["permissions","clients_idclients",clientid,"devices_uid",deviceid];
-          query = mysql.format(query,table);
-          conn.query(query,function(err,rows){
-            db.close_db_connection(conn);
-            if(err) cb(err,false);
-            else if(rows.length > 0) cb(null,true);
-            else cb(null,false);
-          });
-        }
-      });
+
+      let query = `select * from ?? where ?? = ? and ?? = ?`;
+      let table = ["permissions","client_id",clientId,"device_id",deviceId];
+      query = mysql.format(query,table);
+
+      db.queryRow(query)
+      .then(rows => {
+        if(rows.length) return cb(null,true);
+        else return cb(null,false);
+      })
+      .catch(error => {
+        return cb(error,false);
+      })
     }
   },
 
-  getMqttCredentials : (clientid,cb)=>{
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        var query = `select idclients,users.idusers,users.password from ?? inner join users where users.idusers = clients.users_idusers and clients.idclients = ?`;
-        var table = ["clients",clientid];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,false);
-          else cb(false,rows);
-        });
-      }
-    });
+  getMqttCredentials : async (clientId,cb)=>{
+
+    let query = `select nick,users.type,users.password from clients inner join users where users.id = clients.user_id and clients.id = ?`;
+    let table = [clientId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length > 0)
+        return cb(null, rows[0]);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,false);
+    })
   },
 
   isAdmin : (level)=>{
     if(level >= 4)
       return true;
     else return false;
-
   },
+
 };
 
 // check if there is at least one admin registered. If not it creates a temporary one
-function admin(cb){
+async function admin(cb){
 
-  db.getConnection((err,conn) => {
-    if(err) cb(err,null)
-    else{
-      var query = `select * from ?? inner join users where users.idusers = clients.users_idusers and users.level = 5`;
-      var table = ["clients"];
-      query = mysql.format(query,table);
-      conn.query(query,function(err,rows){
-        db.close_db_connection(conn);
-        if(err) cb(err,null);
-        else if(rows.length == 0){
-          let fake_admin = {
-            idusers : "admin",
-            idclients : "admin",
-            level : 5
-          }
-          cb(null,fake_admin);
-        }else cb(null,null);
-      });
-    }
-  });
+  var query = `select * from ?? inner join users where users.id = clients.user_id and users.level = 5`;
+  var table = ["clients"];
+  query = mysql.format(query,table);
+
+  db.queryRow(query)
+  .then(rows => {
+    if(rows.length == 0){
+      let fake_admin = {
+        idusers : "admin",
+        idclients : "admin",
+        level : 5
+      }
+      cb(null,fake_admin);
+    }else cb(null,null);
+  })
+  .catch(error => {
+    return cb(error,false);
+  })
+
 }

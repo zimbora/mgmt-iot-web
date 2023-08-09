@@ -65,18 +65,21 @@
 
     var t;
     var modelID = api.getModelID();
-    $("#title").text("FW Model "+modelID)
 
     $(document).ready(function () {
 
       t = $('#firmwares').DataTable();
 
+      api.getFWModelInfo(modelID,(err,res)=>{
+        if(err) console.log(err);
+        $("#title").text(res.name)
+      })
 
       api.listFWModelPermission(modelID,(err,res)=>{
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.id,item.clients_idclients);
+            addRow(item.client_id,item.nick);
           });
         }
       });
@@ -87,9 +90,10 @@
           var datalist = document.getElementById('datalistOptions');
           res.forEach((item,i)=>{
             var option = document.createElement('option');
-            let clientid = item.idclients
-            if(clientid.indexOf("uid:") === -1){
-              option.value = clientid;
+            let nick = item.nick
+            if(nick.indexOf("uid:") === -1){
+              option.value = nick;
+              option.id = item.id;
               datalist.appendChild(option);
             }
           })
@@ -99,7 +103,8 @@
     });
 
     $("#submit_permission").click(()=>{
-      let clientID = $("#_clientID_").val();
+      let nick = $("#_clientID_").val();
+      var clientID = $("#datalistOptions option[value='" + nick + "']").attr("id");
       api.grantFWModelPermission(modelID,clientID,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
@@ -116,18 +121,17 @@
                             </option>`);
     }
 
-    function addRow(id,clientID){
+    function addRow(clientID,nick){
 
       t.row.add([`
-        <button id="`+id+`" onclick="deletePermission('`+id+`');" type="button" class="delete btn btn-danger btn-sm">
+        <button id="`+clientID+`" onclick="deletePermission('`+clientID+`');" type="button" class="delete btn btn-danger btn-sm">
           <i class="fa-sharp fa-solid fa-user-minus"></i>
         </button>`,
-        clientID]).draw(true);
+        nick]).draw(true);
 
     }
 
     function deletePermission(id){
-
       api.removeFWModelPermission(modelID,id,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");

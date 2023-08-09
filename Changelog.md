@@ -1,5 +1,21 @@
 # Changelog
 
+## version 1.0.34
+ - Stable version, all features are expected to be working.
+
+## version 1.0.33
+ - fixes MQTT ssl connection
+
+## version 1.0.32
+ - fixes Ars, Alarms, JScode and access pages
+
+## version 1.0.31
+ - changes mysql tables and queries
+ - adds deploy command to sync mysql tables
+
+## version 1.0.30
+ - check if network vars exist
+
 ## version 1.0.28
  - fixes db connections
 

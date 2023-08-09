@@ -14,8 +14,15 @@
   <%- include('../../partials/modal/error.ejs') %>
   <%- include('../../partials/modal/loading.ejs') %>
   <%- include('../../partials/modal/timeout.ejs') %>
+  <%- include('../../partials/modal/logsChart.ejs') %>
+  <%- include('../../partials/modal/logsList.ejs') %>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+
+  <script type="module" src="./app.mjs"></script>
 
   <div class="container-fluid">
       <div class="row flex-nowrap">
@@ -142,24 +149,43 @@
             <div class ="row">
               <div class="col-sm-12 mb-4 mb-sm-4">
                 <div class="content-header">
-                  <h5>Device available
+                  <h5>
+                    <button class="btn btn-primary btn-sm" type="submit" onclick="showDeviceLogs(`status`)">
+                      <i class="bi bi-list"></i>
+                    </button>
+                    Device available
                     <button id="status" type="button" class="btn btn-secondary" disabled></button
                   </h5>
                 </div>
                 <div class="mb-1 row">
-                  <label for="uptime" class="col-sm-3 col-form-label">Uptime</label>
+                  <label for="uptime" class="col-sm-3 col-form-label">
+                    <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`uptime`)">
+                      <i class="bi bi-list"></i>
+                    </button>
+                    Uptime
+                  </label>
                   <div class="col-sm-7">
                     <input type="text" readonly class="form-control-plaintext fw-bold" id="uptime" value="0">
                   </div>
                 </div>
                 <div class="mb-1 row">
-                  <label for="tech" class="col-sm-3 col-form-label">Tech</label>
+                  <label for="tech" class="col-sm-3 col-form-label">
+                    <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`tech`)">
+                      <i class="bi bi-list"></i>
+                    </button>
+                    Tech
+                  </label>
                   <div class="col-sm-7">
                     <input type="text" readonly class="form-control-plaintext fw-bold" id="tech" value="ND">
                   </div>
                 </div>
-                <div class="mb-5 row">
-                  <label for="rssi" class="col-sm-3 col-form-label">RSSI</label>
+                <div class="mb-3 row">
+                  <label for="rssi" class="col-sm-3 col-form-label">
+                    <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`rssi`)">
+                      <i class="bi bi-list"></i>
+                    </button>
+                    RSSI
+                  </label>
                   <div class="col-sm-7">
                     <input type="text" readonly class="form-control-plaintext fw-bold" id="rssi" value="99">
                   </div>
@@ -314,6 +340,7 @@
 
     var deviceID = api.getDeviceID();
     var project = "";
+    var uid = "";
     var action = "";
     var data = {}
     var loading = $('#modalLoading');
@@ -345,145 +372,172 @@
       {value:5,description:"AUTO"}
     ]
 
+    var ctx;
+    var table_list;
+
     $(document).ready(()=>{
 
-      api.getDeviceInfo(deviceID,(err,res)=>{
-        if(err) console.log(err.responseJSON.Message)
-        else if(res.length > 0 && res[0] != null){
+      table_list = $('#table_list').DataTable();
 
-          document.querySelector('#project').value = res[0].project;
-          document.querySelector('#model').value = res[0].model;
-          document.querySelector('#fw_version').value = res[0].fw_version;
-          document.querySelector('#app_version').value = res[0].app_version;
-          project = res[0].project;
+      ctx = echarts.init(document.getElementById('myChart'));
 
-          if(res[0].hasOwnProperty("fw_settings") && res[0].fw_settings != null){
+      let device = <%- JSON.stringify(device) %>;
+      let mqtt = <%- JSON.stringify(mqtt) %>;
 
-            if(res[0].fw_settings.hasOwnProperty("wifi") && res[0].fw_settings.wifi != null){
+      document.querySelector('#project').value = device.project;
+      document.querySelector('#model').value = device.model;
+      document.querySelector('#fw_version').value = device.fw_version;
+      document.querySelector('#app_version').value = device.app_version;
+      project = device.project;
+      uid = device.uid;
 
-              if(document.querySelector('#wifissid') != null){
-                document.querySelector('#wifissid').value = res[0].fw_settings.wifi.ssid;
-                document.querySelector('#wifipassword').value = res[0].fw_settings.wifi.pwd;
-              }
+      if(device.hasOwnProperty("settings") && device.settings != null){
+
+        if(device.settings.hasOwnProperty("wifi") && device.settings.wifi != null){
+          try{
+            let wifi = JSON.parse(device.settings.wifi);
+            if(document.querySelector('#wifissid') != null){
+              document.querySelector('#wifissid').value = wifi.ssid;
+              document.querySelector('#wifipassword').value = wifi.pwd;
             }
-
-            if(res[0].fw_settings.hasOwnProperty("modem") && res[0].fw_settings.modem != null){
-              if(document.querySelector('#_lte_apn_') != null){
-                document.querySelector('#_lte_apn_').value = res[0].fw_settings.modem.apn;
-                document.querySelector('#_lte_user_').value = res[0].fw_settings.modem.user;
-                document.querySelector('#_lte_pwd_').value = res[0].fw_settings.modem.pwd;
-                document.querySelector('#_lte_cops_').value = res[0].fw_settings.modem.cops;
-                document.querySelector('#_lte_band_').value = res[0].fw_settings.modem.band;
-                document.querySelector('#_lte_tech_').value = res[0].fw_settings.modem.tech;
-              }
-            }
-
-            if(res[0].fw_settings.hasOwnProperty("mqtt") && res[0].fw_settings.mqtt != null){
-              document.querySelector('#mqtt_host').value = res[0].fw_settings.mqtt.host;
-              document.querySelector('#mqtt_port').value = res[0].fw_settings.mqtt.port;
-              document.querySelector('#mqtt_user').value = res[0].fw_settings.mqtt.user;
-              document.querySelector('#mqtt_pwd').value = res[0].fw_settings.mqtt.pass;
-            }
-          }
-
-          addSelectedOption('#_fwrelease_',res[0].fw_release);
-          addOption('#_fwrelease_',"stable");
-          addOption('#_fwrelease_',"nightmare");
-
-          if(res[0].fw_settings != null){
-            if(res[0].fw_settings.hasOwnProperty("keepalive") && res[0].fw_settings.keepalive.hasOwnProperty("period")){
-              keepalive_arr.forEach((item,i)=>{
-                if(item.value == res[0].fw_settings.keepalive.period)
-                addSelectedOption2('#_fwkeepalive_',item.value,item.description);
-              });
-            }
-            if(res[0].fw_settings.hasOwnProperty("log") && res[0].fw_settings.log.hasOwnProperty("level")){
-              logs_level_arr.forEach((item,i)=>{
-                if(item.value == res[0].fw_settings.log.level)
-                addSelectedOption2('#_fwlogslevel_',item.value,item.description);
-              });
-            }
-
-            if(res[0].fw_settings.hasOwnProperty("modem") && res[0].fw_settings.modem.hasOwnProperty("tech")){
-              lte_tech_arr.forEach((item,i)=>{
-                if(item.value == res[0].fw_settings.modem.tech)
-                addSelectedOption2('#_lte_tech_',item.value,item.description);
-              });
-            }
-          }
-
-          keepalive_arr.forEach((item,i)=>{
-            addOption2('#_fwkeepalive_',item.value,item.description);
-          })
-
-          logs_level_arr.forEach((item,i)=>{
-            addOption2('#_fwlogslevel_',item.value,item.description);
-          })
-
-          lte_tech_arr.forEach((item,i)=>{
-            addOption2('#_lte_tech_',item.value,item.description);
-          })
-
-          $(".fwReleaseOption").change((event)=>{
-            $( ".fwReleaseOption option:selected" ).each(function() {
-              let release = $( this ).text();
-              release = release.trim()
-              api.updateDeviceRelease(deviceID,release,(err,res)=>{
-                if(err){
-                  $('#error').text("Your request cannot be executed");
-                  if(err.hasOwnProperty("sqlMessage"))
-                    $('#suggestion').text(err.sqlMessage);
-                  else
-                    $('#suggestion').text(err);
-                  $('#modalError').modal('show');
-                }
-              });
-            });
-          });
-
-          $(".fwKeepaliveOption").change((event)=>{
-            $( ".fwKeepaliveOption option:selected" ).each(function(item) {
-              let keepalive = $( this ).val();
-              data = {
-                period : keepalive
-              }
-              sendMessage("fw/settings/keepalive/set",JSON.stringify(data));
-            });
-          });
-
-          $(".fwLogsLevelOption").change((event)=>{
-            $( ".fwLogsLevelOption option:selected" ).each(function() {
-              let level = $( this ).val();
-              data = {
-                level : level
-              }
-              sendMessage("fw/settings/log/set",JSON.stringify(data));
-            });
-          });
-
-          api.getMqttCredentials((err,res)=>{
-
-            // connect the client
-            if(res != null && res.length > 0){
-
-              client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, res[0].idclients);
-
-              // set callback handlers
-              client.onConnectionLost = onConnectionLost;
-              client.onMessageArrived = onMessageArrived;
-
-              client.connect({
-                userName:res[0].idusers,
-                password:res[0].password,
-                useSSL:Settings.mqtt.ssl,
-                timeout:3,
-                onSuccess:onConnect
-              });
-            }
-          })
-
+          }catch(e){console.log(e)};
         }
+
+        if(device.settings.hasOwnProperty("modem") && device.settings.modem != null){
+
+          try{
+            let modem = JSON.parse(device.settings.modem);
+            if(document.querySelector('#_lte_apn_') != null){
+              document.querySelector('#_lte_apn_').value = modem.apn;
+              document.querySelector('#_lte_user_').value = modem.user;
+              document.querySelector('#_lte_pwd_').value = modem.pwd;
+              document.querySelector('#_lte_cops_').value = modem.cops;
+              document.querySelector('#_lte_band_').value = modem.band;
+              document.querySelector('#_lte_tech_').value = modem.tech;
+            }
+          }catch(e){console.log(e)};
+        }
+
+        if(device.settings.hasOwnProperty("mqtt") && device.settings.mqtt != null){
+          try{
+            let mqtt = JSON.parse(device.settings.mqtt)
+            document.querySelector('#mqtt_host').value = mqtt.host;
+            document.querySelector('#mqtt_port').value = mqtt.port;
+            document.querySelector('#mqtt_user').value = mqtt.user;
+            document.querySelector('#mqtt_pwd').value = mqtt.pass;
+          }catch(err){}
+        }
+      }
+
+      addSelectedOption('#_fwrelease_',device.fw_release);
+      addOption('#_fwrelease_',"stable");
+      addOption('#_fwrelease_',"nightmare");
+
+      if(device.settings != null){
+        if(device.settings.hasOwnProperty("keepalive")){
+          let keepalive;
+          try{
+            keepalive = JSON.parse(device.settings.keepalive);
+          }catch(e){}
+          keepalive_arr.forEach((item,i)=>{
+            if(item.value == keepalive?.period)
+              addSelectedOption2('#_fwkeepalive_',item.value,item.description);
+          });
+        }
+        if(device.settings.hasOwnProperty("log")){
+          let log;
+          try{
+            log = JSON.parse(device.settings.log);
+          }catch(e){}
+          logs_level_arr.forEach((item,i)=>{
+            if(item.value == log?.level)
+              addSelectedOption2('#_fwlogslevel_',item.value,item.description);
+          });
+        }
+
+        if(device.settings.hasOwnProperty("modem")){
+          let modem;
+          try{
+            modem = JSON.parse(device.settings.modem);
+          }catch(e){}
+          lte_tech_arr.forEach((item,i)=>{
+            if(item.value == device.fw_settings.modem?.tech)
+              addSelectedOption2('#_lte_tech_',item.value,item.description);
+          });
+        }
+      }
+
+      keepalive_arr.forEach((item,i)=>{
+        addOption2('#_fwkeepalive_',item.value,item.description);
       })
+
+      logs_level_arr.forEach((item,i)=>{
+        addOption2('#_fwlogslevel_',item.value,item.description);
+      })
+
+      lte_tech_arr.forEach((item,i)=>{
+        addOption2('#_lte_tech_',item.value,item.description);
+      })
+
+      $(".fwReleaseOption").change((event)=>{
+        $( ".fwReleaseOption option:selected" ).each(function() {
+          let release = $( this ).text();
+          release = release.trim()
+          api.updateDeviceRelease(deviceID,release,(err,res)=>{
+            if(err){
+              $('#error').text("Your request cannot be executed");
+              if(err.hasOwnProperty("sqlMessage"))
+                $('#suggestion').text(err.sqlMessage);
+              else
+                $('#suggestion').text(err);
+              $('#modalError').modal('show');
+            }
+          });
+        });
+      });
+
+      $(".fwKeepaliveOption").change((event)=>{
+        $( ".fwKeepaliveOption option:selected" ).each(function(item) {
+          let keepalive = $( this ).val();
+          data = {
+            period : keepalive
+          }
+          sendMessage("fw/settings/keepalive/set",JSON.stringify(data));
+        });
+      });
+
+      $(".fwLogsLevelOption").change((event)=>{
+        $( ".fwLogsLevelOption option:selected" ).each(function() {
+          let level = $( this ).val();
+          data = {
+            level : level
+          }
+          sendMessage("fw/settings/log/set",JSON.stringify(data));
+        });
+      });
+
+
+      // connect the client
+      if(mqtt != null){
+        if(window.location.protocol == "https:"){
+          Settings.mqtt.ssl = true;
+          Settings.mqtt.port = 443;
+        }
+        client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
+
+        // set callback handlers
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
+
+        client.connect({
+          userName:mqtt.type,
+          password:mqtt.password,
+          useSSL:Settings.mqtt.ssl,
+          timeout:3,
+          onSuccess:onConnect
+        });
+      }
+
     });
 
 
@@ -581,7 +635,7 @@
       let button = document.querySelector('#mqtt_status');
       button.classList.toggle("btn-secondary",false);
       button.classList.toggle("btn-success",true);
-      client.subscribe(project+"/"+deviceID+"/#");
+      client.subscribe(project+"/"+uid+"/#");
     }
 
     // called when the client loses its connection
@@ -688,7 +742,7 @@
 
     function sendMessage(topic,payload){
       message = new Paho.MQTT.Message(payload);
-      message.destinationName = project+"/"+deviceID+"/"+topic;
+      message.destinationName = project+"/"+uid+"/"+topic;
 
       loading.modal('show');
       setTimeout(()=>{
@@ -704,8 +758,6 @@
         loading.modal('hide'); // set confirmation
         clearTimeout(timeoutId);
       });
-
-
     }
 
     function addSelectedOption(id,release){
@@ -730,6 +782,125 @@
       $(id).append(`<option value="${value}">
                                  ${description}
                             </option>`);
+    }
+
+    function showDeviceLogs(sensor){
+
+      api.getDeviceLogs(deviceID,sensor,(err,res)=>{
+        if(err) console(err);
+        if(res?.length > 0 && typeof res[0][sensor] === "string" )
+          showList(sensor,res);
+        else
+          drawLinearChart(sensor,res);
+      })
+    }
+
+    function showList(sensor,data){
+      // Sort the array
+      table_list.clear();
+      calculateTimeDifference(data);
+      data.map((item,i)=>{
+        if(data?.duration)
+          data.duration = 0;
+        table_list.row.add([
+          moment(item.createdAt).format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
+        ]).draw(true);
+      })
+
+      table_list.order([0, 'desc']).draw();
+      $('#modalListLogs').modal('show');
+    }
+
+    function calculateTimeDifference(data){
+
+      data.slice(1).map((item, i) => {
+        // convert both current and previous timestamps to milliseconds
+        let previous = moment(item.createdAt).unix();
+        let current = moment(data[i].createdAt).unix();
+
+        data[i+1].duration = getDifference(current,previous);
+        return;
+      });
+      let previous = moment(data[0].createdAt).unix();
+      let current = moment().unix();
+      data[0].duration = getDifference(current,previous);
+    }
+
+    function getDifference(current, previous){
+      // calculate difference in seconds
+      let differenceInSeconds = (current - previous) % 60;
+      differenceInSeconds = differenceInSeconds.toFixed(0);
+      let sec_str = String(differenceInSeconds).padStart(2, '0');
+
+      // you can convert the difference to minutes, hours etc.
+      let differenceInMinutes = (current - previous) % 3600 / 60;
+      differenceInMinutes = differenceInMinutes.toFixed(0);
+      let min_str = String(differenceInMinutes).padStart(2, '0');
+
+      let differenceInHours = (current - previous) / 3600;
+      differenceInHours = differenceInHours.toFixed(0);
+      let hour_str = String(differenceInHours).padStart(2, '0');
+      let time = hour_str+":"+min_str+":"+sec_str;
+      return time;
+    }
+
+    function drawLinearChart(sensor,data){
+      let option = {
+        legend:{
+          data:[sensor],
+          type:"scroll"
+        },
+        tooltip: {
+          trigger: 'axis',
+          formatter: function (params) {
+            return 'date: '+moment.unix(Number(params[0].axisValue)).format('YYYY/MM/DD HH:mm') + '<br />' + sensor+': '+params[0].value;
+          }
+        },
+        dataZoom:[{type:'inside'}],
+        xAxis: {
+          name: 'time',
+          nameLocation: 'center',
+          nameGap:20,
+          nameTextStyle:{
+            fontWeight:'bold',
+          },
+          data: data.map(function (item) {
+            return moment(item.createdAt).unix();
+          }),
+          axisLabel: {
+            formatter: function (value, idx) {
+              return moment.unix(value).format('DD HH:mm');
+            }
+          },
+        },
+        yAxis: {
+          /*
+          name: 'values',
+          nameLocation: 'center',
+          nameGap:35,
+          nameTextStyle:{
+            fontWeight:'bold',
+          },
+          */
+        },
+        series: [
+          {
+            data: data.map(function (item) {
+              if(sensor == "status"){
+                return item[sensor] == "online" ? 1 : 0;
+              }else return item[sensor];
+            }),
+            name:sensor,
+            type: 'line',
+            smooth: true
+          }
+        ]
+      };
+
+      ctx.setOption(option)
+      ctx.resize();
+
+      $('#modalChartLogs').modal('show');
     }
 
     // On mqtt connect, topic subscribe, change status device

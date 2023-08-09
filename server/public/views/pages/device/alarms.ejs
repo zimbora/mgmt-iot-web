@@ -38,7 +38,7 @@
               <div class="col-sm-8 mb-3 mb-sm-0">
                 <div class="content-header">
                   <h5>Alarms editor
-                    <button id="mqtt_status" type="button" class="btn btn-secondary" disabled></button
+                    <button id="mqtt_status" type="button" class="btn btn-secondary" disabled></button>
                   </h5>
                 </div>
                 <div class="card">
@@ -51,7 +51,7 @@
               <div class="col-sm-4 mb-2 mb-sm-0">
                 <div class="content-header">
                   <h5>Device available
-                    <button id="status" type="button" class="btn btn-secondary" disabled></button
+                    <button id="status" type="button" class="btn btn-secondary" disabled></button>
                   </h5>
                 </div>
                 <div class="card">
@@ -110,12 +110,15 @@
 
     deviceID = api.getDeviceID();
     var project = "";
+    var uid = "";
 
     $(document).ready(()=>{
 
       documentation.innerHTML = markdown.toHTML(`
 
   This module configures alarms on respective device.
+
+  Send '{}' to clean arlarms on device
 
   Minimum and maximum values for safe zone can be set, using min_value and max_value fields.
 
@@ -136,45 +139,37 @@
   Note: check if a field for inside or outside zone is available
       `);
 
-      console.log("deviceID:",deviceID)
-      api.getDeviceInfo(deviceID,(err,res)=>{
+      let device = <%- JSON.stringify(device) %>;
+      let mqtt = <%- JSON.stringify(mqtt) %>;
+      project = device.project;
+      uid = device.uid;
 
-        if(err) console.log(err);
-        else if(res != null && res.length > 0){
-          project = res[0].project;
-          // connect the client
-          api.getMqttCredentials((err,res)=>{
+      if(window.location.protocol == "https:"){
+        Settings.mqtt.ssl = true;
+        Settings.mqtt.port = 443;
+      }
+      client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
 
-            // connect the client
-            if(res != null && res.length > 0){
 
-              client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, res[0].idclients);
+      // set callback handlers
+      client.onConnectionLost = onConnectionLost;
+      client.onMessageArrived = onMessageArrived;
 
-              // set callback handlers
-              client.onConnectionLost = onConnectionLost;
-              client.onMessageArrived = onMessageArrived;
-
-              client.connect({
-                userName:res[0].idusers,
-                password:res[0].password,
-                useSSL:Settings.mqtt.ssl,
-                timeout:3,
-                onSuccess:onConnect
-              });
-            }
-          })
-        }
+      client.connect({
+        userName:mqtt.type,
+        password:mqtt.password,
+        useSSL:Settings.mqtt.ssl,
+        timeout:3,
+        onSuccess:onConnect
       });
 
-      api.getDeviceAlarms(deviceID,(err,res)=>{
-        if(err) console.log(err)
-        else if(res != null && res.length > 0){
-          if(res[0].alarms != null && res[0].alarms != ""){
-            let payload = JSON.parse(res[0].alarms)
-            editor.setValue(JSON.stringify(payload,null,2));
-          }
-        }
-      })
+      let alarms = null;
+      try{
+        alarms = JSON.parse(JSON.stringify(device.alarms));
+      }catch(e){console.log(e)}
+
+      if(alarms != null)
+        editor.setValue(JSON.stringify(alarms,null,2));
 
     });
 
@@ -184,8 +179,8 @@
       let button = document.querySelector('#mqtt_status');
       button.classList.toggle("btn-secondary",false);
       button.classList.toggle("btn-success",true);
-      client.subscribe(project+"/"+deviceID+"/status");
-      client.subscribe(project+"/"+deviceID+"/fw/alarm/#");
+      client.subscribe(project+"/"+uid+"/status");
+      client.subscribe(project+"/"+uid+"/fw/alarms/#");
     }
 
     function onConnectionLost(responseObject) {
@@ -218,7 +213,7 @@
 
     function sendAlarms(payload){
       message = new Paho.MQTT.Message(payload);
-      message.destinationName = project+"/"+deviceID+"/fw/alarm/set";
+      message.destinationName = project+"/"+uid+"/fw/alarms/set";
 
       var loading = $('#modalLoading');
       loading.modal('show');

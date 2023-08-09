@@ -34,6 +34,14 @@ router.route("/:device_id/info")
 
   .get(Device.getInfo)
 
+router.route("/:device_id/status/logs")
+
+  .get(Device.getStatusLogs)
+
+router.route("/:device_id/sensor/logs")
+
+  .get(Device.getSensorLogs)
+
 router.route("/:device_id/autorequests")
 
   .get(Device.getAutorequests)
@@ -48,5 +56,8 @@ router.route("/:device_id/jscode")
 
 router.route("/:device_id/release")
   .put(Device.updateDeviceRelease)
+
+router.route("/:device_id/settings")
+  .put(Device.updateDeviceSettings)
 
 module.exports =  router;

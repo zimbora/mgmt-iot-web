@@ -25,26 +25,17 @@ module.exports = {
       response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"app version not defined");
     }
 
-
     let firmware = req.file;
 
     if(!firmware.hasOwnProperty("filename"))
       response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"filename not defined");
-    if(!firmware.hasOwnProperty("filename"))
+    if(!firmware.hasOwnProperty("originalname"))
       response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"originalname not defined");
-    /*
-    console.log("filename:",firmware.filename)
-    console.log("firmware name:",firmware.originalname)
-    console.log("fw_version:",fw_version)
-    console.log("app_version:",app_version)
-    console.log("model:",req.params.model_id)
-    */
+
     Firmware.add(firmware.filename,firmware.originalname,fw_version,app_version,req.params.model_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     })
-
-
   },
 
   delete : (req, res, next)=>{
@@ -101,7 +92,7 @@ module.exports = {
   },
 
   list : (req, res, next)=>{
-    console.log("model:",req.params.model_id);
+
     Firmware.listByModel(req.params.model_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
@@ -121,19 +112,25 @@ module.exports = {
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }
-
   },
 
   get : (req, res, next)=>{
 
     // send file
     var filePath = path.join(__dirname, "../public/firmwares/"+req.params.fwId);
-    console.log("filePath:",filePath)
     const file = fs.readFileSync(filePath);
     const hash = crypto.createHash('md5').update(file).digest('hex');
     res.set('Content-MD5', hash);
     res.sendFile(filePath);
+  },
 
+  getModelInfo : (req,res,next)=>{
+
+    // check if user has permissions to create a model
+    Firmware.getModelInfo(req.params.model_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
   },
 
   addModel : (req,res,next)=>{
@@ -143,19 +140,16 @@ module.exports = {
     }).validate(req.body);
 
     // check if user has permissions to create a model
-    Firmware.addModel(req.user.id,req.body.model,req.body.description,(err,rows)=>{
+    Firmware.addModel(req.user.nick,req.body.model,req.body.description,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
   },
 
   deleteModel : (req,res,next)=>{
-    const val = Joi.object({
-      model: Joi.string().required()
-    }).validate(req.body);
 
     // check if user has permissions to create a model
-    Firmware.deleteModel(req.user.id,req.body.model,(err,rows)=>{
+    Firmware.deleteModel(req.user.id,req.params.model_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
@@ -179,7 +173,6 @@ module.exports = {
     const val = Joi.object({
       clientID: Joi.string().required(),
     }).validate(req.body);
-
     Firmware.grantModelPermission(req.body.clientID,req.params.model_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);

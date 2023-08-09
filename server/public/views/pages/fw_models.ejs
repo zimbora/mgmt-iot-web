@@ -80,7 +80,7 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.name,item.description);
+            addRow(item.id,item.name,item.description);
           });
         }
       });
@@ -88,13 +88,13 @@
     });
 
 
-    function addRow(model,description){
+    function addRow(id,model,description){
 
       t.row.add([`
-        <button id="`+model+`" onclick="deleteModel('`+model+`');" type="button" class="delete btn btn-secondary btn-sm">
+        <button id="`+id+`" onclick="deleteModel('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
           <i class="bi bi-folder-x"></i>
         </button>`,
-        `<a href="./firmware/`+model+`/list">`+model+`</a>`,
+        `<a href="./firmware/`+id+`/list">`+model+`</a>`,
         description]).draw(true);
     }
 
@@ -110,9 +110,8 @@
       });
     });
 
-    function deleteModel(name){
-      console.log("delete:",name)
-      id = name
+    function deleteModel(model_id){
+      id = model_id
       $('#modalConfirmation').modal('show');
     };
 

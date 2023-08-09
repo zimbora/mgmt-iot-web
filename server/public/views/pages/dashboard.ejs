@@ -111,6 +111,13 @@
 
   $(document).ready(()=>{
 
+    let mqtt = <%- JSON.stringify(mqtt) %>;
+
+    if(window.location.protocol == "https:"){
+      Settings.mqtt.ssl = true;
+      Settings.mqtt.port = 443;
+    }
+
     api.getDevices((err,rows)=>{
       if(err) console.log(err)
       else{
@@ -252,26 +259,23 @@
       document.getElementById('registeredModels').innerHTML = rows.length
     })
 
-    api.getMqttCredentials((err,res)=>{
+    // connect the client
+    if(mqtt != null){
 
-      // connect the client
-      if(res != null && res.length > 0){
+      client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
 
-        client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, res[0].idclients);
+      // set callback handlers
+      client.onConnectionLost = onConnectionLost;
+      client.onMessageArrived = onMessageArrived;
 
-        // set callback handlers
-        client.onConnectionLost = onConnectionLost;
-        client.onMessageArrived = onMessageArrived;
-
-        client.connect({
-          userName:res[0].idusers,
-          password:res[0].password,
-          useSSL:Settings.mqtt.ssl,
-          timeout:3,
-          onSuccess:onConnect
-        });
-      }
-    })
+      client.connect({
+        userName:mqtt.type,
+        password:mqtt.password,
+        useSSL:Settings.mqtt.ssl,
+        timeout:3,
+        onSuccess:onConnect
+      });
+    }
 
     // called when the client connects
     function onConnect() {

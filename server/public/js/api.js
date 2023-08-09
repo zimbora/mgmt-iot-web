@@ -78,6 +78,40 @@ var api = {
     });
   },
 
+  getDeviceLogs : function(deviceID,sensor,cb){
+
+    $.ajax({
+      url : Settings.api+'/device/'+deviceID+'/status/logs',type: 'GET',
+      data : {
+        sensor:sensor
+      },
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
+  getSensorLogs : function(deviceID,sensor,cb){
+
+    $.ajax({
+      url : Settings.api+'/device/'+deviceID+'/sensor/logs',type: 'GET',
+      data : {
+        sensor:sensor
+      },
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
   // get clients with access to the device
   getDeviceAutorequests : function(deviceID,cb){
     $.ajax({
@@ -136,6 +170,27 @@ var api = {
       },
       body: JSON.stringify({
         release: release
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  updateDeviceSettings : (deviceID,settings,cb)=>{
+    fetch(Settings.api+"/device/"+deviceID+"/settings", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        settings: settings
       })
     })
     .then(function (response) {
@@ -466,6 +521,22 @@ var api = {
 
   },
 
+  // get fw model info
+  getFWModelInfo : function(modelId,cb){
+
+    $.ajax({
+      url : Settings.api+'/firmwares/model/'+modelId,type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
   // add fw model
   addFWModel : (model,description,cb)=>{
     fetch(Settings.api+"/firmwares/models", {
@@ -489,16 +560,14 @@ var api = {
     });
   },
 
-  // add fw model
-  removeFWModel : (model,cb)=>{
-    fetch(Settings.api+"/firmwares/models", {
+  // remove fw model
+  removeFWModel : (modelId,cb)=>{
+    console.log("modelId:",modelId);
+    fetch(Settings.api+"/firmwares/model/"+modelId, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: model
-      })
     })
     .then(function (response) {
       return response.json();
@@ -525,7 +594,6 @@ var api = {
       },
       dataType : "JSON"
     });
-
   },
 
   // add FW Model Permission to client
@@ -545,7 +613,6 @@ var api = {
     });
   },
 
-
   // add FW Model Permission to client
   grantFWModelPermission : (model,clientID,cb)=>{
     fetch(Settings.api+"/firmware/"+model+"/permission", {
@@ -558,6 +625,7 @@ var api = {
       })
     })
     .then(function (response) {
+      console.log(response)
       return response.json();
     })
     .then(function (data) {
@@ -591,7 +659,7 @@ var api = {
   },
 
   // add permission to client to access device
-  addFirmware : (file,model,fw_version,app_version,cb)=>{
+  addFirmware : (modelID,file,fw_version,app_version,cb)=>{
 
     const formData = new FormData();
 
@@ -599,7 +667,7 @@ var api = {
     formData.append('app_version', app_version);
     formData.append('file', file);
 
-    fetch(Settings.api+"/firmware/"+model, {
+    fetch(Settings.api+"/firmware/"+modelID, {
       method: 'POST',
       body: formData
     })

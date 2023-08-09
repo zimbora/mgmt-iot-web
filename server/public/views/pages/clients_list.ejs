@@ -113,7 +113,7 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.idclients,item.token,item.api_token,item.users_idusers,moment(item.timestamp).format('YY/MM/DD LT'));
+            addRow(item.id,item.nick,item.token,item.api_token,item.type,moment(item.createdAt).format('YY/MM/DD LT'));
           });
         }
       });
@@ -122,34 +122,37 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addOption("#_userID_",item.idusers)
+            addOption("#_userID_",item.id,item.type)
           });
         }
       })
     });
 
-    function addOption(element, user_id){
+    function addOption(element, id, user_id, selected){
 
-      $(element).append(`<option value="${user_id}">
-                                 ${user_id}
-                            </option>`);
+      if(selected) $(element).append(`<option selected value="${id}">${user_id}</option>`);
+      else $(element).append(`<option value="${id}">${user_id}</option>`);
     }
 
-    function addRow(client_id,password,api_token,user,registered){
+    function addRow(clientId,nick,password,api_token,user,registered){
+      if(nick.indexOf("uid:") > -1)
+          return;
+      if(password == null)
+        password = "";
       t.row.add([`
         <div class="btn-group">
-          <button onclick="deleteClient('`+client_id+`');" type="button" class="delete btn btn-secondary btn-sm">
+          <button onclick="deleteClient('`+clientId+`');" type="button" class="delete btn btn-secondary btn-sm">
             <i class="fa-solid fa-user-xmark"></i>
           </button>
-          <button onclick="editClient('`+client_id+`,`+password+`,`+user+`');" type="button" class="edit btn btn-primary btn-sm">
+          <button onclick="editClient('`+clientId+`,`+password+`,`+user+`');" type="button" class="edit btn btn-primary btn-sm">
             <i class="fa-solid fa-user-pen"></i>
           </button>
         </div>`,
-        `<a href="./client/`+client_id+`">`+client_id+`</a>`,
+        `<a href="./client/`+clientId+`">`+nick+`</a>`,
         `<div class="btn-group">
           <label for="inputPassword2" class="sr-only">Password</label>
-          <input type="password" disabled class="form-control" id='`+client_id+`' name="password" value=`+password+`>
-          <button type="button" class="btn mb-2" onclick="togglePasswordVisibility('`+client_id+`')">
+          <input type="password" disabled class="form-control" id='`+clientId+`' name="password" value=`+password+`>
+          <button type="button" class="btn mb-2" onclick="togglePasswordVisibility('`+clientId+`')">
             <i class="bi bi-eye-fill"></i>
           </button>
         </div>`,
@@ -177,8 +180,11 @@
 
       const myInput = document.getElementById('_modalPasswordID_');
       // Change the value of the input element
-      if(typeof pwd !== "undefined")
-        myInput.value = pwd;
+      console.log("pwd:",pwd)
+      if(typeof pwd !== "undefined"){
+        if(pwd == "null") myInput.value = "";
+        else myInput.value = pwd;
+      }
 
       const mySelect = document.getElementById('_modalUserType_');
       while (mySelect.options.length > 0) {
@@ -188,10 +194,10 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addOption("#_modalUserType_",item.idusers)
-            if(i == res.length-1){
-              mySelect.value = user_type;
-            }
+            if(user_type == item.type)
+              addOption("#_modalUserType_",item.id,item.type,true)
+            else
+              addOption("#_modalUserType_",item.id,item.type)
           });
         }
       })
@@ -212,9 +218,6 @@
     $("#modalChangeClientSettings").click(()=>{
       let pwd = $("#_modalPasswordID_").val();
       let user_type = $("#_modalUserType_").val();
-      console.log("edit client:",id);
-      console.log("password:",pwd);
-      console.log("user_type:",user_type);
 
       api.updateClient(id,pwd,user_type,(err,res)=>{
         if(err){
@@ -223,6 +226,7 @@
           $('#modalError').modal('show');
         }else location.reload();
       });
+
     });
 
     $("#submit").click(()=>{

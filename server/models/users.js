@@ -1,109 +1,117 @@
 var mysql = require('mysql2');
 var db = require('../controllers/db');
+const moment = require('moment');
 
 var self = module.exports = {
 
-  add : (user,pwd,level,cb)=>{
+  getId : async(type)=>{
 
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        let query = "INSERT INTO ?? (??,??,??) VALUES (?,?,?)";
-        let table = ["users","idusers","password","level",user,pwd,level];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          if(err) console.log(err)
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(null,rows);
-        });
-      }
+     return new Promise((resolve,reject) => {
+      var query = `select id from users where type = ?`;
+      var table = [type];
+      query = mysql.format(query,table);
+
+      db.queryRow(query)
+      .then(rows => {
+        if(rows.length > 0) return resolve(rows[0].id);
+        return resolve(null);
+      })
+      .catch(error => {
+        console.log(error);
+        return resolve(null);
+      })
     });
   },
 
-  delete : (user,cb)=>{
+  add : async(type,pwd,level,cb)=>{
 
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        let query = "DELETE FROM ?? where ?? = ?";
-        let table = ["users","idusers",user];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          if(err){
-            db.close_db_connection(conn);
-            return cb(err,null);
-          }else{
-            return cb(null,rows);
-            let query = "DELETE FROM ?? where ?? = ?";
-            let table = ["clients","idclients",clientid];
-            query = mysql.format(query,table);
-            conn.query(query,function(err,rows){
-              if(err) return cb(err,null);
-              else return cb(null,rows);
-            });
-          }
-        });
-      }
+    let obj = {
+      type : type,
+      password : pwd,
+      level: level,
+      createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+
+    db.insert("users",obj)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
     });
   },
 
-  update : (user,pwd,level,cb)=>{
+  delete : async (type,cb)=>{
 
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        let query = "UPDATE ?? set ?? = ?, ??=? where ?? = ?";
-        let table = ["users","password",pwd,"level",level,"idusers",user];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(null,rows);
-        });
-      }
+    let filter = {
+      type : type,
+    }
+
+    db.delete("users",filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
     });
   },
 
-  list : (cb)=>{
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        var query = `select * from users`;
-        var table = [];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) cb(err,null);
-          else cb(null,rows);
-        });
-      }
+  update : async (id,type,pwd,level,cb)=>{
+
+    let obj = {
+      password : pwd,
+      level : level,
+      type : type,
+      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    let filter = {
+      id : id
+    };
+
+    db.update("users",obj,filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
     });
   },
 
-  addIfNotRegistered : (user,pwd,level,cb)=>{
+  list : async (cb)=>{
 
-    db.getConnection((err,conn) => {
-      if(err)
-        cb(err,null)
-      else{
-        var query = `select * from users where idusers = ?`;
-        var table = [user];
-        query = mysql.format(query,table);
-        conn.query(query,function(err,rows){
-          db.close_db_connection(conn);
-          if(err) return cb(err,null);
-          else if(rows != null && rows.length == 0){
-            self.add(user,pwd,level,(err,res)=>{
-              return cb(err,res);
-            })
-          } else return cb(null,rows);
-        });
+    var query = `select * from users`;
+    var table = [];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  addIfNotRegistered : async (type,pwd,level,cb)=>{
+
+    var query = `select * from users where type = ?`;
+    var table = [type];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0){
+        self.add(type,pwd,level,(err,res)=>{
+          return cb(err,res);
+        })
+      }else{
+        return cb("User already registered",null);
       }
-    });
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
   }
 };

@@ -95,38 +95,36 @@ async function authenticate_google(req,res,next){
       audience: clientId
     });
     const data = ticket.getPayload();
-     //log.debug(data.name);
-     //log.debug(data.email);
-     //log.debug(data.picture);
-     Client.findGoogleClient(data.email,(err,result)=>{
-       console.log(err);
-       if(err) res.json({message:"Failure"});
-       else if(result == null){
-         // registe user
-         Client.registerGoogleClient(config.new_client.user_type,data,(err,result)=>{
-           if(err){
-             console.log(err);
-             res.json({message:"Failure"});
-           }
-           else if(result == null) res.json({message:"Couldn't register user"});
-           else{
-             Client.findGoogleClient(data.email,(err,result)=>{
-               if(err) res.json({message:"Failure"});
-               else if(result == null) res.json({message:"Something went wrong during user registration"});
-               else{
-                 req.user = result;
-                 next();
-               }
-             });
-           }
-         });
+    const userId = await User.getId(config.new_client.user_type);
+
+    Client.findGoogleClient(data.email, (err,result)=>{
+      console.log(err);
+      if(err) res.json({message:"Failure"});
+      else if(result == null){
+        // register user
+        Client.registerGoogleClient(userId,data,(err,result)=>{
+          if(err){
+            console.log(err);
+            res.json({message:"Failure"});
+          }
+          else if(result == null) res.json({message:"Couldn't register user"});
+          else{
+            Client.findGoogleClient(data.email,(err,result)=>{
+              if(err) res.json({message:"Failure"});
+              else if(result == null) res.json({message:"Something went wrong during user registration"});
+              else{
+                req.user = result;
+                next();
+              }
+            });
+          }
+        });
+      }
+      else{
+        req.user = result;
+        next();
        }
-       else{
-         //log.debug(result)
-         req.user = result;
-         next();
-       }
-     });
+    });
 
   }catch(error){
     log.warn("Google Unauthorized");
@@ -143,10 +141,12 @@ function generateToken(req, res, next) {
   if (!req.user) return next();
 
   const jwtPayload = {
-    id : req.user.idclients,
-    type: req.user.idusers,
+    user_id : req.user.user_id,
+    type: req.user.type,
     level: req.user.level,
-    name: req.user.name || req.user.idclients,
+    client_id : req.user.client_id,
+    nick: req.user.nick,
+    name: req.user.name,
     ip : req.ip,
     agent: req.get('User-Agent'),
     avatar: req.user.avatar,

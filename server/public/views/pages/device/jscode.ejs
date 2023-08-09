@@ -100,8 +100,10 @@ function foo(items) {
       editor.setTheme("ace/theme/monokai");
       editor.session.setMode("ace/mode/javascript");
 
-      deviceID = api.getDeviceID();
       var project = "";
+      var uid = "";
+
+      deviceID = api.getDeviceID();
 
       //new Editor($("text-input"), $("preview"));
       base.innerHTML = markdown.toHTML(`#####C API imported to JS (Default):
@@ -205,55 +207,49 @@ gpio.write(led.pin, led.on);
 
       $(document).ready(()=>{
 
-        api.getDeviceInfo(deviceID,(err,res)=>{
-          if(err) console.log(err);
-          else if(res != null && res.length > 0){
-            project = res[0].project;
+        let device = <%- JSON.stringify(device) %>;
+        let mqtt = <%- JSON.stringify(mqtt) %>;
+        project = device.project;
+        uid = device.uid;
 
-            api.getMqttCredentials((err,res)=>{
+        if(window.location.protocol == "https:"){
+          Settings.mqtt.ssl = true;
+          Settings.mqtt.port = 443;
+        }
+        client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
 
-              // connect the client
-              if(res != null && res.length > 0){
+        // set callback handlers
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
 
-                client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, res[0].idclients);
-
-                // set callback handlers
-                client.onConnectionLost = onConnectionLost;
-                client.onMessageArrived = onMessageArrived;
-
-                client.connect({
-                  userName:res[0].idusers,
-                  password:res[0].password,
-                  useSSL:Settings.mqtt.ssl,
-                  timeout:3,
-                  onSuccess:onConnect
-                });
-              }
-            })
-          }
+        client.connect({
+          userName:mqtt.type,
+          password:mqtt.password,
+          useSSL:Settings.mqtt.ssl,
+          timeout:3,
+          onSuccess:onConnect
         });
-        api.getDeviceJSCode(deviceID,(err,res)=>{
-          if(err) console.log(err)
-          else if(res != null && res.length > 0){
-            if(res[0] != null)
-              editor.setValue(res[0].js_program);
-          }
-        })
 
+        js_program = device.js_program
+        if(js_program != null)
+          editor.setValue(js_program);
       });
 
       // called when the client connects
       function onConnect() {
+        console.log("connected");
         // Once a connection has been made, make a subscription and send a message.
         let button = document.querySelector('#mqtt_status');
         button.classList.toggle("btn-secondary",false);
         button.classList.toggle("btn-success",true);
-        client.subscribe(project+"/"+deviceID+"/status");
-        client.subscribe(project+"/"+deviceID+"/fw/js/#");
-        client.subscribe(project+"/"+deviceID+"/js/#");
+        console.log("uid:",uid)
+        client.subscribe(project+"/"+uid+"/status");
+        client.subscribe(project+"/"+uid+"/fw/js_program/#");
+        client.subscribe(project+"/"+uid+"/js/#");
       }
 
       function onConnectionLost(responseObject) {
+        console.log("connection lost");
         button.classList.toggle("btn-secondary",false);
         button.classList.toggle("btn-danger",true);
         if (responseObject.errorCode !== 0) {
@@ -266,6 +262,8 @@ gpio.write(led.pin, led.on);
         let topic = message.destinationName;
         let payload = message.payloadString;
 
+        console.log(topic);
+        console.log(payload);
         if(topic.includes("status")){
           let button = document.querySelector('#status');
           button.classList.toggle("btn-secondary",false);
@@ -282,16 +280,16 @@ gpio.write(led.pin, led.on);
         else if(topic.endsWith("debug"))
           $('#consoleArea').val(date.toJSON()+" [debug] : "+payload+currentText);
 
-          if(topic.endsWith("set")){
-            if(payload == "" || payload == null || payload === 'undefined'){
-              $(document).trigger("closeModalLoading"); // set confirmation
-            }
+        if(topic.endsWith("set")){
+          if(payload == "" || payload == null || payload === 'undefined'){
+            $(document).trigger("closeModalLoading"); // set confirmation
           }
+        }
       }
 
       function sendScript(payload){
         message = new Paho.MQTT.Message(payload);
-        message.destinationName = project+"/"+deviceID+"/fw/js/code/set";
+        message.destinationName = project+"/"+uid+"/fw/js_program/set";
 
         var loading = $('#modalLoading');
         loading.modal('show');

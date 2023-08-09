@@ -83,6 +83,32 @@ module.exports = {
     });
   },
 
+  // get staus logs
+  getStatusLogs : (req, res, next)=>{
+
+    const val = Joi.object({
+      sensor: Joi.string().required(),
+    }).validate(req.query);
+
+    device.getStatusLogs(req.params.device_id,req.query.sensor,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
+  // get device logs
+  getSensorLogs : (req, res, next)=>{
+
+    const val = Joi.object({
+      sensor: Joi.string().required(),
+    }).validate(req.query);
+
+    device.getSensorLogs(req.params.device_id,req.query.sensor,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
   // delete device
   delete  : (req, res, next)=>{
     device.delete(req.params.device_id,(err,rows)=>{
@@ -140,6 +166,22 @@ module.exports = {
     }
   },
 
+  // update device settings
+  updateDeviceSettings : (req, res, next)=>{
+
+    const val = Joi.object({
+      settings: Joi.string().required(),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.updateDeviceSettings(req.params.device_id,req.body.settings,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
 };
 /*
 function update(req, res, next) {

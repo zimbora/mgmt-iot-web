@@ -37,11 +37,11 @@
               <thead>
                 <tr>
                   <th></th>
-                  <th>uid</th>
-                  <th>model</th>
-                  <th>fw</th>
-                  <th>app</th>
+                  <th>date</th>
+                  <th>value</th>
+                  <th>created</th>
                   <th>status</th>
+                  <th>updated</th>
                 </tr>
               </thead>
             </table>
@@ -51,6 +51,8 @@
       </div>
     </div>
   </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js" integrity="sha512-42PE0rd+wZ2hNXftlM78BSehIGzezNeQuzihiBCvUEB3CVxHvsShF86wBWwQORNxNINlBPuq7rG4WWhNiTVHFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
   <%- include('../partials/modal/confirmation.ejs') %>
   <%- include('../partials/modal/error.ejs') %>
@@ -65,13 +67,13 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.uid,item.model,item.fw_version,item.app_version,item.status);
+            addRow(item.id,item.uid,item.project,moment(item.createdAt).format('YY/MM/DD LT'),item.status,moment(item.updatedAt).format('YY/MM/DD LT'));
           });
         }
       });
     });
 
-    function addRow(uid,model,fwV,appV,status){
+    function addRow(id,uid,project,created,status,updated){
 
       t.row.add([`
         <div class="btn-group">
@@ -79,8 +81,8 @@
             <i class="fa-solid fa-user-xmark"></i>
           </button>
         </div>`,
-        `<a href="./device/`+uid+`">`+uid+`</a>`,
-        model,fwV,appV,status]).draw(true);
+        `<a href="./device/`+id+`">`+uid+`</a>`,
+        project,created,status,updated]).draw(true);
     }
 
     function deleteDevice(device_id){

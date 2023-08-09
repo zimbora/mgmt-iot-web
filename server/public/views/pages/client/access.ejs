@@ -31,9 +31,7 @@
                       <tr>
                         <th></th>
                         <th>uid</th>
-                        <th>model</th>
-                        <th>fw</th>
-                        <th>app</th>
+                        <th>project</th>
                         <th>status</th>
                       </tr>
                     </thead>
@@ -86,7 +84,7 @@
   <script>
     var t;
     var clientID = "";
-    var device;
+    var deviceId;
 
     privelleges.innerHTML = markdown.toHTML(
     `#### Clients Privelleges
@@ -110,6 +108,7 @@
           var datalist = document.getElementById('datalistOptions');
           res.forEach((item,i)=>{
             var option = document.createElement('option');
+            option.id = item.id;
             option.value = item.uid;
             datalist.appendChild(option);
           })
@@ -117,42 +116,38 @@
       });
 
       t = $('#devices').DataTable();
-      /*
-      let path = "client/"
-      let indexB = location.pathname.indexOf(path);
-      let indexF = location.pathname.indexOf("/access");
-      let clientID = location.pathname.substring(indexB+path.length,indexF);
-      console.log("cliendID:",clientID);
-      */
+
       api.getDevicesOfClient(clientID,(err,res)=>{
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.devices_uid,item.model,item.fw_version,item.app_version,item.status);
+            console.log(item);
+            addRow(item.id,item.uid,item.project,item.status);
           });
         }
       });
 
     });
 
-    function addRow(uid,model,fwV,appV,status){
+    function addRow(id,uid,model,fwV,appV,status){
 
       t.row.add([`
-        <button id="`+uid+`" onclick="removePermission('`+uid+`');" type="button" class="delete btn btn-secondary btn-sm">
+        <button id="`+id+`" onclick="removePermission('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
           <i class="fa-solid fa-user-xmark"></i>
         </button>`,
-        `<a href="../../device/`+uid+`">`+uid+`</a>`,
+        `<a href="../../device/`+id+`">`+uid+`</a>`,
         model,fwV,appV,status]).draw(true);
 
     }
 
-    function removePermission(uid){
-      device = uid;
+    function removePermission(id){
+      deviceId = id;
       $('#modalConfirmation').modal('show');
     }
 
     $("#modalProceed").click(()=>{
-      api.removePermission(clientID,device,(err,res)=>{
+
+      api.removePermission(clientID,deviceId,(err,res)=>{
         if(err){
           //$('#modalErrorBody').text(err);
           $('#error').text("Your request cannot be executed");
@@ -163,13 +158,23 @@
     })
 
     $("#submit").click(()=>{
+
       let device = $("#_deviceID_").val();
+
+      $('#datalistOptions option').each(function() {
+        if(this.value === device) {
+          deviceId = this.id;
+          return;
+        }
+      })
+
       let level = $("#_permissionID_").val();
 
-      api.addPermission(clientID,device,level,(err,res)=>{
+      api.addPermission(clientID,deviceId,level,(err,res)=>{
         if(err) console.log(err);
         else location.reload();
       });
+
     });
 
   </script>

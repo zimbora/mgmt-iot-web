@@ -6,6 +6,7 @@ var useragent = require('express-useragent');
 var bodyParser = require('body-parser');
 //var cookieParser = require('cookie-parser');
 var httpStatus = require('http-status-codes');
+const fs = require('fs');
 
 var auth = require('./server/controllers/auth');
 var routes = require('./server/routes');
@@ -15,6 +16,7 @@ var client = require('./server/controllers/clients');
 var firmware = require('./server/controllers/firmwares');
 
 var Device = require('./server/models/devices');
+var Client = require('./server/models/clients');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -90,6 +92,19 @@ app.use('*/js',express.static(path.join(__dirname, config.public_path+'/js')))
 app.use('*/lib',express.static(path.join(__dirname, config.public_path+'/lib')))
 app.use('*/files',express.static(path.join(__dirname, config.public_path+'/files')))
 
+app.get('*/moment.js',(req,res)=>{
+  //fs.readFile(config.public_path+"/js/moment.js", function(err, data) {
+  fs.readFile("node_modules/moment/dist/moment.js", function(err, data) {
+    if (err) {
+      res.writeHead(500, {'Content-Type': 'text/plain'});
+      res.end('Error loading module');
+    } else {
+      res.writeHead(200, {'Content-Type': 'application/javascript'});
+      res.end(data);
+    }
+  });
+});
+
 app.get('/logout',(req,res)=>{
   let host = req.protocol + '://' + req.get('host');
   auth.deauth(req,res,(req,res)=>{
@@ -99,7 +114,9 @@ app.get('/logout',(req,res)=>{
 
 // --- HOME ---
 app.get('/home',(req,res)=>{
-  res.render(path.join(__dirname, config.public_path+'/views/pages/dashboard'),{user:req.user,container:config.container,page:'Dashboard'});
+  Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
+    res.render(path.join(__dirname, config.public_path+'/views/pages/dashboard'),{user:req.user,mqtt:mqtt,container:config.container,page:'Dashboard'});
+  });
 });
 
 // --- users ---
@@ -176,27 +193,51 @@ app.get('/device/:device_id',(req,res)=>{
 //app.get('/device/:device_id/dashboard',(req,res)=>{
 
 app.get('/device/:device_id/settings',(req,res)=>{
-  Device.getInfo(req.params.device_id,(err,rows)=>{
-    if(rows != null && rows.length > 0)
-      res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{device:rows[0],user:req.user,page:'Settings'});
+  Device.getInfo(req.params.device_id,(err,device)=>{
+    Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
+      if(device != null && mqtt != null)
+        res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{device:device,mqtt:mqtt,user:req.user,page:'Settings'});
+      else
+        res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+    })
   });
 });
 
 app.get('/device/:device_id/access',(req,res)=>{
-  console.log("access granted")
   res.render(path.join(__dirname, config.public_path+'/views/pages/device/access'),{user:req.user,page:'Access'});
 });
 
 app.get('/device/:device_id/autorequests',(req,res)=>{
-  res.render(path.join(__dirname, config.public_path+'/views/pages/device/autorequests'),{user:req.user,page:'Autorequests'});
+  Device.getInfo(req.params.device_id,(err,device)=>{
+    Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
+      if(device != null && mqtt != null)
+        res.render(path.join(__dirname, config.public_path+'/views/pages/device/autorequests'),{device:device,mqtt:mqtt,user:req.user,page:'Autorequests'});
+      else
+        res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+    })
+  });
 });
 
 app.get('/device/:device_id/alarms',(req,res)=>{
-  res.render(path.join(__dirname, config.public_path+'/views/pages/device/alarms'),{user:req.user,page:'Alarms'});
+  Device.getInfo(req.params.device_id,(err,device)=>{
+    Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
+      if(device != null && mqtt != null)
+        res.render(path.join(__dirname, config.public_path+'/views/pages/device/alarms'),{device:device,mqtt:mqtt,user:req.user,page:'Alarms'});
+      else
+        res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+    })
+  });
 });
 
 app.get('/device/:device_id/jscode',(req,res)=>{
-  res.render(path.join(__dirname, config.public_path+'/views/pages/device/jscode'),{user:req.user,page:'JSCODE'});
+  Device.getInfo(req.params.device_id,(err,device)=>{
+    Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
+      if(device != null && mqtt != null)
+        res.render(path.join(__dirname, config.public_path+'/views/pages/device/jscode'),{device:device,mqtt:mqtt,user:req.user,page:'JSCODE'});
+      else
+        res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+    })
+  });
 });
 
 if(typeof middleware !== 'undefined')
