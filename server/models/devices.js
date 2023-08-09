@@ -163,7 +163,7 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
 
-    let query = `SELECT ??,createdAt FROM ?? WHERE ?? IS NOT NULL and device_id = ? ORDER BY createdAt DESC limit 100`
+    let query = `SELECT * FROM (SELECT ??,createdAt FROM ?? WHERE ?? IS NOT NULL and device_id = ? ORDER BY createdAt DESC limit 100)  AS sub ORDER BY createdAt ASC;`
     let table = [sensor,"logs_"+project,sensor,deviceId]
     query = mysql.format(query,table);
     db.queryRow(query)
@@ -184,7 +184,7 @@ var self = module.exports =  {
     if(logs_table == null)
       return cb("No table with logs is associated to the device",null)
 
-    let query = `SELECT ??,createdAt FROM ?? WHERE ?? IS NOT NULL and device_id = ? ORDER BY createdAt DESC limit 100`
+    let query = `SELECT * FROM (SELECT ??,createdAt FROM ?? WHERE ?? IS NOT NULL and device_id = ? ORDER BY createdAt DESC limit 100)  AS sub ORDER BY createdAt ASC;`
     let table = [sensor,logs_table,sensor,deviceId]
     query = mysql.format(query,table);
     db.queryRow(query)

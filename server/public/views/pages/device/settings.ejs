@@ -815,15 +815,15 @@
 
       data.slice(1).map((item, i) => {
         // convert both current and previous timestamps to milliseconds
-        let previous = moment(item.createdAt).unix();
-        let current = moment(data[i].createdAt).unix();
+        let current = moment(item.createdAt).unix();
+        let previous = moment(data[i].createdAt).unix();
 
-        data[i+1].duration = getDifference(current,previous);
+        data[i].duration = getDifference(current,previous);
         return;
       });
-      let previous = moment(data[0].createdAt).unix();
+      let previous = moment(data[data.length-1].createdAt).unix();
       let current = moment().unix();
-      data[0].duration = getDifference(current,previous);
+      data[data.length-1].duration = getDifference(current,previous);
     }
 
     function getDifference(current, previous){
