@@ -1,5 +1,6 @@
 
 var device = require('../models/devices');
+var client = require('../models/clients');
 
 var Joi = require('joi');
 var httpStatus = require('http-status-codes');
@@ -68,7 +69,9 @@ module.exports = {
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }else{
-      device.listAssociated(req.user.id, (err,rows)=>{
+      console.log(req.user)
+      client.getDevices(req.user.client_id, (err,rows)=>{
+      //device.listAssociated(req.user.client_id, (err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });

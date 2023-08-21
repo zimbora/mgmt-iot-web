@@ -70,8 +70,10 @@ var self = module.exports =  {
   // list all devices
   list : async (cb)=>{
 
-    let query = `select * from ??`;
-    let table = ["devices"];
+    let query = `select d.*,p.name as project,m.name as model from devices as d
+                inner join projects as p on p.id = d.project_id
+                inner join models as m on m.id = d.model_id`;
+    let table = [];
     query = mysql.format(query,table);
     db.queryRow(query)
     .then(rows => {
@@ -82,12 +84,16 @@ var self = module.exports =  {
     })
   },
 
-  // list associated devices
+  // !! list associated devices - deprecated
   listAssociated : async (clientId,cb)=>{
 
-    let query = `select * from ?? inner join permissions where permissions.client_id = ? and permissions.device_id = devices.id`;
-    let table = ["devices", clientId];
+    let query = `select d.*,p.name as project,m.name as model from devices as d
+                inner join projects as p on p.id = d.project_id
+                inner join models as m on m.id = d.model_id
+                inner join permissions where permissions.client_id = ? and permissions.device_id = d.id`;
+    let table = [clientId];
     query = mysql.format(query,table);
+
     db.queryRow(query)
     .then(rows => {
       return cb(null,rows);
@@ -101,13 +107,13 @@ var self = module.exports =  {
 
     return new Promise( (resolve,reject)=>{
 
-      let query = `select project from devices where id = ?`;
+      let query = `select p.name from devices as d inner join projects as p on d.project_id = p.id and d.id = ?`;
       let table = [deviceId]
       query = mysql.format(query,table);
       db.queryRow(query)
       .then(rows => {
         if(rows?.length > 0)
-          resolve(rows[0].project);
+          resolve(rows[0].name);
         else resolve(null);
       })
       .catch(error => {
@@ -116,12 +122,70 @@ var self = module.exports =  {
     })
   },
 
-  getLogsTable : async (project,deviceId) =>{
+  getModel : async (deviceId) =>{
 
     return new Promise( (resolve,reject)=>{
 
-      let query = `select logs_table from ?? where device_id = ?`;
-      let table = [project,deviceId]
+      let query = `select m.name from devices as d inner join models as m on d.model_id = m.id and d.id = ?`;
+      let table = [deviceId]
+      query = mysql.format(query,table);
+      db.queryRow(query)
+      .then(rows => {
+        if(rows?.length > 0)
+          resolve(rows[0].name);
+        else resolve(null);
+      })
+      .catch(error => {
+        reject(error);
+      })
+    })
+  },
+
+  // not needed for now
+  getModelTable : async (model) =>{
+
+    return new Promise( (resolve,reject)=>{
+
+      let query = `select model_table from models where name = ?`;
+      let table = [model]
+      query = mysql.format(query,table);
+      db.queryRow(query)
+      .then(rows => {
+        if(rows?.length > 0)
+          resolve(rows[0].logs_table);
+        else resolve(null);
+      })
+      .catch(error => {
+        reject(error);
+      })
+    })
+  },
+
+  getProjectLogsTable : async (project) =>{
+
+    return new Promise( (resolve,reject)=>{
+
+      let query = `select logs_table from projects where name = ?`;
+      let table = [project]
+      query = mysql.format(query,table);
+      db.queryRow(query)
+      .then(rows => {
+        if(rows?.length > 0)
+          resolve(rows[0].logs_table);
+        else resolve(null);
+      })
+      .catch(error => {
+        reject(error);
+      })
+    })
+  },
+
+  getModelLogsTable : async (model) =>{
+
+    return new Promise( (resolve,reject)=>{
+
+      let query = `select logs_table from models where name = ?`;
+      let table = [model]
       query = mysql.format(query,table);
       db.queryRow(query)
       .then(rows => {
@@ -139,23 +203,31 @@ var self = module.exports =  {
   getInfo : async (deviceId,cb)=>{
 
     let project = await self.getProject(deviceId);
+    if(project == null)
+      return;
+    let model = await self.getModel(deviceId);
 
-    if(null)
-      return cb(null,null)
-
-    let query = `select * from ?? as project inner join devices where device_id = ? and project.device_id = devices.id`;
+    let query = `SELECT d.uid as uid,p.* FROM ?? as p left join devices as d on d.id = p.device_id where d.id = ?;`
     let table = [project,deviceId]
     query = mysql.format(query,table);
     db.queryRow(query)
     .then(rows => {
-      if(rows.length > 0)
-        return cb(null,rows[0]);
-      else
+      if(rows.length == 0 )
         return cb(null,null);
+
+      rows[0]["project"] = project;
+      rows[0]["model"] = model;
+
+      return cb(null,rows[0]);
     })
     .catch(error => {
       return cb(error,null);
     })
+
+
+    if(project == null)
+      return cb(null,null)
+
   },
 
   // get status logs of device
@@ -178,8 +250,9 @@ var self = module.exports =  {
   // get sensor logs of device
   getSensorLogs : async (deviceId,sensor,cb)=>{
 
-    let project = await self.getProject(deviceId);
-    let logs_table = await self.getLogsTable(project,deviceId);
+    let model = await self.getModel(deviceId);
+    let model_table = await self.getModelTable(model);
+    let logs_table = await self.getModelLogsTable(model_table,deviceId);
 
     if(logs_table == null)
       return cb("No table with logs is associated to the device",null)
@@ -198,18 +271,41 @@ var self = module.exports =  {
 
   delete : async (deviceId,cb)=>{
 
-    console.log("deviceId:",deviceId)
+    let project_table = await self.getProject(deviceId);
+    let project_logs_table = await self.getProjectLogsTable(project_table);
+
+    let model = await self.getModel(deviceId);
+    let model_table = await self.getModelTable(model);
+    let model_logs_table = await self.getModelLogsTable(model_table);
+
+
     let filter = {
-      uid : deviceId,
+      device_id : deviceId,
+    }
+
+
+    if(project_table != null)
+      await db.delete(project_table,filter);
+    if(project_logs_table != null)
+      await db.delete(project_logs_table,filter);
+    if(model_table != null)
+      await db.delete(model_table,filter);
+    if(model_logs_table != null)
+      await db.delete(model_logs_table,filter);
+    await db.delete("permissions",filter);
+
+    // this must be executed only after all previous delete calls
+    filter = {
+      id : deviceId,
     }
 
     db.delete("devices",filter)
-    .then (rows => {
+    .then(rows => {
       return cb(null,rows);
     })
     .catch(error => {
       return cb(error,null);
-    });
+    })
   },
 
   // get autorequests of device

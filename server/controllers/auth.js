@@ -158,7 +158,7 @@ function generateToken(req, res, next) {
 
   req.session.token = jwt.sign(jwtPayload, secret, jwtData);
 
-  //User.updateWsToken(req.user.id,req.session.token.substr(req.session.token.length-20,req.session.token.length),(error,res)=>{log.debug(error,res)});
+  //User.updateWsToken(req.user.client_id,req.session.token.substr(req.session.token.length-20,req.session.token.length),(error,res)=>{log.debug(error,res)});
 
   next();
 }

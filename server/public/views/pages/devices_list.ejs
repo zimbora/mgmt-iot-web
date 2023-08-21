@@ -37,8 +37,9 @@
               <thead>
                 <tr>
                   <th></th>
-                  <th>date</th>
-                  <th>value</th>
+                  <th>uid</th>
+                  <th>project</th>
+                  <th>model</th>
                   <th>created</th>
                   <th>status</th>
                   <th>updated</th>
@@ -67,22 +68,25 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.id,item.uid,item.project,moment(item.createdAt).format('YY/MM/DD LT'),item.status,moment(item.updatedAt).format('YY/MM/DD LT'));
+            addRow(item.id,item.uid,item.project,item.model,moment(item.createdAt).format('YY/MM/DD LT'),item.status,moment(item.updatedAt).format('YY/MM/DD LT'));
           });
         }
       });
     });
 
-    function addRow(id,uid,project,created,status,updated){
+    function addRow(id,uid,project,model,created,status,updated){
 
+      if(uid.startsWith("uid:")){
+        uid = uid.substring(4);
+      }
       t.row.add([`
         <div class="btn-group">
-          <button onclick="deleteDevice('`+uid+`');" type="button" class="delete btn btn-secondary btn-sm">
+          <button onclick="deleteDevice('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
             <i class="fa-solid fa-user-xmark"></i>
           </button>
         </div>`,
         `<a href="./device/`+id+`">`+uid+`</a>`,
-        project,created,status,updated]).draw(true);
+        project,model,created,status,updated]).draw(true);
     }
 
     function deleteDevice(device_id){

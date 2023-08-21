@@ -107,7 +107,7 @@ module.exports = {
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }else{
-      Firmware.listModelsWithClientPermission(req.user.id,(err,rows)=>{
+      Firmware.listModelsWithClientPermission(req.user.client_id,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
@@ -149,7 +149,7 @@ module.exports = {
   deleteModel : (req,res,next)=>{
 
     // check if user has permissions to create a model
-    Firmware.deleteModel(req.user.id,req.params.model_id,(err,rows)=>{
+    Firmware.deleteModel(req.user.client_id,req.params.model_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
@@ -195,7 +195,7 @@ module.exports = {
     if(Client.isAdmin(req.user.level))
       return next();
     else{
-      Firmware.checkModelOwnership(req.user.id,req.params.model_id,(err,access)=>{
+      Firmware.checkModelOwnership(req.user.client_id,req.params.model_id,(err,access)=>{
         if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
         else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
         else next();
@@ -207,7 +207,7 @@ module.exports = {
     if(Client.isAdmin(req.user.level))
       return next();
     else{
-      Firmware.checkModelAccess(req.user.id,req.params.model_id,(err,access)=>{
+      Firmware.checkModelAccess(req.user.client_id,req.params.model_id,(err,access)=>{
         if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
         else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
         else next();

@@ -7,8 +7,8 @@ var self = module.exports =  {
 
   get : async (nick,pwd,cb)=>{
 
-    let query = `select users.level,users.type,clients.nick,clients.name,clients.avatar from ?? inner join clients where clients.nick = ? and clients.token = ? and users.id = clients.user_id`;
-    let table = ["users",nick,pwd];
+    let query = `select u.id as user_id,u.level,u.type,c.id as client_id,c.nick,c.name,c.avatar from users as u inner join clients as c where c.nick = ? and c.token = ? and u.id = c.user_id`;
+    let table = [nick,pwd];
     query = mysql.format(query,table);
 
     db.queryRow(query)
@@ -27,8 +27,8 @@ var self = module.exports =  {
 
   getByApiToken : async (api_token,cb)=>{
 
-    let query = `select users.level,users.type,clients.nick from ?? inner join clients where clients.api_token = ? and users.id = clients.user_id`;
-    let table = ["users",api_token];
+    let query = `select u.id as user_id,u.level,u.type,c.id as client_id,c.nick,c.name,c.avatar from users as u inner join clients as c where c.api_token = ? and u.id = c.user_id`;
+    let table = [api_token];
     query = mysql.format(query,table);
 
     db.queryRow(query)
@@ -167,10 +167,13 @@ var self = module.exports =  {
     })
   },
 
-  getDevices : async (clientid,cb)=>{
+  getDevices : async (clientId,cb)=>{
 
-    let query = `select d.id as id,uid,project,status from permissions inner join devices as d where ?? = ? and permissions.device_id = d.id`;
-    let table = ["client_id",clientid];
+    let query = `select d.*,p.name as project,m.name as model from devices as d
+                inner join projects as p on p.id = d.project_id
+                inner join models as m on m.id = d.model_id
+                inner join permissions where permissions.client_id = ? and permissions.device_id = d.id`;
+    let table = [clientId];
     query = mysql.format(query,table);
 
     db.queryRow(query)
@@ -247,7 +250,7 @@ var self = module.exports =  {
       let query = `select * from ?? where ?? = ? and ?? = ?`;
       let table = ["permissions","client_id",clientId,"device_id",deviceId];
       query = mysql.format(query,table);
-
+      console.log(query);
       db.queryRow(query)
       .then(rows => {
         if(rows.length) return cb(null,true);

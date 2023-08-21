@@ -115,7 +115,7 @@ module.exports = {
   },
 
   checkDeviceAccess : (req, res, next)=>{
-    Client.checkDeviceAccess(req.user.id,req.user.level,req.params.device_id,(err,access)=>{
+    Client.checkDeviceAccess(req.user.client_id,req.user.level,req.params.device_id,(err,access)=>{
       if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
       else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
       else next();
