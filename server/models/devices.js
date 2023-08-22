@@ -227,7 +227,6 @@ var self = module.exports =  {
 
     if(project == null)
       return cb(null,null)
-
   },
 
   // get status logs of device
@@ -252,7 +251,7 @@ var self = module.exports =  {
 
     let model = await self.getModel(deviceId);
     let model_table = await self.getModelTable(model);
-    let logs_table = await self.getModelLogsTable(model_table,deviceId);
+    let logs_table = await self.getModelLogsTable(model,deviceId);
 
     if(logs_table == null)
       return cb("No table with logs is associated to the device",null)
@@ -260,8 +259,10 @@ var self = module.exports =  {
     let query = `SELECT * FROM (SELECT ??,createdAt FROM ?? WHERE ?? IS NOT NULL and device_id = ? ORDER BY createdAt DESC limit 100)  AS sub ORDER BY createdAt ASC;`
     let table = [sensor,logs_table,sensor,deviceId]
     query = mysql.format(query,table);
+    console.log(query);
     db.queryRow(query)
     .then(rows => {
+      console.log(rows)
       return cb(null,rows);
     })
     .catch(error => {
@@ -276,7 +277,7 @@ var self = module.exports =  {
 
     let model = await self.getModel(deviceId);
     let model_table = await self.getModelTable(model);
-    let model_logs_table = await self.getModelLogsTable(model_table);
+    let model_logs_table = await self.getModelLogsTable(model);
 
 
     let filter = {

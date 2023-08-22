@@ -4,6 +4,14 @@
 
   <%- include('../partials/head.ejs') %>
 
+  <style>
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;  /* Or whatever width you want */
+    }
+  </style>
 </head>
 <body>
 
@@ -22,13 +30,12 @@
           <%- include('../partials/sidebar.ejs') %>
           <div class="col py-3">
             <div class="content-header">
-              <h3>Firmwares</h3>
+              <h3>Models</h3>
             </div>
             <div class="row">
-              <div class="col-sm-8 mb-3 mb-sm-0">
+              <div class="col-sm-12 mb-3 mb-sm-0">
                 <div class="card py-3" style="width:100%" overflow-x:scroll>
-                  <h5 class="card-title">models list</h5>
-                  <table id="firmwares" class="display">
+                  <table id="models" class="display">
                     <thead>
                         <tr>
                             <th></th>
@@ -39,19 +46,20 @@
                   </table>
                 </div>
               </div>
+              <!--
               <div class="col-sm-4 mb-3 mb-sm-0">
                 <div class="card py-3">
                   <div class="card-header">
-                    <h5 class="card-title">Add new firmware model</h5>
+                    <h5 class="card-title">Add new model</h5>
                   </div>
                   <div class="card-body">
                     <div class="mb-3">
                       <div class="input-group py-2">
-                        <label class="input-group-text" for="inputGroupSelect11">FW model</label>
-                        <input type="text" id="_fwmodel_" class="form-control" placeholder="set your fw model">
+                        <label class="input-group-text" for="inputGroupSelect11">name</label>
+                        <input type="text" id="_name_" class="form-control" placeholder="set your model name">
                       </div>
                       <div class="py-2">
-                        <label class="input-group-text" for="inputGroupSelect12">FW description</label>
+                        <label class="input-group-text" for="inputGroupSelect12">description</label>
                         <textarea id="_description_" class="form-control" aria-label="With textarea"></textarea>
                       </div>
                       <div class="py-2">
@@ -61,6 +69,7 @@
                   </div>
                 </div>
               </div>
+              -->
             </div>
           </div>
       </div>
@@ -70,12 +79,16 @@
 
     var t;
     var id;
+    let models = <%- JSON.stringify(models) %>;
 
     $(document).ready(function () {
 
-      t = $('#firmwares').DataTable();
+      t = $('#models').DataTable();
 
-
+      models.forEach((item, i) => {
+        addRow(item.id,item.name,item.description);
+      });
+      /*
       api.getFWModels((err,res)=>{
         if(err) console.log("err:",err)
         else{
@@ -84,7 +97,7 @@
           });
         }
       });
-
+      */
     });
 
 
@@ -94,12 +107,12 @@
         <button id="`+id+`" onclick="deleteModel('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
           <i class="bi bi-folder-x"></i>
         </button>`,
-        `<a href="./firmware/`+id+`/list">`+model+`</a>`,
+        `<a href="./model/`+id+`/firmwares">`+model+`</a>`,
         description]).draw(true);
     }
 
     $("#submit_model").click(()=>{
-      let model = $("#_fwmodel_").val();
+      let model = $("#_name_").val();
       let description = $("#_description_").val();
       api.addFWModel(model,description,(err,res)=>{
         if(err){

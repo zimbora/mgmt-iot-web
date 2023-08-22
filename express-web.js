@@ -14,9 +14,14 @@ var validate = require('./server/controllers/params_validator');
 var user = require('./server/controllers/users');
 var client = require('./server/controllers/clients');
 var firmware = require('./server/controllers/firmwares');
+var model = require('./server/controllers/models');
 
 var Device = require('./server/models/devices');
+var User = require('./server/models/users');
 var Client = require('./server/models/clients');
+var Project = require('./server/models/projects');
+var Model = require('./server/models/models');
+var Firmware = require('./server/models/firmwares');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -114,9 +119,54 @@ app.get('/logout',(req,res)=>{
 
 // --- HOME ---
 app.get('/home',(req,res)=>{
-  Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
-    res.render(path.join(__dirname, config.public_path+'/views/pages/dashboard'),{user:req.user,mqtt:mqtt,container:config.container,page:'Dashboard'});
-  });
+
+  let clients = [];
+  let users = [];
+  let projects = [];
+  let models = [];
+  let firmwares = [];
+
+  if(req.user.level >= 4){
+    User.list((err,rows)=>{
+      users = rows
+    });
+    Client.list((err,rows)=>{
+      clients = rows
+    });
+    Project.list((err,rows)=>{
+      projects = rows;
+    });
+    Model.list((err,rows)=>{
+      models = rows;
+    });
+    Firmware.list((err,rows)=>{
+      firmwares = rows
+    });
+  }else{
+    Model.listWithClientPermission(req.user.client_id,(err,rows)=>{
+      models = rows;
+    });
+    Firmware.listWithClientPermission(req.user.client_id,(err,rows)=>{
+      firmwares = rows
+    });
+  }
+
+  setTimeout(()=>{
+    Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/dashboard'),{
+          user:req.user,
+          mqtt:mqtt,
+          users:users?.length,
+          clients:clients?.length,
+          projects:projects?.length,
+          models:models?.length,
+          firmwares:firmwares?.length,
+          container:config.container,
+          page:'Dashboard'
+        });
+    });
+  },100);
+
 });
 
 // --- users ---
@@ -159,19 +209,28 @@ app.get('/client/:client_id/access',(req,res,next)=>{
 });
 
 // --- firmwares ---
-app.get('/firmwares',(req,res)=>{
-  if(req.user.level >= 2)
-    res.render(path.join(__dirname, config.public_path+'/views/pages/fw_models'),{user:req.user,page:'Firmwares'});
+app.get('/models',(req,res)=>{
+  if(req.user.level >= 2){
+    if(req.user.level >= 4){
+      Model.list((err,models)=>{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/models_list'),{user:req.user,models:models,page:'Models'});
+      });
+    }else{
+      Model.listWithClientPermission(req.user.client_id,(err,models)=>{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/models_list'),{user:req.user,models:models,page:'Models'});
+      });
+    }
+  }
 });
 
-app.get('/firmware/:model_id/list',(req,res)=>{
+app.get('/model/:model_id/firmwares',(req,res)=>{
   if(req.user.level >= 2)
-    res.render(path.join(__dirname, config.public_path+'/views/pages/firmware/list'),{user:req.user,page:'FwList'});
+    res.render(path.join(__dirname, config.public_path+'/views/pages/model/firmwares'),{user:req.user,page:'Firmwares'});
 });
 
-app.get('/firmware/:model_id/access',firmware.checkModelOwnership,(req,res)=>{
+app.get('/model/:model_id/access',model.checkOwnership,(req,res)=>{
   if(req.user.level >= 2)
-    res.render(path.join(__dirname, config.public_path+'/views/pages/firmware/access'),{user:req.user,page:'FwAccess'});
+    res.render(path.join(__dirname, config.public_path+'/views/pages/model/access'),{user:req.user,page:'Access'});
 });
 
 // --- devices ---

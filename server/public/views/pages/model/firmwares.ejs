@@ -4,11 +4,19 @@
 
   <%- include('../../partials/head.ejs') %>
 
+  <style>
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;  /* Or whatever width you want */
+    }
+  </style>
 </head>
 <body>
 
-  <%- include('../../partials/firmware/scripts.ejs') %>
-  <%- include('../../partials/firmware/navbar.ejs') %>
+  <%- include('../../partials/model/scripts.ejs') %>
+  <%- include('../../partials/model/navbar.ejs') %>
 
   <%- include('../../partials/modal/confirmation.ejs') %>
   <%- include('../../partials/modal/error.ejs') %>
@@ -19,7 +27,7 @@
 
   <div class="container-fluid">
       <div class="row flex-nowrap">
-          <%- include('../../partials/firmware/sidebar.ejs') %>
+          <%- include('../../partials/model/sidebar.ejs') %>
           <div class="col py-3">
             <div class="content-header">
               <h3 id="title"></h3>
@@ -27,7 +35,7 @@
             <div class="row">
               <div class="col-sm-8 mb-3 mb-sm-0">
                 <div class="card py-3">
-                  <h5 class="card-title">Firmwares list</h5>
+                  <h5 class="card-title">Firmwares</h5>
                   <table id="firmwares" class="display" style="width:100%" overflow-x:scroll>
                     <thead>
                         <tr>
@@ -82,17 +90,17 @@
 
       api.getFWModelInfo(modelID,(err,res)=>{
         if(err) console.log(err);
-        $("#title").text(res.name)
+        $("#title").text(res?.name)
       })
 
       api.getFirmwares(modelID,(err,res)=>{
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
+            console.log(res)
             addRow(item.id,item.fw_version,item.app_version,item.fw_release,item.originalname);
             if(i == res.length-1){
               $(".fwReleaseOption").change((event)=>{
-                console.log("option changed")
                 let id = event.target.id;
                 $( ".fwReleaseOption option:selected" ).each(function() {
                   let release = $( this ).text();
@@ -109,15 +117,6 @@
                 });
               });
             }
-          });
-        }
-      });
-
-      api.getFWModels((err,res)=>{
-        if(err)console.log(err)
-        else{
-          res.forEach((item, i) => {
-            addOption(item.name);
           });
         }
       });
@@ -140,13 +139,6 @@
         }else location.reload();
       });
     });
-
-    function addOption(model){
-
-      $('#_fwmodel_').append(`<option value="${model}">
-                                 ${model}
-                            </option>`);
-    }
 
     function addRow(id,fw_version,app_version,release,filename){
 

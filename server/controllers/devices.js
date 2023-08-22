@@ -69,7 +69,6 @@ module.exports = {
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }else{
-      console.log(req.user)
       client.getDevices(req.user.client_id, (err,rows)=>{
       //device.listAssociated(req.user.client_id, (err,rows)=>{
         if(!err) response.send(res,rows);

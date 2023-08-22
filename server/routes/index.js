@@ -6,13 +6,15 @@ var config = require('../../config/env');
 var users = require('./users');
 var clients = require('./clients');
 var devices = require('./devices');
-var firmwares = require('./firmwares');
+var models = require('./models');
+//var firmwares = require('./firmwares');
 var authRoutes = require('./auth');
 
 var Response = require('../controllers/response');
 var User = require('../controllers/users');
 var Client = require('../controllers/clients');
 var Device = require('../controllers/devices');
+var Model = require('../controllers/models');
 var Firmware = require('../controllers/firmwares');
 var Database = require('../controllers/db');
 
@@ -60,16 +62,14 @@ router.use('/device', devices);
 router.route('/devices/list')
   .get(Device.list);
 
-router.route('/firmwares/models')
-  .get(Firmware.listModels)
-  .post(Firmware.addModel)
+router.use('/model', models);
 
-router.route('/firmwares/model/:model_id')
-  .get(Firmware.getModelInfo)
-  .delete(Firmware.deleteModel)
-  .put(Firmware.updateModel)
+router.route('/models')
+  .get(Model.list)
+  .post(Model.add)
 
-router.use('/firmware',firmwares)
+
+//router.use('/firmware',firmwares)
 
 //router.use('/user/:user_id',users); // use it to access to other user content - only for admin
 router.use('/auth', authRoutes);

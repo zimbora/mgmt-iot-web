@@ -1,5 +1,16 @@
 # Changelog
 
+## version 1.0.36
+ - associates firmwares to models
+ - shows more data on dashboard
+ - shows model on devices
+ - changes tab firmwares to models
+
+## version 1.0.35
+ - adds projects and models table
+ - fixes auth with low permissions
+ - adds model to devices list
+
 ## version 1.0.34
  - Stable version, all features are expected to be working.
 

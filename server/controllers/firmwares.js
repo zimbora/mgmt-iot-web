@@ -8,6 +8,7 @@ var response = require('./response');
 
 var Firmware = require('../models/firmwares');
 var Client = require('../models/clients');
+var Model = require('../models/models');
 
 module.exports = {
 
@@ -92,22 +93,43 @@ module.exports = {
   },
 
   list : (req, res, next)=>{
+    if(Client.isAdmin(req.user.level)){
+      Firmware.list((err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }else{
+      Firmware.listWithClientPermission(req.user.client_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
 
-    Firmware.listByModel(req.params.model_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
+  listByModel : (req, res, next)=>{
+
+    if(Client.isAdmin(req.user.level)){
+      Firmware.listByModel(req.params.model_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }else{
+      Firmware.listByModelWithClientPermission(req.user.client_id,req.params.model_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
   listModels : (req, res, next)=>{
 
     if(Client.isAdmin(req.user.level)){
-      Firmware.listModels((err,rows)=>{
+      Model.list((err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }else{
-      Firmware.listModelsWithClientPermission(req.user.client_id,(err,rows)=>{
+      Model.listWithClientPermission(req.user.client_id,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
@@ -122,97 +144,6 @@ module.exports = {
     const hash = crypto.createHash('md5').update(file).digest('hex');
     res.set('Content-MD5', hash);
     res.sendFile(filePath);
-  },
-
-  getModelInfo : (req,res,next)=>{
-
-    // check if user has permissions to create a model
-    Firmware.getModelInfo(req.params.model_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
-  },
-
-  addModel : (req,res,next)=>{
-    const val = Joi.object({
-      model: Joi.string().required(),
-      description: Joi.string().required()
-    }).validate(req.body);
-
-    // check if user has permissions to create a model
-    Firmware.addModel(req.user.nick,req.body.model,req.body.description,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
-  },
-
-  deleteModel : (req,res,next)=>{
-
-    // check if user has permissions to create a model
-    Firmware.deleteModel(req.user.client_id,req.params.model_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
-  },
-
-  updateModel :(req,res,next)=>{
-    response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"not supported");
-  },
-
-
-  listModelPermission : (req, res, next)=>{
-
-    Firmware.listModelPermission(req.params.model_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
-  },
-
-  grantModelPermission : (req, res, next)=>{
-
-    const val = Joi.object({
-      clientID: Joi.string().required(),
-    }).validate(req.body);
-    Firmware.grantModelPermission(req.body.clientID,req.params.model_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
-  },
-
-  removeModelPermission : (req, res, next)=>{
-
-    const val = Joi.object({
-      id: Joi.number().required(),
-    }).validate(req.body);
-
-    Firmware.removeModelPermission(req.body.id,req.params.model_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
-  },
-
-  checkModelOwnership : (req, res, next)=>{
-    if(Client.isAdmin(req.user.level))
-      return next();
-    else{
-      Firmware.checkModelOwnership(req.user.client_id,req.params.model_id,(err,access)=>{
-        if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
-        else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
-        else next();
-      });
-    }
-  },
-
-  checkModelAccess : (req, res, next)=>{
-    if(Client.isAdmin(req.user.level))
-      return next();
-    else{
-      Firmware.checkModelAccess(req.user.client_id,req.params.model_id,(err,access)=>{
-        if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
-        else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
-        else next();
-      });
-    }
   },
 
 };

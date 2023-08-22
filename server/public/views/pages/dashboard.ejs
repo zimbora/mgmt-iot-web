@@ -20,44 +20,61 @@
               <h3>MQTT Broker Statistics</h3>
             </div>
             <div class="row">
-
+                <% if(user.level >= 4){ %>
                 <div class="row" style="margin-top:2%">
                   <div class="col-sm-3 mb-3 mb-sm-0">
                   </div>
-                  <div class="col-sm-3 mb-3 mb-sm-0">
-                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
-                      <br>
-                      <h6 class="card-title" style="margin-left:5%">Registered devices:</h6>
-                      <br>
-                      <h2 id="registeredDevices" style="margin-left:30%" class="card-text"><b>10</b></h2>
-                    </div>
-                  </div>
-                  <div class="col-sm-3 mb-3 mb-sm-0">
-                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
-                      <br>
-                      <h6 class="card-title" style="margin-left:5%">Registered clients:</h6>
-                      <br>
-                      <h2 id="registeredClients" style="margin-left:30%" class="card-text"><b>10</b></h2>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-sm-3 mb-3 mb-sm-0">
-                  </div>
-                  <div class="col-sm-3 mb-3 mb-sm-0">
+                  <div class="col-sm-2 mb-3 mb-sm-0">
                     <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
                       <br>
                       <h6 class="card-title" style="margin-left:5%">Available Users</h6>
                       <br>
-                      <h2 id="registeredUsers" style="margin-left:30%" class="card-text"><b>10</b></h2>
+                      <h2 id="registeredUsers" style="margin-left:30%" class="card-text"><b><%= users %></b></h2>
                     </div>
                   </div>
+                  <div class="col-sm-2 mb-3 mb-sm-0">
+                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
+                      <br>
+                      <h6 class="card-title" style="margin-left:5%">Registered clients:</h6>
+                      <br>
+                      <h2 id="registeredClients" style="margin-left:30%" class="card-text"><b><%= clients %></b></h2>
+                    </div>
+                  </div>
+                  <div class="col-sm-2 mb-3 mb-sm-0">
+                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
+                      <br>
+                      <h6 class="card-title" style="margin-left:5%">Available Projects:</h6>
+                      <br>
+                      <h2 id="registeredProjects" style="margin-left:30%" class="card-text"><b><%= projects %></b></h2>
+                    </div>
+                  </div>
+                </div>
+                <% } %>
+                <div class="row">
                   <div class="col-sm-3 mb-3 mb-sm-0">
+                  </div>
+                  <div class="col-sm-2 mb-3 mb-sm-0">
+                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
+                      <br>
+                      <h6 class="card-title" style="margin-left:5%">Registered devices:</h6>
+                      <br>
+                      <h2 id="registeredDevices" style="margin-left:30%" class="card-text"><b></b></h2>
+                    </div>
+                  </div>
+                  <div class="col-sm-2 mb-3 mb-sm-0">
                     <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
                       <br>
                       <h6 class="card-title" style="margin-left:5%">Available Devices Models:</h6>
                       <br>
-                      <h2 id="registeredModels" style="margin-left:30%" class="card-text"><b>10</b></h2>
+                      <h2 id="registeredModels" style="margin-left:30%" class="card-text"><b><%= models %></b></h2>
+                    </div>
+                  </div>
+                  <div class="col-sm-2 mb-3 mb-sm-0">
+                    <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
+                      <br>
+                      <h6 class="card-title" style="margin-left:5%">Available Firmwares:</h6>
+                      <br>
+                      <h2 id="registeredFirmwares" style="margin-left:30%" class="card-text"><b><%= firmwares %></b></h2>
                     </div>
                   </div>
                 </div>
@@ -247,6 +264,7 @@
 
     chart2 = new Chart(ctx2, config2);
 
+    /*
     api.getUsers((err,rows)=>{
       document.getElementById('registeredUsers').innerHTML = rows.length
     })
@@ -258,7 +276,7 @@
     api.getFWModels((err,rows)=>{
       document.getElementById('registeredModels').innerHTML = rows.length
     })
-
+    */
     // connect the client
     if(mqtt != null){
 
