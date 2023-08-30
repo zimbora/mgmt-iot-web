@@ -46,11 +46,31 @@
                     <div id="editor">
                     </div>
                 </div>
-                <button id="sendAlarm" type="button" class="btn btn-primary">update</button>
+                <button <% if(device.alarms_ref != null){%> disabled <%}%> id="sendAlarm" type="button" class="btn btn-primary">update</button>
+                  <div class="btn-group" style="float:right">
+                <label class="input-group-text" for="inputGroupSelect21">use device config:</label>
+                <select class="form-select alarmDeviceRef" id="_alarm_ref_">
+                  <% if(device.device_id == device.alarms_ref){ %>
+                    <option selected value="null">own</option>
+                  <%} else {%>
+                    <option value="null">own</option>
+                  <% } %>
+                  <%devices.map((row)=>{%>
+                    <% if(row.id != device.device_id){ %>
+                      <% if(row.id == device.alarms_ref){ %>
+                        <%console.log(row.id,"match")%>;
+                        <option selected value="<%= row.id%>"><%= row.name != null ? row.name : row.uid%></option>
+                      <% }else { %>
+                        <option value="<%= row.id%>"><%= row.name != null ? row.name : row.uid%></option>
+                      <% } %>
+                    <% } %>
+                  <%})%>
+                </select>
+              </div>
               </div>
               <div class="col-sm-4 mb-2 mb-sm-0">
                 <div class="content-header">
-                  <h5>Device available
+                  <h5><%= device.name != null ? device.name : device.uid %>
                     <button id="status" type="button" class="btn btn-secondary" disabled></button>
                   </h5>
                 </div>
@@ -233,19 +253,40 @@
     }
 
     $("#sendAlarm").click(()=>{
-        let data = editor.getValue()
-        let text = data.replace(/ /g,'');
-        text = text.replace(/\n/g,'');
-        try{
-          //JSON.parse(text)
-          //sendAlarms(JSON.stringify(text));
-          sendAlarms(text);
-        }catch(e){
-          $('#error').text("Not JSON");
-          $('#suggestion').text("check if file has comments");
-          $('#modalError').modal('show');
-        }
-      })
+      let data = editor.getValue()
+      let text = data.replace(/ /g,'');
+      text = text.replace(/\n/g,'');
+      try{
+        //JSON.parse(text)
+        //sendAlarms(JSON.stringify(text));
+        sendAlarms(text);
+      }catch(e){
+        $('#error').text("Not JSON");
+        $('#suggestion').text("check if file has comments");
+        $('#modalError').modal('show');
+      }
+    })
+
+    $(".alarmDeviceRef").change((event)=>{
+        $( ".alarmDeviceRef option:selected" ).each(function() {
+          let dev_ref = $( this ).val();
+          if(dev_ref == "null")
+            dev_ref = null;
+          api.updateDeviceProjectField(deviceID,"alarms_ref",dev_ref,(err,res)=>{
+            if(err){
+              $('#error').text("Your request cannot be executed");
+              if(err.hasOwnProperty("sqlMessage"))
+                $('#suggestion').text(err.sqlMessage);
+              else
+                $('#suggestion').text(err);
+              $('#modalError').modal('show');
+            }else{
+              location.reload();
+            }
+          });
+
+        });
+      });
 
   </script>
 </body>

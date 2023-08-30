@@ -53,7 +53,7 @@
               </div>
               <div class="col-sm-4 mb-2 mb-sm-0">
                 <div class="content-header">
-                  <h5>Device available
+                  <h5><%= device.name != null ? device.name : device.uid %>
                     <button id="status" type="button" class="btn btn-secondary" disabled></button
                   </h5>
                 </div>

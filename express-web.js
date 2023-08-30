@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 //var cookieParser = require('cookie-parser');
 var httpStatus = require('http-status-codes');
 const fs = require('fs');
+const async = require('async');
 
 var auth = require('./server/controllers/auth');
 var routes = require('./server/routes');
@@ -223,14 +224,40 @@ app.get('/models',(req,res)=>{
   }
 });
 
+// --- models ---
+app.use('/model/:model_id',(req,res,next)=>{
+  console.log("model_id:",req.params.model_id);
+  Model.getModelById(req.params.model_id,(err,model)=>{
+    req.model = model.name;
+    next();
+  })
+
+})
+
+app.get('/model/:model_id/devices',(req,res)=>{
+  if(req.user.level >= 2){
+    if(req.user.level >= 4){
+      Device.list(req.params.model_id,(err,devices)=>{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/model/devices'),{model:req.model,devices:devices,user:req.user,page:'Devices'});
+      })
+    }else{
+      Device.list(req.params.model_id,req.user.client_id,(err,devices)=>{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/model/devices'),{model:req.model,devices:devices,user:req.user,page:'Devices'});
+      })
+    }
+  }
+});
+
 app.get('/model/:model_id/firmwares',(req,res)=>{
-  if(req.user.level >= 2)
-    res.render(path.join(__dirname, config.public_path+'/views/pages/model/firmwares'),{user:req.user,page:'Firmwares'});
+  if(req.user.level >= 2){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/model/firmwares'),{model:req.model,user:req.user,page:'Firmwares'});
+  }
 });
 
 app.get('/model/:model_id/access',model.checkOwnership,(req,res)=>{
-  if(req.user.level >= 2)
-    res.render(path.join(__dirname, config.public_path+'/views/pages/model/access'),{user:req.user,page:'Access'});
+  if(req.user.level >= 2){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/model/access'),{model:req.model,user:req.user,page:'Access'});
+  }
 });
 
 // --- devices ---
@@ -252,39 +279,122 @@ app.get('/device/:device_id',(req,res)=>{
 //app.get('/device/:device_id/dashboard',(req,res)=>{
 
 app.get('/device/:device_id/settings',(req,res)=>{
-  Device.getInfo(req.params.device_id,(err,device)=>{
-    Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
-      if(device != null && mqtt != null)
-        res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{device:device,mqtt:mqtt,user:req.user,page:'Settings'});
-      else
-        res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
-    })
-  });
+  let device = null;
+  let devices = [];
+  let mqtt = null;
+  async.waterfall([
+    (cb)=>{
+      Device.getInfo(req.params.device_id,(err,row)=>{
+        device = row;
+        cb(err);
+      });
+    },
+    (cb)=>{
+      Client.getMqttCredentials(req.user.client_id,(err,row)=>{
+        mqtt = row;
+        cb(err);
+      });
+    },
+    (cb)=>{
+      if(req.user.level <= 4){
+        Device.list(device.model_id,req.user.client_id,(err,rows)=>{
+          devices = rows;
+          cb(err);
+        });
+      }else{
+        Device.list(device.model_id,(err,rows)=>{
+          devices = rows;
+          cb(err);
+        });
+      }
+    },
+  ],(err)=>{
+    if(!err && device != null && mqtt != null)
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{device:device,devices:devices,mqtt:mqtt,user:req.user,page:'Settings'});
+    else
+      res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+  })
 });
 
 app.get('/device/:device_id/access',(req,res)=>{
-  res.render(path.join(__dirname, config.public_path+'/views/pages/device/access'),{user:req.user,page:'Access'});
+  Device.getInfo(req.params.device_id,(err,device)=>{
+    res.render(path.join(__dirname, config.public_path+'/views/pages/device/access'),{device:device,user:req.user,page:'Access'});
+  });
 });
 
 app.get('/device/:device_id/autorequests',(req,res)=>{
-  Device.getInfo(req.params.device_id,(err,device)=>{
-    Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
-      if(device != null && mqtt != null)
-        res.render(path.join(__dirname, config.public_path+'/views/pages/device/autorequests'),{device:device,mqtt:mqtt,user:req.user,page:'Autorequests'});
+  let device = null;
+  let devices = [];
+  let mqtt = null;
+  async.waterfall([
+    (cb)=>{
+      Device.getInfo(req.params.device_id,(err,row)=>{
+        device = row;
+        cb(err);
+      });
+    },
+    (cb)=>{
+      Client.getMqttCredentials(req.user.client_id,(err,row)=>{
+        mqtt = row;
+        cb(err);
+      });
+    },
+    (cb)=>{
+      if(req.user.level <= 4){
+        Device.list(device.model_id,req.user.client_id,(err,rows)=>{
+          devices = rows;
+          cb(err);
+        });
+      }else{
+        Device.list(device.model_id,(err,rows)=>{
+          devices = rows;
+          cb(err);
+        });
+      }
+    },
+  ],(err)=>{
+    if(device != null && mqtt != null)
+        res.render(path.join(__dirname, config.public_path+'/views/pages/device/autorequests'),{device:device,devices:devices,mqtt:mqtt,user:req.user,page:'Autorequests'});
       else
         res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
-    })
   });
 });
 
 app.get('/device/:device_id/alarms',(req,res)=>{
-  Device.getInfo(req.params.device_id,(err,device)=>{
-    Client.getMqttCredentials(req.user.client_id,(err,mqtt)=>{
-      if(device != null && mqtt != null)
-        res.render(path.join(__dirname, config.public_path+'/views/pages/device/alarms'),{device:device,mqtt:mqtt,user:req.user,page:'Alarms'});
+  let device = null;
+  let devices = [];
+  let mqtt = null;
+  async.waterfall([
+    (cb)=>{
+      Device.getInfo(req.params.device_id,(err,row)=>{
+        device = row;
+        cb(err);
+      });
+    },
+    (cb)=>{
+      Client.getMqttCredentials(req.user.client_id,(err,row)=>{
+        mqtt = row;
+        cb(err);
+      });
+    },
+    (cb)=>{
+      if(req.user.level <= 4){
+        Device.list(device.model_id,req.user.client_id,(err,rows)=>{
+          devices = rows;
+          cb(err);
+        });
+      }else{
+        Device.list(device.model_id,(err,rows)=>{
+          devices = rows;
+          cb(err);
+        });
+      }
+    },
+  ],(err)=>{
+    if(device != null && mqtt != null)
+        res.render(path.join(__dirname, config.public_path+'/views/pages/device/alarms'),{device:device,devices:devices,mqtt:mqtt,user:req.user,page:'Alarms'});
       else
         res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
-    })
   });
 });
 

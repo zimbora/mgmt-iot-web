@@ -16,14 +16,16 @@
 
   </style>
 
-  <%- include('../partials/head.ejs') %>
+  <%- include('../../partials/head.ejs') %>
 
 </head>
 <body>
 
-  <%- include('../partials/scripts.ejs') %>
+<%- include('../../partials/model/scripts.ejs') %>
+  <%- include('../../partials/model/navbar.ejs') %>
 
-  <%- include('../partials/navbar.ejs') %>
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
 
   <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
   <script src="./assets/js/jquery.dataTables.min.js"></script>
@@ -31,22 +33,22 @@
 
   <div class="container-fluid">
     <div class="row flex-nowrap">
-      <%- include('../partials/sidebar.ejs') %>
+      <%- include('../../partials/model/sidebar.ejs') %>
       <div class="col py-3">
         <div class="content-header">
-          <h5>Display Devices</h5>
+          <h3><%= model %></h3>
         </div>
       <div class="row">
         <!--<div class="col-sm-12 mb-3 mb-sm-0">-->
         <div class="card overflow-auto" style="width:100%">
           <div class="card-body">
             <table id="devices" class="display">
+              <caption><b>Devices</b></caption>
               <thead>
                 <tr>
                   <th></th>
                   <th>uid</th>
                   <th>project</th>
-                  <th>model</th>
                   <th>created</th>
                   <th>status</th>
                   <th>updated</th>
@@ -62,22 +64,16 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js" integrity="sha512-42PE0rd+wZ2hNXftlM78BSehIGzezNeQuzihiBCvUEB3CVxHvsShF86wBWwQORNxNINlBPuq7rG4WWhNiTVHFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-  <%- include('../partials/modal/confirmation.ejs') %>
-  <%- include('../partials/modal/error.ejs') %>
-
   <script>
     var t;
     var id;
+    let devices = <%- JSON.stringify(devices) %>;
+
     $(document).ready(function () {
       t = $('#devices').DataTable();
 
-      api.getDevices((err,res)=>{
-        if(err) console.log("err:",err)
-        else{
-          res.forEach((item, i) => {
-            addRow(item.id,item.uid,item.project,item.model,item.model_id,moment(item.createdAt).format('YY/MM/DD LT'),item.status,moment(item.updatedAt).format('YY/MM/DD LT'));
-          });
-        }
+      devices.forEach((item, i) => {
+        addRow(item.id,item.uid,item.project,item.model,item.model_id,moment(item.createdAt).format('YY/MM/DD LT'),item.status,moment(item.updatedAt).format('YY/MM/DD LT'));
       });
     });
 
@@ -92,9 +88,8 @@
             <i class="fa-solid fa-user-xmark"></i>
           </button>
         </div>`,
-        `<a href="./device/`+id+`">`+uid+`</a>`,
+        `<a href="../../../device/`+id+`">`+uid+`</a>`,
         project,
-        `<a href="../model/`+model_id+`/settings">`+model+`</a>`,
         created,status,updated]).draw(true);
     }
 

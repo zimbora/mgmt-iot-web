@@ -60,4 +60,7 @@ router.route("/:device_id/release")
 router.route("/:device_id/settings")
   .put(Device.updateDeviceSettings)
 
+router.route("/:device_id/project/field")
+  .put(Device.updateDeviceProjectField)
+
 module.exports =  router;

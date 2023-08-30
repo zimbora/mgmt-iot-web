@@ -68,13 +68,43 @@ var self = module.exports =  {
   },
 
   // list all devices
-  list : async (cb)=>{
+  list : async (...args)=>{
 
+    let cb = ()=>{};
+    let clientId = null;
+    let modelId = null;
+    args.forEach((param,counter)=>{
+      if( typeof param === 'function')
+        cb = param;
+      else{
+        switch(counter){
+          case 0:
+            modelId = param;
+            break;
+          case 1:
+            clientId = param;
+            break;
+        }
+      }
+    })
     let query = `select d.*,p.name as project,m.name as model from devices as d
                 inner join projects as p on p.id = d.project_id
                 inner join models as m on m.id = d.model_id`;
     let table = [];
+
+    if(clientId != null)
+      query += " inner join modelPermissions as mp on mp.model_id = m.id"
+
+    if(modelId != null){
+      query += " where m.id = ?"
+      table.push(modelId);
+    }
+    if(clientId != null){
+      query += " and mp.client_id = ?";
+      table.push(clientId);
+    }
     query = mysql.format(query,table);
+    console.log(query);
     db.queryRow(query)
     .then(rows => {
       return cb(null,rows);
@@ -207,7 +237,7 @@ var self = module.exports =  {
       return;
     let model = await self.getModel(deviceId);
 
-    let query = `SELECT d.uid as uid,p.* FROM ?? as p left join devices as d on d.id = p.device_id where d.id = ?;`
+    let query = `SELECT d.uid as uid,d.model_id as model_id,p.* FROM ?? as p left join devices as d on d.id = p.device_id where d.id = ?;`
     let table = [project,deviceId]
     query = mysql.format(query,table);
     db.queryRow(query)
@@ -259,10 +289,9 @@ var self = module.exports =  {
     let query = `SELECT * FROM (SELECT ??,createdAt FROM ?? WHERE ?? IS NOT NULL and device_id = ? ORDER BY createdAt DESC limit 100)  AS sub ORDER BY createdAt ASC;`
     let table = [sensor,logs_table,sensor,deviceId]
     query = mysql.format(query,table);
-    console.log(query);
+
     db.queryRow(query)
     .then(rows => {
-      console.log(rows)
       return cb(null,rows);
     })
     .catch(error => {
@@ -419,6 +448,31 @@ var self = module.exports =  {
       settings : settings,
       updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
     };
+
+    let filter = {
+      device_id : deviceId
+    };
+
+    db.update(project,obj,filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
+  updateDeviceProjectField : async (deviceId,field,data,cb)=>{
+
+    let project = await self.getProject(deviceId);
+
+    if(null)
+      return cb(null,null)
+
+    let obj = {
+      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+    };
+    obj[field] = data;
 
     let filter = {
       device_id : deviceId

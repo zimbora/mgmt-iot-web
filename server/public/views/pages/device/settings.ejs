@@ -25,311 +25,302 @@
   <script type="module" src="./app.mjs"></script>
 
   <div class="container-fluid">
-      <div class="row flex-nowrap">
-          <%- include('../../partials/device/sidebar.ejs') %>
-          <div class="col py-3">
-            <div class="row">
-              <div class="col-sm-12 mb-4 mb-sm-0">
-                <div class="content-header">
-                  <h5>MQTT Available
-                    <button id="mqtt_status" type="button" class="btn btn-secondary" disabled></button>
-                  </h5>
-                </div>
-                <div class="col">
-                <!--<div class="card">-->
-                  <!--<h5 class="card-title">Special title treatment</h5>-->
-                  <div class="mb-1 row">
-                    <label for="project" class="col-sm-3 col-form-label">Project</label>
-                    <div class="col-sm-7">
-                      <input type="text" readonly class="form-control-plaintext fw-bold" id="project" value="ND">
-                    </div>
-                  </div>
-                    <div class="mb-1 row">
-                      <label for="model" class="col-sm-3 col-form-label">Model</label>
-                      <div class="col-sm-7">
-                        <input type="text" readonly class="form-control-plaintext fw-bold" id="model" value="ND">
-                      </div>
-                    </div>
-                    <div class="mb-1 row">
-                      <label for="fw_version" class="col-sm-3 col-form-label">FW version</label>
-                      <div class="col-sm-7">
-                        <input type="text" readonly class="form-control-plaintext fw-bold" id="fw_version" value="0.0.0">
-                      </div>
-                    </div>
-                    <div class="mb-4 row">
-                      <label for="app_version" class="col-sm-3 col-form-label">App version</label>
-                      <div class="col-sm-7">
-                        <input type="text" readonly class="form-control-plaintext fw-bold" id="app_version" value="0.0.0">
-                      </div>
-                    </div>
-                    <!--
-                    <div class="mb-4 row">
-                      <label for="flexCheckDefault" class="col-sm-3 col-form-check">JavaScript</label>
-                      <div class="col-sm-7">
-                        <input class="form-check-input" type="checkbox" value="" id="flexCheckJS" disabled checked>
-                      </div>
-                    </div>
-                    <div class="mb-5 row">
-                      <label for="flexCheckDefault" class="col-sm-3 col-form-check">RS485</label>
-                      <div class="col-sm-7">
-                        <input class="form-check-input" type="checkbox" value="" id="flexCheckJS" disabled>
-                      </div>
-                    </div>
-                    -->
-                </div>
-                <!--</div>-->
-              </div>
+    <div class="row flex-nowrap">
+      <%- include('../../partials/device/sidebar.ejs') %>
+      <div class="col">
 
-              <div class="col-sm-12 mb-4 mb-sm-4">
-                <div class="btn-group">
-                  <label class="input-group-text" for="inputGroupSelect21">release</label>
-                  <select class="form-select fwReleaseOption" id="_fwrelease_">
-                  </select>
+        <div class="row py-3">
+          <div class="col-xs-12 col-sm-6 mb-4 mb-sm-0">
+            <div class="content-header">
+              <h5>MQTT Available
+                <button id="mqtt_status" type="button" class="btn btn-secondary" disabled></button>
+              </h5>
+            </div>
+            <div class="col">
+              <div class="mb-1 row">
+                <label for="project" class="col-4 col-form-label">Project</label>
+                <div class="col-6">
+                  <input type="text" readonly class="form-control-plaintext fw-bold" id="project" value="ND">
                 </div>
               </div>
-
-              <div class="col-sm-12 mb-4 mb-sm-4">
-                <div class="card">
-                  <div class="card-header">
-                    <p>Settings</p>
-                  </div>
-                  <div class="card-body">
-                    <form class="row g-3 needs-validation" novalidate>
-                      <div class="col-sm-6">
-                        <div class="btn-group">
-                          <label class="input-group-text" for="inputGroupSelect31">keepalive</label>
-                          <select class="form-select fwKeepaliveOption" id="_fwkeepalive_">
-                          </select>
-                          <button id="keepaliveget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">
-                            <i class="bi bi-search"></i>
-                          </button>
-                        </div>
-                      </div>
-                      <div class="col-sm-6">
-                        <div class="btn-group">
-                          <label class="input-group-text" for="inputGroupSelect31">logs level</label>
-                          <select class="form-select fwLogsLevelOption" id="_fwlogslevel_">
-                          </select>
-                          <button id="logLevelget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">
-                            <i class="bi bi-search"></i>
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
+              <div class="mb-1 row">
+                <label for="model" class="col-4 col-form-label">Model</label>
+                <div class="col-6">
+                  <input type="text" readonly class="form-control-plaintext fw-bold" id="model" value="ND">
                 </div>
               </div>
-
-              <div class="col-sm-12 mb-4 mb-sm-0">
-                <div class="card">
-                  <div class="card-header">
-                    <p>Actions</p>
-                  </div>
-                  <div class="card-body">
-                    <div class="mb-3 row">
-                      <label for="reboot" class="col-sm-8 col-form-label">Reboot</label>
-                      <div class="col-sm-4">
-                        <button id="reboot" type="button" class="btn btn-primary btn-sm">set</button>
-                      </div>
-                    </div>
-                    <div class="mb-3 row">
-                      <label for="reset" class="col-sm-8 col-form-label">Reset</label>
-                      <div class="col-sm-4">
-                        <button id="reset" type="button" class="btn btn-warning btn-sm">set</button>
-                      </div>
-                    </div>
-
-                  </div>
+              <div class="mb-1 row">
+                <label for="fw_version" class="col-4 col-form-label">FW version</label>
+                <div class="col-6">
+                  <input type="text" readonly class="form-control-plaintext fw-bold" id="fw_version" value="0.0.0">
                 </div>
               </div>
-
+              <div class="mb-4 row">
+                <label for="app_version" class="col-4 col-form-label">App version</label>
+                <div class="col-6">
+                  <input type="text" readonly class="form-control-plaintext fw-bold" id="app_version" value="0.0.0">
+                </div>
+              </div>
+              <div class="btn-group">
+                <label class="input-group-text" for="inputGroupSelect21">release</label>
+                <select class="form-select fwReleaseOption" id="_fwrelease_">
+                </select>
+              </div>
             </div>
           </div>
-          <div class="col py-3">
-            <div class ="row">
-              <div class="col-sm-12 mb-4 mb-sm-4">
-                <div class="content-header">
-                  <h5>
-                    <button class="btn btn-primary btn-sm" type="submit" onclick="showDeviceLogs(`status`)">
-                      <i class="bi bi-list"></i>
-                    </button>
-                    Device available
-                    <button id="status" type="button" class="btn btn-secondary" disabled></button
-                  </h5>
-                </div>
-                <div class="mb-1 row">
-                  <label for="uptime" class="col-sm-3 col-form-label">
-                    <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`uptime`)">
-                      <i class="bi bi-list"></i>
-                    </button>
-                    Uptime
-                  </label>
-                  <div class="col-sm-7">
-                    <input type="text" readonly class="form-control-plaintext fw-bold" id="uptime" value="0">
+          <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+            <div class="content-header">
+              <h5>
+                <button class="btn btn-primary btn-sm" type="submit" onclick="showDeviceLogs(`status`)">
+                  <i class="bi bi-list"></i>
+                </button>
+                <%= device.name != null ? device.name : device.uid %>
+                <button id="status" type="button" class="btn btn-secondary" disabled></button
+              </h5>
+            </div>
+            <div class="mb-1 row">
+              <label for="uptime" class="col-4 col-form-label">
+                <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`uptime`)">
+                  <i class="bi bi-list"></i>
+                </button>
+                Uptime
+              </label>
+              <div class="col-6">
+                <input type="text" readonly class="form-control-plaintext fw-bold" id="uptime" value="0">
+              </div>
+            </div>
+            <div class="mb-1 row">
+              <label for="tech" class="col-4 col-form-label">
+                <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`tech`)">
+                  <i class="bi bi-list"></i>
+                </button>
+                Tech
+              </label>
+              <div class="col-6">
+                <input type="text" readonly class="form-control-plaintext fw-bold" id="tech" value="ND">
+              </div>
+            </div>
+            <div class="mb-3 row">
+              <label for="rssi" class="col-4 col-form-label">
+                <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`rssi`)">
+                  <i class="bi bi-list"></i>
+                </button>
+                RSSI
+              </label>
+              <div class="col-6">
+                <input type="text" readonly class="form-control-plaintext fw-bold" id="rssi" value="99">
+              </div>
+            </div>
+            <div class="btn-group">
+              <label class="input-group-text" for="inputGroupSelect21">use device config:</label>
+                <select class="form-select settingsDeviceRef" id="_device_ref_">
+                  <% if(device.device_id == device.settings_ref){ %>
+                    <option selected value="null">own</option>
+                  <%} else {%>
+                    <option value="null">own</option>
+                  <% } %>
+                  <%devices.map((row)=>{%>
+                    <% if(row.id != device.device_id){ %>
+                      <% if(row.id == device.settings_ref){ %>
+                        <%console.log(row.id,"match")%>;
+                        <option selected value="<%= row.id%>"><%= row.name != null ? row.name : row.uid%></option>
+                      <% }else { %>
+                        <option value="<%= row.id%>"><%= row.name != null ? row.name : row.uid%></option>
+                      <% } %>
+                    <% } %>
+                  <%})%>
+                </select>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="row py-3">
+
+          <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+            <div class="card">
+              <div class="card-header">
+                <p>Settings</p>
+              </div>
+              <div class="card-body">
+                <form class="row g-3 needs-validation" novalidate>
+                  <div class="col-xs-12 col-sm-6">
+                    <div class="btn-group">
+                      <label class="input-group-text" for="inputGroupSelect31">keepalive</label>
+                      <select <% if(device.settings_ref != null){%> disabled <%}%> class="form-select fwKeepaliveOption" id="_fwkeepalive_">
+                      </select>
+                      <button id="keepaliveget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">
+                        <i class="bi bi-search"></i>
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div class="mb-1 row">
-                  <label for="tech" class="col-sm-3 col-form-label">
-                    <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`tech`)">
-                      <i class="bi bi-list"></i>
-                    </button>
-                    Tech
-                  </label>
-                  <div class="col-sm-7">
-                    <input type="text" readonly class="form-control-plaintext fw-bold" id="tech" value="ND">
+                  <div class="col-xs-12 col-sm-6">
+                    <div class="btn-group">
+                      <label class="input-group-text" for="inputGroupSelect31">logs level</label>
+                      <select <% if(device.settings_ref != null){%> disabled <%}%> class="form-select fwLogsLevelOption" id="_fwlogslevel_">
+                      </select>
+                      <button id="logLevelget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">
+                        <i class="bi bi-search"></i>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-sm-6 mb-4 mb-sm-0">
+            <div class="card">
+              <div class="card-header">
+                <p>Actions</p>
+              </div>
+              <div class="card-body">
                 <div class="mb-3 row">
-                  <label for="rssi" class="col-sm-3 col-form-label">
-                    <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`rssi`)">
-                      <i class="bi bi-list"></i>
-                    </button>
-                    RSSI
-                  </label>
-                  <div class="col-sm-7">
-                    <input type="text" readonly class="form-control-plaintext fw-bold" id="rssi" value="99">
+                  <div class="col-3">
+                    <button id="reboot" type="button" class="btn btn-primary btn-sm">Reboot</button>
                   </div>
-                </div>
-              </div>
-              <div class="col-sm-12 mb-4 mb-sm-4">
-                <div class="btn-group">
-                  <label class="input-group-text" for="inputGroupSelect21">configuration</label>
-                  <select disabled class="form-select fwConfigurationOption" id="_fwconfiguration_">
-                  </select>
-                </div>
-              </div>
-              <% if(device.model.endsWith("WIFI")){ %>
-              <div class="col-sm-12 mb-4 mb-sm-4">
-                <div class="card">
-                  <div class="card-header">
-                    <p>WiFi</p>
+                  <div class="col-3">
                   </div>
-                  <div class="card-body">
-                    <form class="row g-3 needs-validation" validate>
-                      <div class="col-md-6">
-                        <label for="validationCustom01" class="form-label">SSID</label>
-                        <input type="text" class="form-control" id="wifissid" value="" required>
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="validationCustom02" class="form-label">Password</label>
-                        <input type="text" class="form-control" id="wifipassword" value="" required>
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <button id="wifiget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
-                        <button id="wifiset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-              <% }else if(device.model.endsWith("LTE")){ %>
-              <div class="col-sm-12 mb-4 mb-sm-4">
-                <div class="card">
-                  <div class="card-header">
-                    <p>LTE</p>
-                  </div>
-                  <div class="card-body">
-                    <form class="row g-3 needs-validation" validate>
-                      <div class="col-md-4">
-                        <label for="validationCustom11" class="form-label">APN</label>
-                        <input type="text" class="form-control" id="_lte_apn_" value="" required>
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <label for="validationCustom12" class="form-label">User</label>
-                        <input type="text" class="form-control" id="_lte_user_" value="">
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <label for="validationCustom13" class="form-label">Password</label>
-                        <input type="text" class="form-control" id="_lte_pwd_" value="">
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <label for="validationCustom13" class="form-label">Cops</label>
-                        <input type="number" class="form-control" id="_lte_cops_" value="">
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <label for="validationCustom13" class="form-label">Band</label>
-                        <input type="number" class="form-control" id="_lte_band_" value="">
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <label for="validationCustom13" class="form-label">Tech</label>
-                        <select class="form-select fwTechOption" id="_lte_tech_">
-                        </select>
-                      </div>
-                      <div class="col-md-4">
-                        <button id="lteget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
-                        <button id="lteset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-              <% } %>
-              <div class="col-sm-12 mb-4 mb-sm-4">
-                <div class="card">
-                  <div class="card-header">
-                    <p>MQTT Second Connection</p>
-                  </div>
-                  <div class="card-body">
-                    <form class="row g-3 needs-validation" novalidate>
-                      <div class="col-md-10">
-                        <label for="validationMQTT01" class="form-label">Host</label>
-                        <input type="text" class="form-control" id="mqtt_host" value="" required>
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-2">
-                        <label for="validationMQTT02" class="form-label">Port</label>
-                        <input type="number" class="form-control" id="mqtt_port" value="" required>
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="validationMQTT03" class="form-label">User</label>
-                        <input type="text" class="form-control" id="mqtt_user" value="" required>
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="validationMQTT04" class="form-label">Password</label>
-                        <input type="text" class="form-control" id="mqtt_pwd" value="" required>
-                        <div class="valid-feedback">
-                          Looks good!
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <button id="mqttget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
-                        <button id="mqttset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
-                      </div>
-                    </form>
+                  <div class="col-3">
+                    <button id="reset" type="button" class="btn btn-warning btn-sm">Reset</button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <% if(device.model.endsWith("WIFI")){ %>
+            <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+              <div class="card">
+                <div class="card-header">
+                  <p>WiFi</p>
+                </div>
+                <div class="card-body">
+                  <form class="row g-3 needs-validation" validate>
+                    <div class="col-md-6">
+                      <label for="validationCustom01" class="form-label">SSID</label>
+                      <input type="text" class="form-control" id="wifissid" value="" required>
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="validationCustom02" class="form-label">Password</label>
+                      <input type="text" class="form-control" id="wifipassword" value="" required>
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <button id="wifiget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
+                      <button <% if(device.settings_ref != null){%> disabled <%}%> id="wifiset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <% }else if(device.model.endsWith("LTE")){ %>
+            <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+              <div class="card">
+                <div class="card-header">
+                  <p>LTE</p>
+                </div>
+                <div class="card-body">
+                  <form class="row g-3 needs-validation" validate>
+                    <div class="col-md-4">
+                      <label for="validationCustom11" class="form-label">APN</label>
+                      <input type="text" class="form-control" id="_lte_apn_" value="" required>
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="validationCustom12" class="form-label">User</label>
+                      <input type="text" class="form-control" id="_lte_user_" value="">
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="validationCustom13" class="form-label">Password</label>
+                      <input type="text" class="form-control" id="_lte_pwd_" value="">
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="validationCustom13" class="form-label">Cops</label>
+                      <input type="number" class="form-control" id="_lte_cops_" value="">
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="validationCustom13" class="form-label">Band</label>
+                      <input type="number" class="form-control" id="_lte_band_" value="">
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="validationCustom13" class="form-label">Tech</label>
+                      <select class="form-select fwTechOption" id="_lte_tech_">
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <button id="lteget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
+                      <button <% if(device.settings_ref != null){%> disabled <%}%> id="lteset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <% } %>
+            <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+              <div class="card">
+                <div class="card-header">
+                  <p>MQTT Second Connection</p>
+                </div>
+                <div class="card-body">
+                  <form class="row g-3 needs-validation" novalidate>
+                    <div class="col-md-10">
+                      <label for="validationMQTT01" class="form-label">Host</label>
+                      <input type="text" class="form-control" id="mqtt_host" value="" required>
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <label for="validationMQTT02" class="form-label">Port</label>
+                      <input type="number" class="form-control" id="mqtt_port" value="" required>
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="validationMQTT03" class="form-label">User</label>
+                      <input type="text" class="form-control" id="mqtt_user" value="" required>
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="validationMQTT04" class="form-label">Password</label>
+                      <input type="text" class="form-control" id="mqtt_pwd" value="" required>
+                      <div class="valid-feedback">
+                        Looks good!
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <button id="mqttget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
+                      <button <% if(device.settings_ref != null){%> disabled <%}%> id="mqttset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+        </div>
+      </div>
       </div>
   </div>
 
@@ -374,6 +365,7 @@
 
     var ctx;
     var table_list;
+    let devices = <%- JSON.stringify(devices) %>;
 
     $(document).ready(()=>{
 
@@ -493,6 +485,27 @@
               $('#modalError').modal('show');
             }
           });
+        });
+      });
+
+      $(".settingsDeviceRef").change((event)=>{
+        $( ".settingsDeviceRef option:selected" ).each(function() {
+          let dev_ref = $( this ).val();
+          if(dev_ref == "null")
+            dev_ref = null;
+          api.updateDeviceProjectField(deviceID,"settings_ref",dev_ref,(err,res)=>{
+            if(err){
+              $('#error').text("Your request cannot be executed");
+              if(err.hasOwnProperty("sqlMessage"))
+                $('#suggestion').text(err.sqlMessage);
+              else
+                $('#suggestion').text(err);
+              $('#modalError').modal('show');
+            }else{
+              location.reload();
+            }
+          });
+
         });
       });
 

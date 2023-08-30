@@ -85,6 +85,8 @@
 
       t = $('#models').DataTable();
 
+      models.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
+
       models.forEach((item, i) => {
         addRow(item.id,item.name,item.description);
       });
@@ -107,7 +109,7 @@
         <button id="`+id+`" onclick="deleteModel('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
           <i class="bi bi-folder-x"></i>
         </button>`,
-        `<a href="./model/`+id+`/firmwares">`+model+`</a>`,
+        `<a href="./model/`+id+`/devices">`+model+`</a>`,
         description]).draw(true);
     }
 

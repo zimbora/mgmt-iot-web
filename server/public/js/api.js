@@ -204,6 +204,28 @@ var api = {
     });
   },
 
+  updateDeviceProjectField : (deviceID,field,data,cb)=>{
+    fetch(Settings.api+"/device/"+deviceID+"/project/field", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        field: field,
+        data: data
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   deleteDevice : (deviceID, cb)=>{
 
     fetch(Settings.api+"/device/"+deviceID, {
@@ -411,7 +433,6 @@ var api = {
       },
       dataType : "JSON"
     });
-
   },
   // add permission to client to access device
   addPermission : (clientID,device,level,cb)=>{
@@ -478,7 +499,6 @@ var api = {
       return parseError(error,cb);
     });
   },
-
   getMqttCredentials : (cb)=>{
 
     if(window.location.protocol == "https:"){

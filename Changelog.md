@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.0.37
+ - Supports references to other devices in order to use their configuration
+ - shows device list on model tab as entry index
+
 ## version 1.0.36
  - associates firmwares to models
  - shows more data on dashboard
