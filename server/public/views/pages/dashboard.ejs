@@ -298,13 +298,13 @@
     // called when the client connects
     function onConnect() {
       // Once a connection has been made, make a subscription and send a message.
-      console.log("connected")
+      console.log("mqtt connected")
       client.subscribe("docker/#");
     }
 
     // called when the client loses its connection
     function onConnectionLost(responseObject) {
-      console.log("disconnected")
+      console.log("mqtt disconnected")
     }
 
     function onMessageArrived(message) {

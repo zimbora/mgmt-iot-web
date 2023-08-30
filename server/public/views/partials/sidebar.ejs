@@ -5,6 +5,10 @@
         <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
             <span class="fs-5 d-none d-sm-inline">Device Manager</span>
         </a>
+        <% if(user.mgmt_iot_version != ""){%>
+        <%= user.mgmt_iot_version %>
+        <% } %>
+        @ <%= user.mgmt_iot_web_version %>
         <div class="dropdown pb-4">
             <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
                 <li><a class="dropdown-item" href="#">New project...</a></li>

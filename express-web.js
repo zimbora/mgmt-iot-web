@@ -9,6 +9,10 @@ var httpStatus = require('http-status-codes');
 const fs = require('fs');
 const async = require('async');
 
+const packageJson = require(__dirname+'/package.json');
+const packageVersion = packageJson.version;
+
+
 var auth = require('./server/controllers/auth');
 var routes = require('./server/routes');
 var validate = require('./server/controllers/params_validator');
@@ -90,6 +94,8 @@ app.use(auth.check_authentication,(req,res,next)=>{
     //res.render(path.join(__dirname, config.public_path+'/views/pages/login'));
     res.render(path.join(__dirname, config.public_path+'/views/pages/login'),{googleclientID:config.googleClientId});
   }else{
+    req.user.mgmt_iot_web_version = packageVersion;
+    req.user.mgmt_iot_version = mgmt_iot_version;
     next()
   }
 });

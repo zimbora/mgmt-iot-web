@@ -6,6 +6,7 @@ var device = require('./server/models/devices.js');
 const mqtt = require('mqtt')
 
 var user = require('./server/models/users');
+mgmt_iot_version = "";
 
 'use strict';
 const {Docker} = require('node-docker-api');
@@ -19,6 +20,7 @@ module.exports = {
     var db = require('./server/controllers/db');
     db.connect(config,() => {
       db_setup();
+      mgmt_iot_version = config?.version ? config.version : "";
       web.listen(config.web_port, () => {
         log.info('Web Server started and listening on port: ' +config.web_port + ' ' + config.env);
       });
