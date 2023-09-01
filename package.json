@@ -1,6 +1,6 @@
 {
   "name": "mgmt-iot-web",
-  "version": "1.0.38",
+  "version": "1.0.39",
   "description": "web platform to configure and interact with iot devices using mqtt",
   "main": "index.js",
   "scripts": {

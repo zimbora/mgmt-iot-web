@@ -73,6 +73,7 @@
                         <% } %>
                         class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
                     </li>
+                    <% if(model?.ar_enabled){ %>
                     <li>
                         <a href="./autorequests"
                         <% if(page == "Autorequests"){%>
@@ -80,6 +81,8 @@
                         <% } %>
                         class="nav-link px-0"> <span class="d-none d-sm-inline">Autorequests</span></a>
                     </li>
+                    <%}%>
+                    <% if(model?.alarms_enabled){ %>
                     <li>
                       <a href="./alarms"
                       <% if(page == "Alarms"){%>
@@ -87,6 +90,8 @@
                       <% } %>
                       class="nav-link px-0"> <span class="d-none d-sm-inline">Alarms</span></a>
                     </li>
+                    <%}%>
+                    <% if(model?.js_code_enabled){ %>
                     <li>
                         <a href="./jscode"
                         <% if(page == "JSCODE"){%>
@@ -94,6 +99,7 @@
                         <% } %>
                         class="nav-link px-0"> <span class="d-none d-sm-inline">JScode</span></a>
                     </li>
+                    <%}%>
                 </ul>
             </li>
             <!--

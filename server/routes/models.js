@@ -38,4 +38,7 @@ router.route('/:model_id/firmware')
   .delete(Firmware.delete)
   .put(Firmware.updateRelease)
 
+router.route('/:model_id/option')
+  .put(Model.updateOption)
+
 module.exports =  router;

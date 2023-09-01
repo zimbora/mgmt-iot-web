@@ -521,6 +521,29 @@ var api = {
 
   // --- ----- ---
 
+  // --- models ---
+  updateModelOption : function(modelId,option,val,cb){
+    fetch(Settings.api+"/model/"+modelId+"/option", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        option: option,
+        enable: val,
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   // --- firmwares ---
 
   // get all firmwares models

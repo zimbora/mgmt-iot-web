@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.39
+ - allows enable/disable ARs, Alarms, JSCode, Firmwares
+
 ## version 1.0.38
  - shows packages versions on sidebar
 

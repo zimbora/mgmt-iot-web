@@ -55,13 +55,23 @@
                       </li>
                       <% if(user.level >= 4){%>
                       <li class="w-100">
+                          <a href="./settings"
+                          <% if(page == "Settings"){%>
+                            class="active"
+                          <% } %>
+                          class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
+                      </li>
+                      <%}%>
+                      <% if(user.level >= 4){%>
+                      <li class="w-100">
                           <a href="./access"
-                          <% if(page == "access"){%>
+                          <% if(page == "Access"){%>
                             class="active"
                           <% } %>
                           class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
                       </li>
                       <%}%>
+                      <% if(model.fw_enabled){%>
                       <li class="w-100">
                           <a href="./firmwares"
                           <% if(page == "Firmwares"){%>
@@ -69,6 +79,7 @@
                           <% } %>
                           class="nav-link px-0"> <span class="d-none d-sm-inline">Firmwares</span></a>
                       </li>
+                      <%}%>
                     </ul>
             </li>
             <% } %>

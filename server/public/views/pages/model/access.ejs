@@ -22,12 +22,12 @@
           <%- include('../../partials/model/sidebar.ejs') %>
           <div class="col py-3">
             <div class="content-header">
-              <h3><%= model %></h3>
+              <h3><%= model.name %></h3>
             </div>
             <div class="row">
               <div class="col-sm-7 mb-3 mb-sm-0">
                 <div class="card py-3">
-                  <h5 class="card-title">Firmware Model Access</h5>
+                  <h5 class="card-title">Model Access</h5>
                   <table id="firmwares" class="display" style="width:100%" overflow-x:scroll>
                     <thead>
                         <tr>
@@ -69,11 +69,6 @@
     $(document).ready(function () {
 
       t = $('#firmwares').DataTable();
-
-      api.getFWModelInfo(modelID,(err,res)=>{
-        if(err) console.log(err);
-        $("#title").text(res.name)
-      })
 
       api.listFWModelPermission(modelID,(err,res)=>{
         if(err) console.log("err:",err)

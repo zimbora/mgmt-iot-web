@@ -104,7 +104,7 @@ var self = module.exports =  {
       table.push(clientId);
     }
     query = mysql.format(query,table);
-    console.log(query);
+
     db.queryRow(query)
     .then(rows => {
       return cb(null,rows);
@@ -240,10 +240,12 @@ var self = module.exports =  {
     let query = `SELECT d.uid as uid,d.model_id as model_id,p.* FROM ?? as p left join devices as d on d.id = p.device_id where d.id = ?;`
     let table = [project,deviceId]
     query = mysql.format(query,table);
+
     db.queryRow(query)
     .then(rows => {
-      if(rows.length == 0 )
+      if(rows.length == 0 ){
         return cb(null,null);
+      }
 
       rows[0]["project"] = project;
       rows[0]["model"] = model;
@@ -253,7 +255,6 @@ var self = module.exports =  {
     .catch(error => {
       return cb(error,null);
     })
-
 
     if(project == null)
       return cb(null,null)

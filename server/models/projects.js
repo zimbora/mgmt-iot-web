@@ -17,7 +17,6 @@ var self = module.exports = {
         return resolve(null);
       })
       .catch(error => {
-        console.log(error);
         return resolve(null);
       })
     });

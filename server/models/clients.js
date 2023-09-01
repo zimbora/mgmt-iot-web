@@ -250,7 +250,7 @@ var self = module.exports =  {
       let query = `select * from ?? where ?? = ? and ?? = ?`;
       let table = ["permissions","client_id",clientId,"device_id",deviceId];
       query = mysql.format(query,table);
-      console.log(query);
+
       db.queryRow(query)
       .then(rows => {
         if(rows.length) return cb(null,true);
@@ -270,8 +270,7 @@ var self = module.exports =  {
 
     db.queryRow(query)
     .then(rows => {
-      if(rows.length > 0)
-        return cb(null, rows[0]);
+      if(rows.length > 0) return cb(null, rows[0]);
       else return cb(null,null);
     })
     .catch(error => {

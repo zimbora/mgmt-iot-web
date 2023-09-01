@@ -57,10 +57,9 @@ module.exports =  {
     var query = `select * from ?? where model_id = ?`;
     var table = ["firmwares",modelId];
     query = mysql.format(query,table);
-    console.log(query);
+
     db.queryRow(query)
     .then(rows => {
-      console.log(rows)
       return cb(null,rows);
     })
     .catch(error => {
@@ -77,7 +76,7 @@ module.exports =  {
 
     var table = [clientId,modelId];
     query = mysql.format(query,table);
-    console.log(query)
+
     db.queryRow(query)
     .then(rows => {
       return cb(null,rows);

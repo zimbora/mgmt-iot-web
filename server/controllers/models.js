@@ -65,6 +65,23 @@ module.exports = {
     }
   },
 
+  updateOption : (req, res, next)=>{
+
+    const val = Joi.object({
+      option: Joi.string().required(),
+      enable: Joi.boolean().required(),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Model.updateOption(req.params.model_id,req.body.option,req.body.enable,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
   list : (req, res, next)=>{
     Model.list((err,rows)=>{
       if(!err) response.send(res,rows);

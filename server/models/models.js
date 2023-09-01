@@ -35,7 +35,6 @@ var self = module.exports = {
         return resolve(null);
       })
       .catch(error => {
-        console.log(error);
         return resolve(null);
       })
     });
@@ -79,6 +78,26 @@ var self = module.exports = {
       description : description,
       updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
     };
+
+    let filter = {
+      id : id
+    };
+
+    db.update("models",obj,filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
+  updateOption : async (id,option,value,cb)=>{
+
+    let obj = {
+      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+    };
+    obj[option] = value;
 
     let filter = {
       id : id

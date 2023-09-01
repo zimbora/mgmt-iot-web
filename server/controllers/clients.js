@@ -28,7 +28,6 @@ module.exports = {
 
   delete : (req, res, next)=>{
 
-    console.log(req.user);
     const val = Joi.object({
       clientID: Joi.string().required()
     }).validate(req.body);
