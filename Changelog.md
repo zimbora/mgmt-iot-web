@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.41
+  - removes dependencies from external libraries
+
 ## version 1.0.40
  - adds display module for devices and sensors logs
  - collects sensors data on device request
