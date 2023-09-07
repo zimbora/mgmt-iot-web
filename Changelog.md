@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.0.40
+ - adds display module for devices and sensors logs
+ - collects sensors data on device request
+
 ## version 1.0.39
  - allows enable/disable ARs, Alarms, JSCode, Firmwares
 

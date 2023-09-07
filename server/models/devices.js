@@ -182,7 +182,26 @@ var self = module.exports =  {
       db.queryRow(query)
       .then(rows => {
         if(rows?.length > 0)
-          resolve(rows[0].logs_table);
+          resolve(rows[0].model_table);
+        else resolve(null);
+      })
+      .catch(error => {
+        reject(error);
+      })
+    })
+  },
+
+  getModelTableById : async (modelId) =>{
+
+    return new Promise( (resolve,reject)=>{
+
+      let query = `select model_table from models where id = ?`;
+      let table = [modelId]
+      query = mysql.format(query,table);
+      db.queryRow(query)
+      .then(rows => {
+        if(rows?.length > 0)
+          resolve(rows[0].model_table);
         else resolve(null);
       })
       .catch(error => {
@@ -271,6 +290,30 @@ var self = module.exports =  {
     db.queryRow(query)
     .then(rows => {
       return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  // get sensor of device
+  getSensors : async (deviceId,modelId,cb)=>{
+
+    let model_table = await self.getModelTableById(modelId);
+
+    if(model_table == null)
+      return cb(null,null)
+
+    let query = `SELECT * FROM ?? where device_id = ?`;
+    let table = [model_table,deviceId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0)
+        return cb(null,null);
+      else
+        return cb(null,rows[0]);
     })
     .catch(error => {
       return cb(error,null);

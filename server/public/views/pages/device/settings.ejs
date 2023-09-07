@@ -71,7 +71,7 @@
           <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
             <div class="content-header">
               <h5>
-                <button class="btn btn-primary btn-sm" type="submit" onclick="showDeviceLogs(`status`)">
+                <button class="btn btn-primary btn-sm" type="submit" onclick="Display.showDeviceLogs(`status`)">
                   <i class="bi bi-list"></i>
                 </button>
                 <%= device.name != null ? device.name : device.uid %>
@@ -80,7 +80,7 @@
             </div>
             <div class="mb-1 row">
               <label for="uptime" class="col-4 col-form-label">
-                <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`uptime`)">
+                <button class="btn btn-light btn-sm" type="submit" onclick="Display.showDeviceLogs(`uptime`)">
                   <i class="bi bi-list"></i>
                 </button>
                 Uptime
@@ -91,7 +91,7 @@
             </div>
             <div class="mb-1 row">
               <label for="tech" class="col-4 col-form-label">
-                <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`tech`)">
+                <button class="btn btn-light btn-sm" type="submit" onclick="Display.showDeviceLogs(`tech`)">
                   <i class="bi bi-list"></i>
                 </button>
                 Tech
@@ -102,7 +102,7 @@
             </div>
             <div class="mb-3 row">
               <label for="rssi" class="col-4 col-form-label">
-                <button class="btn btn-light btn-sm" type="submit" onclick="showDeviceLogs(`rssi`)">
+                <button class="btn btn-light btn-sm" type="submit" onclick="Display.showDeviceLogs(`rssi`)">
                   <i class="bi bi-list"></i>
                 </button>
                 RSSI
@@ -369,8 +369,8 @@
 
     $(document).ready(()=>{
 
+      const app = require('./app.mjs');
       table_list = $('#table_list').DataTable();
-
       ctx = echarts.init(document.getElementById('myChart'));
 
       let device = <%- JSON.stringify(device) %>;
@@ -379,7 +379,7 @@
       document.querySelector('#project').value = device.project;
       document.querySelector('#model').value = device.model;
       document.querySelector('#fw_version').value = device.fw_version;
-      document.querySelector('#app_version').value = device.app_version;
+      document.querySelector('#app_version').value = device.app_version || device.version;
       project = device.project;
       uid = device.uid;
 
@@ -536,6 +536,7 @@
           Settings.mqtt.ssl = true;
           Settings.mqtt.port = 443;
         }
+
         client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
 
         // set callback handlers
@@ -665,9 +666,7 @@
 
       let topic = message.destinationName;
       let payload = message.payloadString;
-      //console.log(topic);
-      //console.log("payload:"+payload);
-      if(topic.includes("status")){
+      if(topic.includes("/status")){
         let button = document.querySelector('#status');
         button.classList.toggle("btn-secondary",false);
         if(payload == "online")
@@ -795,125 +794,6 @@
       $(id).append(`<option value="${value}">
                                  ${description}
                             </option>`);
-    }
-
-    function showDeviceLogs(sensor){
-
-      api.getDeviceLogs(deviceID,sensor,(err,res)=>{
-        if(err) console(err);
-        if(res?.length > 0 && typeof res[0][sensor] === "string" )
-          showList(sensor,res);
-        else
-          drawLinearChart(sensor,res);
-      })
-    }
-
-    function showList(sensor,data){
-      // Sort the array
-      table_list.clear();
-      calculateTimeDifference(data);
-      data.map((item,i)=>{
-        if(data?.duration)
-          data.duration = 0;
-        table_list.row.add([
-          moment(item.createdAt).format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
-        ]).draw(true);
-      })
-
-      table_list.order([0, 'desc']).draw();
-      $('#modalListLogs').modal('show');
-    }
-
-    function calculateTimeDifference(data){
-
-      data.slice(1).map((item, i) => {
-        // convert both current and previous timestamps to milliseconds
-        let current = moment(item.createdAt).unix();
-        let previous = moment(data[i].createdAt).unix();
-
-        data[i].duration = getDifference(current,previous);
-        return;
-      });
-      let previous = moment(data[data.length-1].createdAt).unix();
-      let current = moment().unix();
-      data[data.length-1].duration = getDifference(current,previous);
-    }
-
-    function getDifference(current, previous){
-      // calculate difference in seconds
-      let differenceInSeconds = (current - previous) % 60;
-      differenceInSeconds = differenceInSeconds.toFixed(0);
-      let sec_str = String(differenceInSeconds).padStart(2, '0');
-
-      // you can convert the difference to minutes, hours etc.
-      let differenceInMinutes = (current - previous) % 3600 / 60;
-      differenceInMinutes = differenceInMinutes.toFixed(0);
-      let min_str = String(differenceInMinutes).padStart(2, '0');
-
-      let differenceInHours = (current - previous) / 3600;
-      differenceInHours = differenceInHours.toFixed(0);
-      let hour_str = String(differenceInHours).padStart(2, '0');
-      let time = hour_str+":"+min_str+":"+sec_str;
-      return time;
-    }
-
-    function drawLinearChart(sensor,data){
-      let option = {
-        legend:{
-          data:[sensor],
-          type:"scroll"
-        },
-        tooltip: {
-          trigger: 'axis',
-          formatter: function (params) {
-            return 'date: '+moment.unix(Number(params[0].axisValue)).format('YYYY/MM/DD HH:mm') + '<br />' + sensor+': '+params[0].value;
-          }
-        },
-        dataZoom:[{type:'inside'}],
-        xAxis: {
-          name: 'time',
-          nameLocation: 'center',
-          nameGap:20,
-          nameTextStyle:{
-            fontWeight:'bold',
-          },
-          data: data.map(function (item) {
-            return moment(item.createdAt).unix();
-          }),
-          axisLabel: {
-            formatter: function (value, idx) {
-              return moment.unix(value).format('DD HH:mm');
-            }
-          },
-        },
-        yAxis: {
-          /*
-          name: 'values',
-          nameLocation: 'center',
-          nameGap:35,
-          nameTextStyle:{
-            fontWeight:'bold',
-          },
-          */
-        },
-        series: [
-          {
-            data: data.map(function (item) {
-              if(sensor == "status"){
-                return item[sensor] == "online" ? 1 : 0;
-              }else return item[sensor];
-            }),
-            name:sensor,
-            type: 'line',
-            smooth: true
-          }
-        ]
-      };
-
-      ctx.setOption(option)
-      ctx.resize();
-
-      $('#modalChartLogs').modal('show');
     }
 
     // On mqtt connect, topic subscribe, change status device

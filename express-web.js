@@ -280,10 +280,12 @@ app.get('/devices',(req,res)=>{
 
 app.use('/device/:device_id',client.checkDeviceAccess,(req,res,next)=>{
 
-  collectData(req,(err,data)=>{
-    req.user.data = data;
-    next()
-  });
+  if(! (req.originalUrl.endsWith(".js") || req.originalUrl.endsWith(".mjs")) ){
+    collectData(req,(err,data)=>{
+      req.user.data = data;
+      next()
+    });
+  }else next()
 });
 
 app.get('/device/:device_id',(req,res)=>{
@@ -403,6 +405,7 @@ module.exports = app;
 function collectData(req,callback){
   let data ={
     device:null,
+    sensor:null,
     devices:[],
     mqtt:null,
     model:null,
@@ -410,8 +413,16 @@ function collectData(req,callback){
 
   async.waterfall([
     (next)=>{
+      console.log("get info");
       Device.getInfo(req.params.device_id,(err,row)=>{
         data.device = row;
+        next(err);
+      });
+    },
+    (next)=>{
+      console.log("get sensors");
+      Device.getSensors(req.params.device_id,data.device.model_id,(err,row)=>{
+        data.sensor = row;
         next(err);
       });
     },
