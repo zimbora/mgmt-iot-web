@@ -231,7 +231,6 @@ app.get('/models',(req,res)=>{
 
 // --- models ---
 app.use('/model/:model_id',(req,res,next)=>{
-  console.log("model_id:",req.params.model_id);
   Model.getModelById(req.params.model_id,(err,model)=>{
     req.model = model;
     next();
@@ -310,7 +309,7 @@ app.get('/device/:device_id/settings',(req,res)=>{
       user:req.user,
       page:'Settings'});
   }else{
-    res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }
 });
 
@@ -326,7 +325,7 @@ app.get('/device/:device_id/access',(req,res)=>{
       user:req.user,
       page:'Access'});
   }else{
-    res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }
 });
 
@@ -342,7 +341,7 @@ app.get('/device/:device_id/autorequests',(req,res)=>{
       user:req.user,
       page:'Autorequests'});
   }else{
-    res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }
 });
 
@@ -358,7 +357,7 @@ app.get('/device/:device_id/alarms',(req,res)=>{
       user:req.user,
       page:'Alarms'});
   }else{
-    res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }
 });
 
@@ -374,7 +373,7 @@ app.get('/device/:device_id/jscode',(req,res)=>{
       user:req.user,
       page:'JSCODE'});
   }else{
-    res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/devices");
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }
 });
 
@@ -413,17 +412,18 @@ function collectData(req,callback){
 
   async.waterfall([
     (next)=>{
-      console.log("get info");
       Device.getInfo(req.params.device_id,(err,row)=>{
         data.device = row;
         next(err);
       });
     },
     (next)=>{
-      console.log("get sensors");
-      Device.getSensors(req.params.device_id,data.device.model_id,(err,row)=>{
+      Device.getSensors(req.params.device_id,data.device?.model_id,(err,row)=>{
         data.sensor = row;
-        next(err);
+        if(err){
+          console.warn(`warning - no table for model ${data.device?.model}`);
+        }
+        next();
       });
     },
     (next)=>{
@@ -452,6 +452,7 @@ function collectData(req,callback){
       })
     }
   ],(err)=>{
+    if(err) console.error(error: err);
     return callback(err,data);
   })
 }

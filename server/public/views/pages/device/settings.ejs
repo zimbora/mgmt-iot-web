@@ -114,10 +114,12 @@
             <div class="btn-group">
               <label class="input-group-text" for="inputGroupSelect21">use device config:</label>
                 <select class="form-select settingsDeviceRef" id="_device_ref_">
-                  <% if(device.device_id == device.settings_ref){ %>
+                  <% if(device.device_id == null){ %>
                     <option selected value="null">own</option>
                   <%} else {%>
+                    <option select value="<%= device.settings_ref %>"><%= device.settings_ref %>
                     <option value="null">own</option>
+                    </option>
                   <% } %>
                   <%devices.map((row)=>{%>
                     <% if(row.id != device.device_id){ %>

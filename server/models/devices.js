@@ -253,8 +253,11 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
     if(project == null)
-      return;
+      return cb(null,null);
+
     let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
 
     let query = `SELECT d.uid as uid,d.model_id as model_id,p.* FROM ?? as p left join devices as d on d.id = p.device_id where d.id = ?;`
     let table = [project,deviceId]
@@ -272,11 +275,9 @@ var self = module.exports =  {
       return cb(null,rows[0]);
     })
     .catch(error => {
+      console.log("error:",error)
       return cb(error,null);
     })
-
-    if(project == null)
-      return cb(null,null)
   },
 
   // get status logs of device

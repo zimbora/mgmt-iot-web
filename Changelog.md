@@ -1,5 +1,10 @@
 # Changelog
 
+## version 1.0.42
+  - device/:device_id/.. - changes redirect
+  - collect data - keep action if no sensors were found for the respective model
+  - change settings device ref logic on settings.ejs file
+
 ## version 1.0.41
   - removes dependencies from external libraries
 
