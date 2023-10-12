@@ -52,8 +52,8 @@ var self = module.exports =  {
       user_id : userId,
       token : password,
       api_token : api_token,
-      createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
 
     db.insert("clients",obj)
@@ -85,7 +85,7 @@ var self = module.exports =  {
     let obj = {
       user_id : userId,
       token : password,
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {
@@ -191,8 +191,8 @@ var self = module.exports =  {
       client_id : clientId,
       device_id : deviceId,
       level : level,
-      createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
 
     db.insert("permissions",obj)

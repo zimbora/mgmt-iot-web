@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../../partials/model/scripts.ejs') %>
+  <%- include('../../partials/model/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js"></script>
+  <script src="./assets/js/ace.js"></script>
+  <script type="module" src="./app.mjs"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/model/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="content-header">
+              <h3><%= model.name %></h3>
+            </div>
+            <div class="row">
+
+                <div class="card py-3">
+                  <h5 class="card-title">Available Sensors</h5>
+                  <div class="card-body">
+                    <table id="sensors" class="display">
+                      <thead>
+                        <tr>
+                          <th>active</th>
+                          <th>ref</th>
+                          <th>name</th>
+                          <th>type</th>
+                          <th>created</th>
+                          <th>updated</th>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
+                </div>
+
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+
+    var t;
+    var modelID = api.getModelID();
+    var model = <%- JSON.stringify(model) %>;
+    console.log(model);
+
+    $(document).ready(function () {
+
+      const app = require('./app.mjs');
+      t = $('#sensors').DataTable();
+
+      api.model.getSensors(modelID,(err,res)=>{
+        if(err) console.log(err)
+        else{
+          console.log(res);
+          res.forEach((item, i) => {
+            addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.createdAt).format('YY/MM/DD LT'),moment(item.updatedAt).format('YY/MM/DD LT'));
+          });
+        }
+      })
+    });
+
+    function addRow(id,ref,name,type,active,created,updated){
+
+      t.row.add([
+        active,
+        ref,
+        `<input type="ref" class="form-control" id=${id} value=${name} oninput="handleInputChange(${id})">`,
+        `<select class="form-control" id="type" name="dataTypes" value=${type}>
+          <option value="json">json</option>
+          <option value="string">string</option>
+          <option value="number">number</option>
+        </select>`,
+        created,
+        updated
+      ]).draw(true);
+    }
+
+    function handleInputChange(id){
+      console.log(`change sensor id:${id}`)
+      timer = setTimeout(function() {
+        // this function will run 500ms after the user stops typing
+        console.log("User has finished typing:", document.getElementById('type').value);
+      }, 500); // 500ms delay
+    }
+
+  </script>
+</body>
+</html>

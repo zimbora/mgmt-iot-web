@@ -109,8 +109,8 @@ module.exports =  {
           app_version : app_version,
           model_id : modelId,
           token : token,
-          createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
-          updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+          createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+          updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
         }
 
         db.insert("firmwares",obj)
@@ -161,7 +161,7 @@ module.exports =  {
   update : (firmwareId,cb)=>{
 
     let obj = {
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {
@@ -181,7 +181,7 @@ module.exports =  {
 
     let obj = {
       fw_release : release,
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {

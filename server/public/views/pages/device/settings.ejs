@@ -114,7 +114,8 @@
             <div class="btn-group">
               <label class="input-group-text" for="inputGroupSelect21">use device config:</label>
                 <select class="form-select settingsDeviceRef" id="_device_ref_">
-                  <% if(device.device_id == null){ %>
+                  <% console.log(device) %>
+                  <% if(device.settings_ref == null){ %>
                     <option selected value="null">own</option>
                   <%} else {%>
                     <option select value="<%= device.settings_ref %>"><%= device.settings_ref %>
@@ -335,6 +336,7 @@
     var data = {}
     var loading = $('#modalLoading');
     var keepalive_arr = [
+      {value:1,description:"1s"},
       {value:15,description:"15s"},
       {value:30,description:"30s"},
       {value:60,description:"60s"},

@@ -4,33 +4,18 @@ const moment = require('moment');
 
 var self = module.exports = {
 
-  getId : async(name)=>{
-
-     return new Promise((resolve,reject) => {
-      var query = `select id from projects where name = ?`;
-      var table = [name];
-      query = mysql.format(query,table);
-
-      db.queryRow(query)
-      .then(rows => {
-        if(rows.length > 0) return resolve(rows[0].id);
-        return resolve(null);
-      })
-      .catch(error => {
-        return resolve(null);
-      })
-    });
-  },
-
-  add : async(namecb)=>{
+  add : async(model_id,ref,name,type,cb)=>{
 
     let obj = {
+      model_id : model_id,
+      ref : ref,
       name : name,
+      type: type,
       createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
 
-    db.insert("projects",obj)
+    db.insert("sensors",obj)
     .then (rows => {
       return cb(null,rows);
     })
@@ -39,33 +24,18 @@ var self = module.exports = {
     });
   },
 
-  delete : async (id,cb)=>{
-
-    let filter = {
-      id : id,
-    }
-
-    db.delete("projects",filter)
-    .then (rows => {
-      return cb(null,rows);
-    })
-    .catch(error => {
-      return cb(error,null);
-    });
-  },
-
-  update : async (id,description,cb)=>{
+  update : async (id,property,value,cb)=>{
 
     let obj = {
-      description : description,
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
+    obj[property] = value;
 
     let filter = {
       id : id
     };
 
-    db.update("projects",obj,filter)
+    db.update("sensors",obj,filter)
     .then (rows => {
       return cb(null,rows);
     })
@@ -76,7 +46,7 @@ var self = module.exports = {
 
   list : async (cb)=>{
 
-    var query = `select * from projects`;
+    var query = `select * from sensors`;
     var table = [];
     query = mysql.format(query,table);
 
@@ -87,5 +57,6 @@ var self = module.exports = {
     .catch(error => {
       return cb(error,null);
     })
-  }
+  },
+
 };

@@ -86,7 +86,7 @@
         var elementId = $(this).attr('id');      // Get the element ID
         var isChecked = $(this).prop('checked'); // Get the current checked state
 
-        api.updateModelOption(modelID,elementId, isChecked,(err,res)=>{
+        api.model.updateOption(modelID,elementId, isChecked,(err,res)=>{
           if(err) console.log(err);
         });
     });

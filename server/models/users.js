@@ -28,8 +28,8 @@ var self = module.exports = {
       type : type,
       password : pwd,
       level: level,
-      createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
 
     db.insert("users",obj)
@@ -62,7 +62,7 @@ var self = module.exports = {
       password : pwd,
       level : level,
       type : type,
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {

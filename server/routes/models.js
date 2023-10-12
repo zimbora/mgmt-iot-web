@@ -3,6 +3,7 @@ var express = require('express');
 
 var Model = require('../controllers/models');
 var Firmware = require('../controllers/firmwares');
+var Sensor = require('../controllers/sensors');
 
 // set up multer
 const multer = require('multer')
@@ -37,6 +38,15 @@ router.route('/:model_id/firmware')
   .get(Firmware.get)
   .delete(Firmware.delete)
   .put(Firmware.updateRelease)
+
+router.route('/:model_id/sensors')
+  .get(Sensor.list)
+
+router.route('/:model_id/sensor')
+  //.get(Sensor.get)
+  //.delete(Sensor.delete)
+  .put(Sensor.update)
+  .post(Sensor.add)
 
 router.route('/:model_id/option')
   .put(Model.updateOption)

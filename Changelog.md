@@ -1,5 +1,12 @@
 # Changelog
 
+## version 1.0.44
+  - supporting mqtt sensors definition (in development)
+  - testing github action
+
+## version 1.0.43
+  - fixes 1.0.42 express-web file, line 455
+
 ## version 1.0.42
   - device/:device_id/.. - changes redirect
   - collect data - keep action if no sensors were found for the respective model

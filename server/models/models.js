@@ -44,8 +44,8 @@ var self = module.exports = {
 
     let obj = {
       name : name,
-      createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
 
     db.insert("models",obj)
@@ -76,7 +76,7 @@ var self = module.exports = {
 
     let obj = {
       description : description,
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {
@@ -95,7 +95,7 @@ var self = module.exports = {
   updateOption : async (id,option,value,cb)=>{
 
     let obj = {
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
     obj[option] = value;
 
@@ -170,8 +170,8 @@ var self = module.exports = {
         let obj = {
           client_id : clientId,
           model_id : modelId,
-          createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
-          updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+          createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+          updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
         }
         db.insert("modelPermissions",obj)
         .then (rows => {

@@ -64,6 +64,15 @@
                       <%}%>
                       <% if(user.level >= 4){%>
                       <li class="w-100">
+                          <a href="./sensors"
+                          <% if(page == "Sensors"){%>
+                            class="active"
+                          <% } %>
+                          class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
+                      </li>
+                      <%}%>
+                      <% if(user.level >= 4){%>
+                      <li class="w-100">
                           <a href="./access"
                           <% if(page == "Access"){%>
                             class="active"

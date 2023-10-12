@@ -10,8 +10,8 @@ var self = module.exports =  {
       client_id : clientId,
       device_id : deviceId,
       level : level,
-      createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
 
     return await db.insert("permissions",obj);
@@ -50,7 +50,7 @@ var self = module.exports =  {
     let obj = {
       level : level,
       token : password,
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {
@@ -466,7 +466,7 @@ var self = module.exports =  {
 
     let obj = {
       fw_release : release,
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {
@@ -491,7 +491,7 @@ var self = module.exports =  {
 
     let obj = {
       settings : settings,
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {
@@ -515,7 +515,7 @@ var self = module.exports =  {
       return cb(null,null)
 
     let obj = {
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
     obj[field] = data;
 

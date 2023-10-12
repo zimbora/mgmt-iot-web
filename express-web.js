@@ -26,6 +26,7 @@ var Client = require('./server/models/clients');
 var Project = require('./server/models/projects');
 var Model = require('./server/models/models');
 var Firmware = require('./server/models/firmwares');
+var Sensor = require('./server/models/sensors');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -253,19 +254,25 @@ app.get('/model/:model_id/devices',(req,res)=>{
 });
 
 app.get('/model/:model_id/access',model.checkOwnership,(req,res)=>{
-  if(req.user.level >= 2){
+  if(req.user.level >= 4){
     res.render(path.join(__dirname, config.public_path+'/views/pages/model/access'),{model:req.model,user:req.user,page:'Access'});
   }
 });
 
 app.get('/model/:model_id/settings',model.checkOwnership,(req,res)=>{
-  if(req.user.level >= 2){
+  if(req.user.level >= 4){
     res.render(path.join(__dirname, config.public_path+'/views/pages/model/settings'),{model:req.model,user:req.user,page:'Settings'});
   }
 });
 
+app.get('/model/:model_id/sensors',(req,res)=>{
+  if(req.user.level >= 4 ){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/model/sensors'),{model:req.model,user:req.user,page:'Sensors'});
+  }
+});
+
 app.get('/model/:model_id/firmwares',(req,res)=>{
-  if(req.user.level >= 2 && req.model?.fw_enabled){
+  if(req.user.level >= 4 && req.model?.fw_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/model/firmwares'),{model:req.model,user:req.user,page:'Firmwares'});
   }
 });
@@ -421,7 +428,7 @@ function collectData(req,callback){
       Device.getSensors(req.params.device_id,data.device?.model_id,(err,row)=>{
         data.sensor = row;
         if(err){
-          console.warn(`warning - no table for model ${data.device?.model}`);
+          log.warn(`warning - no table for model ${data.device?.model}`);
         }
         next();
       });
@@ -452,7 +459,7 @@ function collectData(req,callback){
       })
     }
   ],(err)=>{
-    if(err) console.error(error: err);
+    if(err) log.error(err);
     return callback(err,data);
   })
 }

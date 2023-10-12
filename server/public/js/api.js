@@ -27,6 +27,92 @@ var api = {
     return modelID;
   },
 
+
+  // --- models ---
+  model : {
+    updateOption : function(modelId,option,val,cb){
+      fetch(Settings.api+"/model/"+modelId+"/option", {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          option: option,
+          enable: val,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    getSensors : function(modelId,cb){
+      $.ajax({
+        url : Settings.api+"/model/"+modelId+"/sensors",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    addSensor: (modelId,ref,name,type,cb)=>{
+      fetch(Settings.api+"/model/"+modelId+"/sensor", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ref: ref,
+          name: name,
+          type: type
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    updateSensor : function(modelId,sensorId,property,value,cb){
+      fetch(Settings.api+"/model/"+modelId+"/sensor", {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sensor_id: sensorId,
+          property: property,
+          value: value
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+  },
+
   // get all registered devices
   getDevices : function(cb){
 
@@ -520,29 +606,6 @@ var api = {
   },
 
   // --- ----- ---
-
-  // --- models ---
-  updateModelOption : function(modelId,option,val,cb){
-    fetch(Settings.api+"/model/"+modelId+"/option", {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        option: option,
-        enable: val,
-      })
-    })
-    .then(function (response) {
-      return response.json();
-    })
-    .then(function (data) {
-      return parseResponse(data,cb);
-    })
-    .catch(function (error) {
-      return parseError(error,cb);
-    });
-  },
 
   // --- firmwares ---
 
