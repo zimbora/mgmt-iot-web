@@ -1,0 +1,33 @@
+<!-- Modal -->
+<div class="modal fade" id="modalAddSensor" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalErrorHeader">Add Sensor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <span class="input-group-text" >sensor topic</span>
+          <input type="text" id="_modalRef_" class="form-control" placeholder="temperature/outdoor" aria-label="Password" aria-describedby="basic-addon1" data-toggle="tooltip" data-placement="top" title="exclude project and uid identification">
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text" >name</span>
+          <input type="text" id="_modalName_" class="form-control" placeholder="Outside Temperature" aria-label="Password" aria-describedby="basic-addon1">
+        </div>
+        <div class="input-group mb-3">
+          <label class="input-group-text" for="inputGroupSelect01">type</label>
+          <select class="form-control" id="type" name="dataTypes" value=${type}>
+            <option value="json">json</option>
+            <option value="string">string</option>
+            <option value="number">number</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" onclick="addSensor()" class="btn btn-primary" data-bs-dismiss="modal">Add</button>
+      </div>
+    </div>
+  </div>
+</div>

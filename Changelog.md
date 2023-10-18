@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.45
+  - Allows adding sensors to model configuration
+
 ## version 1.0.44
   - supporting mqtt sensors definition (in development)
   - testing github action
