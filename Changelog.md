@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.0.46
+  - Show sensors on device page
+  - Improves model editing sensors
+
 ## version 1.0.45
   - Allows adding sensors to model configuration
 

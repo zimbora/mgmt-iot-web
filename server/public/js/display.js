@@ -1,26 +1,33 @@
 var Display = {
 
-	showSensorsLogs : (sensor)=>{
+	showSensorsLogs : (sensorID,type)=>{
 
-      api.getSensorLogs(deviceID,sensor,(err,res)=>{
-        if(err) console(err);
-        if(res?.length > 0 && typeof res[0][sensor] === "string" )
-          Display.showList(sensor,res);
-        else
-          Display.drawLinearChart(sensor,res);
-      })
-    },
+    api.getSensorLogs(deviceID,sensorID,(err,res)=>{
+      if(err) console(err);
+      else if(res?.length > 0){
+        if(type.toLowerCase() == "string" )
+          Display.showList('value',res);
+        else if(type.toLowerCase() == "number" )
+          Display.drawLinearChart('value',res);
+        else console.log("format not supported");
+      }else{
+        console.log("no elements found");
+      }
+    })
+  },
 
 	showDeviceLogs : (sensor)=>{
 
-      api.getDeviceLogs(deviceID,sensor,(err,res)=>{
-        if(err) console(err);
-        if(res?.length > 0 && typeof res[0][sensor] === "string" )
-          Display.showList(sensor,res);
-        else
-          Display.drawLinearChart(sensor,res);
-      })
-    },
+    moment.locale('pt');
+    console.log(moment.locale());
+    api.getDeviceLogs(deviceID,sensor,(err,res)=>{
+      if(err) console(err);
+      if(res?.length > 0 && typeof res[0][sensor] === "string" )
+        Display.showList(sensor,res);
+      else
+        Display.drawLinearChart(sensor,res);
+    })
+  },
 
 	drawLinearChart : (sensor,data)=>{
       let option = {
@@ -31,7 +38,7 @@ var Display = {
         tooltip: {
           trigger: 'axis',
           formatter: function (params) {
-            return 'date: '+moment.unix(Number(params[0].axisValue)).format('YYYY/MM/DD HH:mm') + '<br />' + sensor+': '+params[0].value;
+            return 'date: '+moment.unix(Number(params[0].axisValue)).local().format('YYYY/MM/DD HH:mm') + '<br />' + sensor+': '+params[0].value;
           }
         },
         dataZoom:[{type:'inside'}],
@@ -89,7 +96,7 @@ var Display = {
         if(data?.duration)
           data.duration = 0;
         table_list.row.add([
-          moment(item.createdAt).format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
+          moment(item.createdAt).local().format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
         ]).draw(true);
       })
 

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <style>
+
+    .float-right {
+      float: right;
+    }
+
+
+  </style>
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../../partials/scripts.ejs') %>
+  <%- include('../../partials/device/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/addSensor.ejs') %>
+  <%- include('../../partials/modal/loading.ejs') %>
+  <%- include('../../partials/modal/timeout.ejs') %>
+  <%- include('../../partials/modal/logsChart.ejs') %>
+  <%- include('../../partials/modal/logsList.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js"></script>
+  <script src="./assets/js/ace.js"></script>
+  <script src="./assets/js/mqttws31.min.js" type="text/javascript"></script>
+  <script type="module" src="./app.mjs"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/device/sidebar.ejs') %>
+          <div class="col py-3">
+
+                    <div class="row py-3">
+          <div class="col-xs-12 col-sm-6 mb-4 mb-sm-0">
+            <div class="content-header">
+              <h5>MQTT Available
+                <button id="mqtt_status" type="button" class="btn btn-secondary" disabled></button>
+              </h5>
+            </div>
+          </div>
+          <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+            <div class="content-header">
+              <h5>
+                <button class="btn btn-primary btn-sm" type="submit" onclick="Display.showDeviceLogs(`status`)">
+                  <i class="bi bi-list"></i>
+                </button>
+                <%= device.name != null ? device.name : device.uid %>
+                <button id="status" type="button" class="btn btn-secondary" disabled></button>
+              </h5>
+            </div>
+          </div>
+        </div>
+
+        <div class="row py-3">
+
+            <div class="content-header">
+              <h3><%= model.name %></h3>
+            </div>
+            <div class="row">
+
+                <div class="card py-3">
+                  <h5 class="card-title">
+                    Available Sensors
+                    <button type="button" class="btn btn-primary mb-2 float-right" onclick="showAddSensorModal()"><i class="fa-solid fa-plus"></i></button>
+                  </h5>
+                  <div class="card-body">
+                    <table id="sensors" class="display">
+                      <thead>
+                        <tr>
+                          <th>ref</th>
+                          <th>name</th>
+                          <th>updated</th>
+                          <th>last_value</th>
+                          <th>logs</th>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
+                </div>
+            </div>
+
+
+          </div>
+      </div>
+  </div>
+
+  <script>
+
+    var ctx;
+    var t;
+    var table_list;
+    var deviceID = api.getDeviceID();
+    var device = <%- JSON.stringify(device) %>;
+    var mqtt = <%- JSON.stringify(mqtt) %>;
+    let modelID = device.model_id;
+    var timerInputChange = null;
+
+    const project = device.project;
+    const uid = device.uid;
+
+    $(document).ready(function () {
+
+      table_list = $('#table_list').DataTable();
+      $('[data-toggle="tooltip"]').tooltip();
+      const app = require('./app.mjs');
+      t = $('#sensors').DataTable();
+      ctx = echarts.init(document.getElementById('myChart'));
+      api.model.getSensors(modelID,(err,res)=>{
+        if(err) console.log(err)
+        else{
+          res.forEach((item, i) => {
+            addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.updatedAt).format('YY/MM/DD LT'),"");
+
+            if(i==res.length-1){
+              $('.form-check-input').on('change', function() {
+                let id = $(this).attr('id');
+                let active = "0";
+                if ($(this).is(':checked'))
+                  active = "1";
+
+                api.model.updateSensor(modelID,id,"active",active,(err,res)=>{
+                  if(err){
+                    $('#error').text("Your request cannot be executed");
+                    $('#suggestion').text(err);
+                    $('#modalError').modal('show');
+                  }
+                });
+
+              });
+
+              $('.select_type').on('change', function() {
+                  let id = $(this).attr('id');
+                  let type = $(this).val();
+                  api.model.updateSensor(modelID,id,"type",type,(err,res)=>{
+                    if(err){
+                      $('#error').text("Your request cannot be executed");
+                      $('#suggestion').text(err);
+                      $('#modalError').modal('show');
+                    }
+                  });
+              });
+            }
+
+          });
+
+        }
+      })
+
+      // connect the client
+      if(mqtt != null){
+        if(window.location.protocol == "https:"){
+          Settings.mqtt.ssl = true;
+          Settings.mqtt.port = 443;
+        }
+        client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
+
+        // set callback handlers
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
+
+        client.connect({
+          userName:mqtt.type,
+          password:mqtt.password,
+          useSSL:Settings.mqtt.ssl,
+          timeout:3,
+          onSuccess:onConnect
+        });
+      }
+
+    });
+
+        // called when the client connects
+    function onConnect() {
+      // Once a connection has been made, make a subscription and send a message.
+      let button = document.querySelector('#mqtt_status');
+      button.classList.toggle("btn-secondary",false);
+      button.classList.toggle("btn-success",true);
+      client.subscribe(project+"/"+uid+"/#");
+    }
+
+    // called when the client loses its connection
+    function onConnectionLost(responseObject) {
+      console.log("connection lost");
+      let button = document.querySelector('#mqtt_status');
+      button.classList.toggle("btn-secondary",false);
+      button.classList.toggle("btn-danger",true);
+      if (responseObject.errorCode !== 0) {
+        console.log("onConnectionLost:"+responseObject.errorMessage);
+      }
+    }
+
+    // called when a message arrives
+    function onMessageArrived(message) {
+
+      let topic = message.destinationName;
+      let payload = message.payloadString;
+
+      if(topic.includes("/status")){
+        let button = document.querySelector('#status');
+        button.classList.toggle("btn-secondary",false);
+        if(payload == "online")
+          button.classList.toggle("btn-success",true);
+        else
+          button.classList.toggle("btn-danger",true);
+      }
+    }
+
+    function sendMessage(topic,payload){
+      message = new Paho.MQTT.Message(payload);
+      message.destinationName = project+"/"+uid+"/"+topic;
+
+      loading.modal('show');
+      setTimeout(()=>{
+        client.send(message);
+      },500)
+
+      var timeoutId = setTimeout(()=>{
+        loading.modal('hide'); // set confirmation
+        $('#modalTimeout').modal('show');
+      },15000);
+
+      $(document).on("closeModalLoading", function() {
+        loading.modal('hide'); // set confirmation
+        clearTimeout(timeoutId);
+      });
+    }
+
+    function addRow(id,ref,name,type,active,updated,last_value){
+      let state = "";
+      if(!active) return;
+      t.row.add([
+        ref,
+        name,
+        updated,
+        last_value,
+        `<button class="btn btn-light btn-sm" type="submit" onclick=Display.showSensorsLogs(${id},'${type}')>
+          <i class="bi bi-list"></i>
+        </button>`
+      ]).draw(true);
+
+    }
+
+  </script>
+</body>
+</html>

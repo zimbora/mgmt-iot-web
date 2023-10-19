@@ -80,7 +80,6 @@
       api.model.getSensors(modelID,(err,res)=>{
         if(err) console.log(err)
         else{
-          console.log(res);
           res.forEach((item, i) => {
             addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.createdAt).format('YY/MM/DD LT'),moment(item.updatedAt).format('YY/MM/DD LT'));
 
@@ -88,12 +87,9 @@
               $('.form-check-input').on('change', function() {
                 let id = $(this).attr('id');
                 let active = "0";
-                if ($(this).is(':checked')) {
-                    console.log('Switch is ON');
+                if ($(this).is(':checked'))
                     active = "1";
-                } else {
-                    console.log('Switch is OFF');
-                }
+
                 api.model.updateSensor(modelID,id,"active",active,(err,res)=>{
                   if(err){
                     $('#error').text("Your request cannot be executed");
@@ -125,7 +121,6 @@
 
     function addRow(id,ref,name,type,active,created,updated){
       let state = "";
-      console.log("type:",type)
       if(active)
         state = "checked"
       let json = type == "json" ? "selected" : "";
@@ -168,7 +163,6 @@
     }
 
     function addSensor(){
-      console.log("add sensor");
       let ref = $("#_modalRef_").val();
       let name = $("#_modalName_").val();
       let type = $("#type").val();

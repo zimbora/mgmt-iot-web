@@ -105,8 +105,31 @@ app.use('*/lib',express.static(path.join(__dirname, config.public_path+'/lib')))
 app.use('*/files',express.static(path.join(__dirname, config.public_path+'/files')))
 
 app.get('*/moment.js',(req,res)=>{
-  //fs.readFile(config.public_path+"/js/moment.js", function(err, data) {
   fs.readFile("node_modules/moment/dist/moment.js", function(err, data) {
+    if (err) {
+      res.writeHead(500, {'Content-Type': 'text/plain'});
+      res.end('Error loading module');
+    } else {
+      res.writeHead(200, {'Content-Type': 'application/javascript'});
+      res.end(data);
+    }
+  });
+});
+
+app.get('*/moment-locales.js',(req,res)=>{
+  fs.readFile("node_modules/moment/min/moment-with-locales.js", function(err, data) {
+    if (err) {
+      res.writeHead(500, {'Content-Type': 'text/plain'});
+      res.end('Error loading module');
+    } else {
+      res.writeHead(200, {'Content-Type': 'application/javascript'});
+      res.end(data);
+    }
+  });
+});
+
+app.get('*/locale/*',(req,res)=>{
+  fs.readFile("node_modules/moment/locale/pt.js", function(err, data) {
     if (err) {
       res.writeHead(500, {'Content-Type': 'text/plain'});
       res.end('Error loading module');
@@ -303,6 +326,22 @@ app.get('/device/:device_id',(req,res)=>{
 });
 
 //app.get('/device/:device_id/dashboard',(req,res)=>{
+
+app.get('/device/:device_id/sensors',(req,res)=>{
+
+  let data = req.user.data;
+  if(data.device != null && data.mqtt != null && data.model){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/device/sensors'),{
+      device:data.device,
+      devices:data.devices,
+      mqtt:data.mqtt,
+      model:data.model,
+      user:req.user,
+      page:'Sensors'});
+  }else{
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
+  }
+});
 
 app.get('/device/:device_id/settings',(req,res)=>{
 

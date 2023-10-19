@@ -233,6 +233,8 @@ var self = module.exports =  {
 
     return new Promise( (resolve,reject)=>{
 
+      return resolve("sensor_logs");
+      /*
       let query = `select logs_table from models where name = ?`;
       let table = [model]
       query = mysql.format(query,table);
@@ -245,6 +247,7 @@ var self = module.exports =  {
       .catch(error => {
         reject(error);
       })
+      */
     })
   },
 
@@ -331,8 +334,8 @@ var self = module.exports =  {
     if(logs_table == null)
       return cb("No table with logs is associated to the device",null)
 
-    let query = `SELECT * FROM (SELECT ??,createdAt FROM ?? WHERE ?? IS NOT NULL and device_id = ? ORDER BY createdAt DESC limit 100)  AS sub ORDER BY createdAt ASC;`
-    let table = [sensor,logs_table,sensor,deviceId]
+    let query = `SELECT * FROM (SELECT value,createdAt FROM ?? WHERE sensor_id = ? and device_id = ? ORDER BY createdAt DESC limit 1000)  AS sub ORDER BY createdAt ASC;`
+    let table = [logs_table,sensor,deviceId]
     query = mysql.format(query,table);
 
     db.queryRow(query)
