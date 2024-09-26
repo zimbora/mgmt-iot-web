@@ -13,7 +13,7 @@ increase version of package.json file
 ## 2nd step
 
 commands:
-	>> tag = "version of package file"
+	>> tag="version of package file"
 	>> git add -A
 	>> git commit -m "message"
 	>> git tag ${tag}

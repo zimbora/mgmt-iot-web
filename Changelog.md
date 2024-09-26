@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.0.47
+  - Files are stored with the original filename
+  - Adds link to download firmware on front-end
+
 ## version 1.0.46
   - Show sensors on device page
   - Improves model editing sensors

@@ -46,7 +46,8 @@ app.use(session({
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('trust proxy', true);
 
-app.get('/api/firmware/:fwId/download',auth.fw_check_token,firmware.get)
+//app.get('/api/firmware/:fwId/download',auth.fw_check_token,firmware.get)
+app.get('/api/firmware/:fwId/download',firmware.get)
 
 app.use('/api', auth.api_check_authentication,routes);
 

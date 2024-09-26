@@ -98,7 +98,7 @@
         else{
           res.forEach((item, i) => {
             console.log(res)
-            addRow(item.id,item.fw_version,item.app_version,item.fw_release,item.originalname);
+            addRow(item.id,item.fw_version,item.app_version,item.fw_release,item.originalname,item.token);
             if(i == res.length-1){
               $(".fwReleaseOption").change((event)=>{
                 let id = event.target.id;
@@ -140,8 +140,10 @@
       });
     });
 
-    function addRow(id,fw_version,app_version,release,filename){
+    function addRow(id,fw_version,app_version,release,filename,token){
 
+      var hostname = window.location.protocol+"//"+window.location.hostname+":"+window.location.port;
+      let fileUrl = hostname+"/api/firmware/"+filename+"/download?token="+token;
       t.row.add([`
         <button id="`+id+`" onclick="deleteFirmware('`+id+`');" type="button" class="delete btn btn-danger btn-sm">
           <i class="fa-sharp fa-solid fa-trash"></i>
@@ -153,7 +155,7 @@
           <option value="nightmare">nightmare</option>
           <option value="stable">stable</option>
         </select>`,
-        filename]).draw(true);
+        `<a href="` + fileUrl + `" class="filename-link">` + filename + `</a>`]).draw(true);
 
     }
 

@@ -8,7 +8,18 @@ var Sensor = require('../controllers/sensors');
 // set up multer
 const multer = require('multer')
 //var upload;
-const  upload = multer({ dest: path.join(__dirname, "../public/firmwares/") })
+//const  upload = multer({ dest: path.join(__dirname, "../public/firmwares/") })
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "../public/firmwares/"));
+  },
+  filename: (req, file, cb) => {
+    console.log(file);
+    cb(null, file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
+
 const router = express.Router();
 
 router.use('/:model_id',Model.checkAccess,(req,res,next)=>{next()});

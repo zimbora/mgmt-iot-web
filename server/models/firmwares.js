@@ -9,7 +9,7 @@ module.exports =  {
 
   getFirmwareToken : (fw_token,filename,cb)=>{
 
-    var query = `select * from ?? where token = ? and filename = ?`;
+    var query = `select * from ?? where token = ? and originalname = ?`;
     var table = ["firmwares",fw_token,filename];
     query = mysql.format(query,table);
 
