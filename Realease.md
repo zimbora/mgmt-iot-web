@@ -11,15 +11,18 @@
 increase version of package.json file
 
 ## 2nd step
+	
+	1st - commit files to git
 
-commands:
-	>> tag="version of package file"
-	>> git add -A
-	>> git commit -m "message"
-	>> git tag ${tag}
-	>> git push origin ${tag}
+	2nd - publish tag
+	commands:
+		>> tag="version of package file"
+		>> git add -A
+		>> git commit -m "message"
+		>> git tag ${tag}
+		>> git push origin ${tag}
 
 ## 3rd step
-
-launch release:
-	>> gh release create ${tag}
+	
+	launch release on npm:
+		>> gh release create ${tag}

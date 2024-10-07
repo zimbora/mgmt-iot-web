@@ -97,6 +97,8 @@ module.exports =  {
       if(rows.length > 0){
         return cb("this version already exists for this model, try increase it",null)
       }else{
+        var token = "";
+        
         var SHA256 = require("crypto-js/sha256");
         let message = originalname+"\º~"+fw_version+app_version;
         let key = String(Date.now()/3621)

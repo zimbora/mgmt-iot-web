@@ -1,9 +1,13 @@
+const mqtt = require('mqtt')
+const FtpSrv = require('ftp-srv');
+const crc = require('crc');
+const fs = require('fs');
+const path = require('path');
 
 var web = require('./express-web');
 
 var config = require('./config/env');
 var device = require('./server/models/devices.js');
-const mqtt = require('mqtt')
 
 var user = require('./server/models/users');
 mgmt_iot_version = "";
@@ -12,6 +16,8 @@ mgmt_iot_version = "";
 const {Docker} = require('node-docker-api');
 
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+
+const ftpPath = './server/public/'
 
 module.exports = {
 
@@ -118,6 +124,90 @@ module.exports = {
       console.log("mqtt closed")
     })
 
+    // --- FTP Server ---
+    /*
+    ftpServer.on('login', ({ ftpConnection, username, password }, resolve, reject) => { 
+      if(username === 'anonymous' && password === 'anonymous'){
+          return resolve({ root:"/" });    
+      }
+      return reject(new errors.GeneralError('Invalid username or password', 401));
+    });
+    */
+    // Init ftp server
+    const ftpServer = new FtpSrv({
+      url: "ftp://127.0.0.1:" + config.ftp.port,
+      anonymous: false,
+      blacklist: ['STOR'],
+      //whitelist: ['PORT', USER', 'PASS', 'ACCT', 'TYPE', 'PASV', 'CWD', 'LIST', 'NLIST', 'RETR', 'QUIT', 'NOOP']
+    });
+
+    if( config.ftp.enabled ){
+      ftpServer.listen().then(() => { 
+        console.log(`Ftp server is starting on port: ${config.ftp.port}`);
+      });
+    }
+    
+    ftpServer.on('login', ({ ftpConnection, username, password }, resolve, reject) => {
+      // You can implement your own user authentication here
+      console.log('username:',username);
+      console.log('password:',password);
+
+      if(username !== config.ftp.user_default && passwordconfig.ftp.pwd_default !== 'anonymous'){
+        return reject(new errors.GeneralError('Invalid username or password', 401));
+      }
+
+      resolve({ root: path.join(__dirname, './server/public/') });
+    });
+
+    ftpServer.on('STOR', async (conn) => {
+        const filePath = path.join(__dirname, 'ftp_files', conn.args[0]);
+        const fileStream = fs.createWriteStream(filePath);
+        conn.stream.pipe(fileStream);
+
+        fileStream.on('finish', () => {
+            console.log(`File uploaded: ${filePath}`);
+        });
+        
+        conn.stream.on('data', (chunk) => {
+            const crcValue = crc.crc16xmodem(chunk);
+            console.log(`CRC16 for the received chunk: ${crcValue.toString(16)}`);
+        });
+    });
+
+    ftpServer.on('RETR', async (conn) => {
+        const filePath = path.join(__dirname, ftpPath, conn.args[0]);
+        const fileStream = fs.createReadStream(filePath);
+      
+        // Calculate CRC16 for the file content
+        let fileCRC = crc.crc16xmodem();
+        fileStream.on('data', (chunk) => {
+            fileCRC.update(chunk);
+        });
+
+        fileStream.on('end', () => {
+            console.log(`CRC16 for the file ${conn.args[0]}: ${fileCRC.digest().toString('hex')}`);
+        });
+
+        conn.stream.pipe(fileStream);
+    });
+
+    ftpServer.on('client-error', ({connection, context, error}) => { 
+      console.log("client error: ",error);
+    });
+
+    ftpServer.on('server-error', ({error}) => { 
+      console.log("server error: ",error);
+    });
+
+    ftpServer.on('disconnect', ({connection, id, newConnectionCount}) => { 
+      console.log("disconnected id: ",id);
+    });
+
+    ftpServer.listen().then(() => {
+        console.log('FTP Server is running on port 2121');
+    });
+    
+    // --- ----- ---
   },
 
   path : ()=>{

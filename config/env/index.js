@@ -24,5 +24,11 @@ module.exports = {
     user_type: process.env.USER_TYPE || "client",
     user_pwd: process.env.USER_PWD || "client_pwd",
     user_lvl: process.env.USER_LVL || 3
+  },
+  ftp : {
+    enabled: process.env.FTP_ENABLE || true,
+    port: process.env.FTP_PORT || 3021,
+    user_default: process.env.FTP_USER_DEFAULT || "anonymous",
+    pwd_default: process.env.FTP_USER_DEFAULT || "anonymous",
   }
 }

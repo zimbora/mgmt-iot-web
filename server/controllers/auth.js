@@ -1,6 +1,6 @@
 var jwt = require('jsonwebtoken');
 var httpStatus = require('http-status-codes');
-const { OAuth2Client } = require('google-auth-library'); // android gauth
+const { OAuth2Client } = require('google-auth-library'); // gauth
 
 var response = require('./response');
 var config = require('../../config/env');

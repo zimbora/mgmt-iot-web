@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.48
+  - Adds FTP server - 1st draft, basic auth
+
 ## version 1.0.47
   - Files are stored with the original filename
   - Adds link to download firmware on front-end
