@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.50
+  - access safely to settings pass as arg to init call
+
 ## version 1.0.49
   - changes init(arg_name)
 

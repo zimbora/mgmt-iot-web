@@ -27,20 +27,20 @@ module.exports = {
     db.connect(settings,() => {
       db_setup();
       mgmt_iot_version = settings?.version ? settings.version : "";
-      web.listen(settings.web_port, () => {
-        log.info('Web Server started and listening on port: ' +settings.web_port + ' ' + settings.env);
+      web.listen(settings?.web_port, () => {
+        log.info('Web Server started and listening on port: ' +settings?.web_port + ' ' + settings?.env);
       });
       log.info("connected to DB");
     });
 
-    var host = settings.mqtt.host;
+    var host = settings?.mqtt?.host;
     const client  = mqtt.connect({
-      protocolId: settings.mqtt.protocol,
-      host: settings.mqtt.host,
-      port:settings.mqtt.port,
-      username:settings.mqtt.user,
-      password:settings.mqtt.pwd,
-      clientId: settings.mqtt.client
+      protocolId: settings?.mqtt?.protocol,
+      host: settings?.mqtt?.host,
+      port:settings?.mqtt?.port,
+      username:settings?.mqtt?.user,
+      password:settings?.mqtt?.pwd,
+      clientId: settings?.mqtt?.client
     })
 
     docker.container.list()
@@ -135,15 +135,15 @@ module.exports = {
     */
     // Init ftp server
     const ftpServer = new FtpSrv({
-      url: "ftp://127.0.0.1:" + settings.ftp.port,
+      url: "ftp://127.0.0.1:" + settings?.ftp?.port,
       anonymous: false,
       blacklist: ['STOR'],
       //whitelist: ['PORT', USER', 'PASS', 'ACCT', 'TYPE', 'PASV', 'CWD', 'LIST', 'NLIST', 'RETR', 'QUIT', 'NOOP']
     });
 
-    if( settings.ftp.enabled ){
+    if( settings?.ftp && settings?.ftp?.enabled ){
       ftpServer.listen().then(() => { 
-        console.log(`FTP Server is running on port: ${settings.ftp.port}`);
+        console.log(`FTP Server is running on port: ${settings?.ftp?.port}`);
       });
     }
     
@@ -152,7 +152,7 @@ module.exports = {
       console.log('username:',username);
       console.log('password:',password);
 
-      if(username !== settings.ftp.user_default && passwordconfig.ftp.pwd_default !== 'anonymous'){
+      if(username !== settings?.ftp?.user_default && passwordconfig.ftp.pwd_default !== 'anonymous'){
         return reject(new errors.GeneralError('Invalid username or password', 401));
       }
 
