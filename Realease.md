@@ -24,5 +24,5 @@ increase version of package.json file
 
 ## 3rd step
 	
-	launch release on npm:
+	launch release on git and npm:
 		>> gh release create ${tag}

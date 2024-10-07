@@ -21,26 +21,26 @@ const ftpPath = './server/public/'
 
 module.exports = {
 
-  init : (config)=>{
+  init : (settings)=>{
 
     var db = require('./server/controllers/db');
-    db.connect(config,() => {
+    db.connect(settings,() => {
       db_setup();
-      mgmt_iot_version = config?.version ? config.version : "";
-      web.listen(config.web_port, () => {
-        log.info('Web Server started and listening on port: ' +config.web_port + ' ' + config.env);
+      mgmt_iot_version = settings?.version ? settings.version : "";
+      web.listen(settings.web_port, () => {
+        log.info('Web Server started and listening on port: ' +settings.web_port + ' ' + settings.env);
       });
       log.info("connected to DB");
     });
 
-    var host = config.mqtt.host;
+    var host = settings.mqtt.host;
     const client  = mqtt.connect({
-      protocolId: config.mqtt.protocol,
-      host: config.mqtt.host,
-      port:config.mqtt.port,
-      username:config.mqtt.user,
-      password:config.mqtt.pwd,
-      clientId: config.mqtt.client
+      protocolId: settings.mqtt.protocol,
+      host: settings.mqtt.host,
+      port:settings.mqtt.port,
+      username:settings.mqtt.user,
+      password:settings.mqtt.pwd,
+      clientId: settings.mqtt.client
     })
 
     docker.container.list()
@@ -135,15 +135,15 @@ module.exports = {
     */
     // Init ftp server
     const ftpServer = new FtpSrv({
-      url: "ftp://127.0.0.1:" + config.ftp.port,
+      url: "ftp://127.0.0.1:" + settings.ftp.port,
       anonymous: false,
       blacklist: ['STOR'],
       //whitelist: ['PORT', USER', 'PASS', 'ACCT', 'TYPE', 'PASV', 'CWD', 'LIST', 'NLIST', 'RETR', 'QUIT', 'NOOP']
     });
 
-    if( config.ftp.enabled ){
+    if( settings.ftp.enabled ){
       ftpServer.listen().then(() => { 
-        console.log(`Ftp server is starting on port: ${config.ftp.port}`);
+        console.log(`FTP Server is running on port: ${settings.ftp.port}`);
       });
     }
     
@@ -152,7 +152,7 @@ module.exports = {
       console.log('username:',username);
       console.log('password:',password);
 
-      if(username !== config.ftp.user_default && passwordconfig.ftp.pwd_default !== 'anonymous'){
+      if(username !== settings.ftp.user_default && passwordconfig.ftp.pwd_default !== 'anonymous'){
         return reject(new errors.GeneralError('Invalid username or password', 401));
       }
 
@@ -201,10 +201,6 @@ module.exports = {
 
     ftpServer.on('disconnect', ({connection, id, newConnectionCount}) => { 
       console.log("disconnected id: ",id);
-    });
-
-    ftpServer.listen().then(() => {
-        console.log('FTP Server is running on port 2121');
     });
     
     // --- ----- ---

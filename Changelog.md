@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.49
+  - changes init(arg_name)
+
 ## version 1.0.48
   - Adds FTP server - 1st draft, basic auth
 
