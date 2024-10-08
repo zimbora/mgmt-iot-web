@@ -3,6 +3,7 @@ var Joi = require('joi');
 var httpStatus = require('http-status-codes');
 const fs = require('fs');
 const crypto = require('crypto');
+const crc = require('crc');
 
 var response = require('./response');
 
@@ -143,6 +144,12 @@ module.exports = {
     const file = fs.readFileSync(filePath);
     const hash = crypto.createHash('md5').update(file).digest('hex');
     res.set('Content-MD5', hash);
+    // Calculate CRC32
+    const crc32 = crc.crc32(file).toString(16); // Convert to hexadecimal string
+    res.set('Content-CRC32', crc32);
+    // Calculate CRC16
+    const crc16Modbus = crc.crc16modbus(file); // CRC16 Modbus calculation
+    res.set('Content-CRC16', crc16Modbus.toString(16)); // Convert to hexadecimal string    
     res.sendFile(filePath);
   },
 

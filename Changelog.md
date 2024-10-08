@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.52
+  - Adds CRC16 modbus and CRC32 to file transfer "firmware/" folder
+
 ## version 1.0.51
   - FTP: supports passive connections
   - FTP: allows enable or disable of download and upload methods
