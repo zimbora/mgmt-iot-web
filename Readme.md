@@ -37,24 +37,40 @@ require("./middleware") // optional, execute it, only if you will work on a midd
 var iot = require('mgmt-iot');
 
 let config = {
+    env: process.env.NODE_ENV || 'development',
   db: {
-    conn_limit : 15,
-    host:'localhost',
-    user:'user',
-    pwd:'user_pwd',
-    name:'mqtt-aedes', // db name
+    conn_limit: process.env.DB_CONN_LIMIT || 15,
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 3306,
+    user: process.env.DB_USER || 'user',
+    pwd: process.env.DB_PWD   || 'pwd',
+    name: process.env.DB_NAME || 'mqtt-aedes',
   },
   mqtt: {
-    protocol:'MQTT',
-    host:'localhost',
-    port:'1883',
-    user:'admin',
-    pwd:'admin'
+    protocol:process.env.MQTT_PROTOCOL || 'MQTT',
+    host:process.env.MQTT_HOST || 'localhost',
+    port:process.env.MQTT_PORT || '1883',
+    user:process.env.MQTT_USER || 'user',
+    pwd:process.env.MQTT_PWD || 'pwd',
+    client:process.env.MQTT_CLIENT || 'client'
   },
   debug:{
-    level: "trace" // logs level (ignore it for now)
+    level: process.env.NODE_DEBUG || "trace"
   },
-  web_port : 24000, // http port to expose
+  domain: process.env.DOMAIN || "localhost",
+  web_port: process.env.WEB_PORT || 80,
+  public_path:  '../server/public',
+  ftp: { // hard to setup with nginx as proxy, working locally
+    enabled: process.env.FTP_ENABLE || false,
+    port: process.env.FTP_PORT || 21,
+    user_default: process.env.FTP_USER_DEFAULT || "anonymous",
+    pwd_default: process.env.FTP_PWD_DEFAULT || "anonymous",
+    pasv_url: process.env.FTP_PASV_URL || "127.0.0.1", // change it for your server DNS
+    pasv_min: process.env.FTP_PASV_MIN || 30010, // min range tcp ports
+    pasv_max: process.env.FTP_PASV_MAX || 30012, // max range tcp ports
+    download: process.env.FTP_DOWNLOAD || true, // allow download
+    upload: process.env.FTP_UPLOAD || false, // allow upload
+  }
 }
 
 var iot = require('mgmt-iot');
@@ -69,6 +85,10 @@ And that's it, your program is ready to run
 [mqtt-broker-auth](https://github.com/zimbora/mqtt-broker-auth)
 
 Note: This module must be used with a special mqtt broker. So, in order to have it working properly you need to run mqtt-broker-auth also
+
+## FTP
+
+passive connections - hard to configure with nginx !!
 
 ## Adding features to this module
 
