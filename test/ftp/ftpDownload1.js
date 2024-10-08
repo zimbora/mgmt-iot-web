@@ -7,8 +7,8 @@ async function downloadFile() {
     const client = new ftp.Client();
 
     // Replace with your FTP server details
-    const ftpServerUrl = '127.0.0.1';
-    const ftpPort = 3021; // Ensure this matches the server port you're using
+    const ftpServerUrl = '127.0.0.1'; // change it for your DNS
+    const ftpPort = 21; // Ensure this matches the server port you're using
     const username = 'anonymous'; // Change if authentication is required
     const password = 'anonymous'; // Change if authentication is required
 
@@ -33,7 +33,7 @@ async function downloadFile() {
         const file = "halfEG501.bin"
         const remoteFilePath = 'firmwares/'+file; // Specify the name of the file on the server
         const localFilePath = path.join(__dirname, file); // Specify local path to save the file
-        
+
         // Set a new callback function which also resets the overall counter
         client.trackProgress(info => console.log(info.bytesOverall));
 

@@ -125,20 +125,16 @@ module.exports = {
     })
 
     // --- FTP Server ---
-    /*
-    ftpServer.on('login', ({ ftpConnection, username, password }, resolve, reject) => { 
-      if(username === 'anonymous' && password === 'anonymous'){
-          return resolve({ root:"/" });    
-      }
-      return reject(new errors.GeneralError('Invalid username or password', 401));
-    });
-    */
+    
     // Init ftp server
     const ftpServer = new FtpSrv({
       url: "ftp://127.0.0.1:" + settings?.ftp?.port,
       anonymous: false,
       blacklist: ['STOR'],
-      //whitelist: ['PORT', USER', 'PASS', 'ACCT', 'TYPE', 'PASV', 'CWD', 'LIST', 'NLIST', 'RETR', 'QUIT', 'NOOP']
+      tls: false,
+      pasv_url: settings?.ftp?.pasv_url,
+      pasv_min: settings?.ftp?.pasv_min,
+      pasv_max: settings?.ftp?.pasv_max,
     });
 
     if( settings?.ftp && settings?.ftp?.enabled ){
@@ -159,37 +155,41 @@ module.exports = {
       resolve({ root: path.join(__dirname, './server/public/') });
     });
 
-    ftpServer.on('STOR', async (conn) => {
-        const filePath = path.join(__dirname, 'ftp_files', conn.args[0]);
-        const fileStream = fs.createWriteStream(filePath);
-        conn.stream.pipe(fileStream);
+    if( settings?.ftp?.upload){
+      ftpServer.on('STOR', async (conn) => {
+          const filePath = path.join(__dirname, './server/public/', conn.args[0]);
+          const fileStream = fs.createWriteStream(filePath);
+          conn.stream.pipe(fileStream);
 
-        fileStream.on('finish', () => {
-            console.log(`File uploaded: ${filePath}`);
-        });
+          fileStream.on('finish', () => {
+              console.log(`File uploaded: ${filePath}`);
+          });
+          
+          conn.stream.on('data', (chunk) => {
+              const crcValue = crc.crc16xmodem(chunk);
+              console.log(`CRC16 for the received chunk: ${crcValue.toString(16)}`);
+          });
+      });
+    }
+
+    if( settings?.ftp?.download){
+      ftpServer.on('RETR', async (conn) => {
+          const filePath = path.join(__dirname, ftpPath, conn.args[0]);
+          const fileStream = fs.createReadStream(filePath);
         
-        conn.stream.on('data', (chunk) => {
-            const crcValue = crc.crc16xmodem(chunk);
-            console.log(`CRC16 for the received chunk: ${crcValue.toString(16)}`);
-        });
-    });
+          // Calculate CRC16 for the file content
+          let fileCRC = crc.crc16xmodem();
+          fileStream.on('data', (chunk) => {
+              fileCRC.update(chunk);
+          });
 
-    ftpServer.on('RETR', async (conn) => {
-        const filePath = path.join(__dirname, ftpPath, conn.args[0]);
-        const fileStream = fs.createReadStream(filePath);
-      
-        // Calculate CRC16 for the file content
-        let fileCRC = crc.crc16xmodem();
-        fileStream.on('data', (chunk) => {
-            fileCRC.update(chunk);
-        });
+          fileStream.on('end', () => {
+              console.log(`CRC16 for the file ${conn.args[0]}: ${fileCRC.digest().toString('hex')}`);
+          });
 
-        fileStream.on('end', () => {
-            console.log(`CRC16 for the file ${conn.args[0]}: ${fileCRC.digest().toString('hex')}`);
-        });
-
-        conn.stream.pipe(fileStream);
-    });
+          conn.stream.pipe(fileStream);
+      });
+    }
 
     ftpServer.on('client-error', ({connection, context, error}) => { 
       console.log("client error: ",error);

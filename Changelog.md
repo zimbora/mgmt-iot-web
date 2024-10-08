@@ -1,5 +1,12 @@
 # Changelog
 
+## version 1.0.51
+  - FTP: supports passive connections
+  - FTP: allows enable or disable of download and upload methods
+  - FTP: working locally
+  - FTP: hard to configure with nginx
+  - FTP: adds download test
+
 ## version 1.0.50
   - access safely to settings pass as arg to init call
 
