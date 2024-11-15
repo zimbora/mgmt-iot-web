@@ -8,9 +8,9 @@ var Sensor = require('../controllers/sensors');
 // send file
 var filePath = "";
 if( process.env?.NODE_ENV.toLowerCase().includes("docker") ){
-  filePath = "/mgmt-iot/devices/firmwares/"+req.params.fwId;
+  filePath = "/mgmt-iot/devices/firmwares/";
 }else{
-  filePath = path.join(__dirname, "../public/firmwares/"+req.params.fwId);
+  filePath = path.join(__dirname, "../public/firmwares/");
 }
 
 // set up multer
@@ -20,7 +20,7 @@ const multer = require('multer')
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log("storage:",filePath);
-    cb(null, filePath);
+    cb(null, filePath+req.params.fwId);
   },
   filename: (req, file, cb) => {
     console.log(file);
@@ -36,7 +36,6 @@ router.use('/:model_id',Model.checkAccess,(req,res,next)=>{next()});
 router.use((req,res,next) => {
   //log.debug("firmware route");
   //console.log("current dir",__dirname);
-  //console.log("dest:",path.join(__dirname, "../public/firmwares/"));
   next();
 });
 
