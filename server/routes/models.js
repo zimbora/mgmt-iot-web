@@ -20,7 +20,8 @@ const multer = require('multer')
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log("storage:",filePath);
-    cb(null, filePath+req.params.fwId);
+    const uploadPath = path.join(filePath, req.params.fwId);
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     console.log(file);
