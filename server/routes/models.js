@@ -8,9 +8,9 @@ var Sensor = require('../controllers/sensors');
 // send file
 var filePath = "";
 if( process.env?.NODE_ENV.toLowerCase().includes("docker") ){
-  filePath = "/mgmt-iot/devices/firmwares/";
+  filePath = "/mgmt-iot/devices/firmwares";
 }else{
-  filePath = path.join(__dirname, "../public/firmwares/");
+  filePath = path.join(__dirname, "../public/firmwares");
 }
 
 // set up multer
@@ -20,8 +20,7 @@ const multer = require('multer')
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log("storage:",filePath);
-    const uploadPath = path.join(filePath, req.params.fwId);
-    cb(null, uploadPath);
+    cb(null, filePath);
   },
   filename: (req, file, cb) => {
     console.log(file);
