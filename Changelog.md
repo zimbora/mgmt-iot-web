@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.54
+  - fixes pre version
+
 ## version 1.0.53
   - Store firmware uploads on volume
 
