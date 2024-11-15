@@ -140,7 +140,13 @@ module.exports = {
   get : (req, res, next)=>{
 
     // send file
-    var filePath = path.join(__dirname, "../public/firmwares/"+req.params.fwId);
+    var filePath = "";
+    if( process.env?.NODE_ENV.toLowerCase().includes("docker") ){
+      filePath = path.join("/mgmt-iot/devices/firmwares/"+req.params.fwId);
+    }else{
+      filePath = path.join(__dirname, "../public/firmwares/"+req.params.fwId);
+    }
+     
     const file = fs.readFileSync(filePath);
     const hash = crypto.createHash('md5').update(file).digest('hex');
     res.set('Content-MD5', hash);
@@ -151,6 +157,7 @@ module.exports = {
     const crc16Modbus = crc.crc16modbus(file); // CRC16 Modbus calculation
     res.set('Content-CRC16', crc16Modbus.toString(16)); // Convert to hexadecimal string    
     res.sendFile(filePath);
+    
   },
 
 };

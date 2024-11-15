@@ -148,7 +148,7 @@ module.exports = {
       console.log('username:',username);
       console.log('password:',password);
 
-      if(username !== settings?.ftp?.user_default && passwordconfig.ftp.pwd_default !== 'anonymous'){
+      if(username !== settings?.ftp?.user_default && settings?.ftp?.pwd_default !== 'anonymous'){
         return reject(new errors.GeneralError('Invalid username or password', 401));
       }
 

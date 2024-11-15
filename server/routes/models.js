@@ -5,13 +5,22 @@ var Model = require('../controllers/models');
 var Firmware = require('../controllers/firmwares');
 var Sensor = require('../controllers/sensors');
 
+// send file
+var filePath = "";
+if( process.env?.NODE_ENV.toLowerCase().includes("docker") ){
+  filePath = "/mgmt-iot/devices/firmwares/"+req.params.fwId;
+}else{
+  filePath = path.join(__dirname, "../public/firmwares/"+req.params.fwId);
+}
+
 // set up multer
 const multer = require('multer')
 //var upload;
 //const  upload = multer({ dest: path.join(__dirname, "../public/firmwares/") })
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../public/firmwares/"));
+    console.log("storage:",filePath);
+    cb(null, filePath);
   },
   filename: (req, file, cb) => {
     console.log(file);

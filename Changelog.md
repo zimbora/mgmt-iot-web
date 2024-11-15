@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.53
+  - Store firmware uploads on volume
+
 ## version 1.0.52
   - Adds CRC16 modbus and CRC32 to file transfer "firmware/" folder
 
