@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.57
+  - !! API delete device on device list not working
+
 ## version 1.0.56
   - fixes pre version
   

@@ -20,7 +20,7 @@
 
 	2nd - publish tag
 	commands:
-		>> tag="version of package file"
+		>> tag="1.0.56"
 		>> git tag ${tag}
 		>> git push origin ${tag}
 

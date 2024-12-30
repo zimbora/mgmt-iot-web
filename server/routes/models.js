@@ -7,7 +7,7 @@ var Sensor = require('../controllers/sensors');
 
 // send file
 var filePath = "";
-if( process.env?.NODE_ENV.toLowerCase().includes("docker") ){
+if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
   filePath = "/mgmt-iot/devices/firmwares";
 }else{
   filePath = path.join(__dirname, "../public/firmwares");
