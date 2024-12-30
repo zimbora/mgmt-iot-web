@@ -191,7 +191,7 @@
             </div>
           </div>
 
-          <% if(device.model.endsWith("WIFI")){ %>
+          <% if(device.tech?.toLowerCase().includes("wifi")){ %>
             <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
               <div class="card">
                 <div class="card-header">
@@ -221,7 +221,7 @@
                 </div>
               </div>
             </div>
-            <% }else if(device.model.endsWith("LTE")){ %>
+          <% }else if(device.tech?.toLowerCase().includes("lte")){ %>
             <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
               <div class="card">
                 <div class="card-header">
@@ -277,50 +277,50 @@
                 </div>
               </div>
             </div>
-            <% } %>
-            <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
-              <div class="card">
-                <div class="card-header">
-                  <p>MQTT Second Connection</p>
-                </div>
-                <div class="card-body">
-                  <form class="row g-3 needs-validation" novalidate>
-                    <div class="col-md-10">
-                      <label for="validationMQTT01" class="form-label">Host</label>
-                      <input type="text" class="form-control" id="mqtt_host" value="" required>
-                      <div class="valid-feedback">
-                        Looks good!
-                      </div>
+          <% } %>
+          <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+            <div class="card">
+              <div class="card-header">
+                <p>MQTT Second Connection</p>
+              </div>
+              <div class="card-body">
+                <form class="row g-3 needs-validation" novalidate>
+                  <div class="col-md-10">
+                    <label for="validationMQTT01" class="form-label">Host</label>
+                    <input type="text" class="form-control" id="mqtt_host" value="" required>
+                    <div class="valid-feedback">
+                      Looks good!
                     </div>
-                    <div class="col-md-2">
-                      <label for="validationMQTT02" class="form-label">Port</label>
-                      <input type="number" class="form-control" id="mqtt_port" value="" required>
-                      <div class="valid-feedback">
-                        Looks good!
-                      </div>
+                  </div>
+                  <div class="col-md-2">
+                    <label for="validationMQTT02" class="form-label">Port</label>
+                    <input type="number" class="form-control" id="mqtt_port" value="" required>
+                    <div class="valid-feedback">
+                      Looks good!
                     </div>
-                    <div class="col-md-6">
-                      <label for="validationMQTT03" class="form-label">User</label>
-                      <input type="text" class="form-control" id="mqtt_user" value="" required>
-                      <div class="valid-feedback">
-                        Looks good!
-                      </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="validationMQTT03" class="form-label">User</label>
+                    <input type="text" class="form-control" id="mqtt_user" value="" required>
+                    <div class="valid-feedback">
+                      Looks good!
                     </div>
-                    <div class="col-md-6">
-                      <label for="validationMQTT04" class="form-label">Password</label>
-                      <input type="text" class="form-control" id="mqtt_pwd" value="" required>
-                      <div class="valid-feedback">
-                        Looks good!
-                      </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="validationMQTT04" class="form-label">Password</label>
+                    <input type="text" class="form-control" id="mqtt_pwd" value="" required>
+                    <div class="valid-feedback">
+                      Looks good!
                     </div>
-                    <div class="col-md-4">
-                      <button id="mqttget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
-                      <button <% if(device.settings_ref != null){%> disabled <%}%> id="mqttset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
-                    </div>
-                  </form>
-                </div>
+                  </div>
+                  <div class="col-md-4">
+                    <button id="mqttget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">get</button>
+                    <button <% if(device.settings_ref != null){%> disabled <%}%> id="mqttset" class="btn btn-warning btn-sm" type="submit" onclick="return false;">set</button>
+                  </div>
+                </form>
               </div>
             </div>
+          </div>
         </div>
 
       </div>
