@@ -186,6 +186,36 @@ var self = module.exports = {
       });
     });
   },
+
+  tableExists : async(table)=>{
+
+    return new Promise((resolve,reject) => {
+
+      self.getConnection((err,conn)=>{
+        if(err) return reject(err);
+
+         let query = `
+          SELECT COUNT(*) as count 
+          FROM information_schema.tables 
+          WHERE table_name = ?
+        `;
+
+        query = mysql.format(query,table);
+
+        conn.query(query,function(err,rows){
+          self.close_db_connection(conn);
+          if(err) return reject(err)
+          else{
+            if (rows?.length > 0){
+              return resolve(rows[0]?.count > 0);  
+            }else{
+              return false;
+            }
+          } 
+        });
+      });
+    });
+  },
 }
 
 function getLoad(cb){

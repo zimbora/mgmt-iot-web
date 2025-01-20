@@ -141,7 +141,7 @@ module.exports = {
 
     // send file
     var filePath = "";
-    if( process.env?.NODE_ENV.toLowerCase().includes("docker") ){
+    if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
       filePath = "/mgmt-iot/devices/firmwares/"+req.params.fwId;
     }else{
       filePath = path.join(__dirname, "../public/firmwares/"+req.params.fwId);

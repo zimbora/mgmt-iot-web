@@ -1,7 +1,9 @@
 # Changelog
 
 ## version 1.0.57
-  - !! API delete device on device list not working
+  - fixes NODE_ENV var
+  - changes fw release names
+  - fixes device deletion
 
 ## version 1.0.56
   - fixes pre version

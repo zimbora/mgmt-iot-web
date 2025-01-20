@@ -152,8 +152,10 @@
         app_version,
         `<select class="form-select fwReleaseOption" id="`+id+`">
           <option selected>`+release+`</option>
-          <option value="nightmare">nightmare</option>
+          <option value="dev">dev</option>
+          <option value="beta">beta</option>
           <option value="stable">stable</option>
+          <option value="critical">critical</option>
         </select>`,
         `<a href="` + fileUrl + `" class="filename-link">` + filename + `</a>`]).draw(true);
 

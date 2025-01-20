@@ -2,9 +2,7 @@
 
 # Release process
 
-## 0 step
-
-	
+## 0 step	
 
 ## 1st step
 	

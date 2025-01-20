@@ -363,13 +363,23 @@ var self = module.exports =  {
 
 
     if(project_table != null)
-      await db.delete(project_table,filter);
+      if( await db.tableExists(model_table)){
+        await db.delete(project_table,filter);
+      }
     if(project_logs_table != null)
-      await db.delete(project_logs_table,filter);
-    if(model_table != null)
-      await db.delete(model_table,filter);
-    if(model_logs_table != null)
-      await db.delete(model_logs_table,filter);
+      if( await db.tableExists(model_table)){
+        await db.delete(project_logs_table,filter);
+      }
+    if(model_table != null){
+      if( await db.tableExists(model_table)){
+        await db.delete(model_table,filter);
+      }
+    }
+    if(model_logs_table != null){
+      if( await db.tableExists(model_table)){
+        await db.delete(model_logs_table,filter);
+      }
+    }
     await db.delete("permissions",filter);
 
     // this must be executed only after all previous delete calls

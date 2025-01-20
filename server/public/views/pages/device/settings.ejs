@@ -364,6 +364,13 @@
       {value:5,description:"AUTO"}
     ]
 
+    var release_arr = [
+      "dev",
+      "beta",
+      "stable",
+      "critical"
+    ]
+
     var ctx;
     var table_list;
     let devices = <%- JSON.stringify(devices) %>;
@@ -423,8 +430,9 @@
       }
 
       addSelectedOption('#_fwrelease_',device.fw_release);
-      addOption('#_fwrelease_',"stable");
-      addOption('#_fwrelease_',"nightmare");
+      release_arr.forEach((item,i)=>{
+        addOption('#_fwrelease_',item);
+      });
 
       if(device.settings != null){
         if(device.settings.hasOwnProperty("keepalive")){
