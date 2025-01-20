@@ -4,6 +4,7 @@
   - fixes NODE_ENV var
   - changes fw release names
   - fixes device deletion
+  - Requests "tech" from db and uses it to display Wifi credentials
 
 ## version 1.0.56
   - fixes pre version
