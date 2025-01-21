@@ -17,7 +17,7 @@ This module will enable the management of those permissions, as well as configur
 Furthermore, without any development a device can be configured to have it's own Autorequests, Alarms or even a dedicated JavaScript code running in real time.
 JavaScript code can be changed at any time. The code is limited to some internal calls and JavaScript functions.
 
-All devices will have the most recent available firmware version. They can be configured to receive any version (nightmare) or only stable versions (stable).
+All devices will have the most recent available firmware version. They can be configured to receive any version (dev), beta versions (beta), stable versions (stable) or non updatable (critical).
 Firmware download can be done over http or https, it depends on how this platform was setup. This download is made automatically and is protected with SHA256 tokens.
 
 All devices are visible only to admin accounts. However, dedicated accounts can be created and configured to have access to one or more devices.
