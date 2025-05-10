@@ -85,17 +85,21 @@ module.exports = {
     });
   },
 
-  // get staus logs
+  // get status logs
   getStatusLogs : (req, res, next)=>{
 
     const val = Joi.object({
       sensor: Joi.string().required(),
     }).validate(req.query);
 
-    device.getStatusLogs(req.params.device_id,req.query.sensor,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getStatusLogs(req.params.device_id,req.query.sensor,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
   // get device logs
@@ -105,10 +109,14 @@ module.exports = {
       sensor: Joi.string().required(),
     }).validate(req.query);
 
-    device.getSensorLogs(req.params.device_id,req.query.sensor,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getSensorLogs(req.params.device_id,req.query.sensor,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
   // delete device

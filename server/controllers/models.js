@@ -102,10 +102,15 @@ module.exports = {
     const val = Joi.object({
       clientID: Joi.string().required(),
     }).validate(req.body);
-    Model.grantPermission(req.body.clientID,req.params.model_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Model.grantPermission(req.body.clientID,req.params.model_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
   removePermission : (req, res, next)=>{
@@ -114,10 +119,14 @@ module.exports = {
       id: Joi.number().required(),
     }).validate(req.body);
 
-    Model.removePermission(req.body.id,req.params.model_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Model.removePermission(req.body.id,req.params.model_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
   checkOwnership : (req, res, next)=>{

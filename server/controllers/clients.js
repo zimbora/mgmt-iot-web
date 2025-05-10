@@ -82,10 +82,14 @@ module.exports = {
       level: Joi.number().required()
     }).validate(req.body);
 
-    Client.addPermission(req.params.client_id,req.body.device,req.body.level,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Client.addPermission(req.params.client_id,req.body.device,req.body.level,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
   removePermission : (req, res, next)=>{
@@ -94,10 +98,14 @@ module.exports = {
       device: Joi.string().required()
     }).validate(req.body);
 
-    Client.removePermission(req.params.client_id,req.body.device,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Client.removePermission(req.params.client_id,req.body.device,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
   updatePermission : (req, res, next)=>{
@@ -107,10 +115,14 @@ module.exports = {
       level: Joi.number().required()
     }).validate(req.body);
 
-    Client.updatePermission(req.params.client_id,req.body.device,req.body.level,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Client.updatePermission(req.params.client_id,req.body.device,req.body.level,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
   checkDeviceAccess : (req, res, next)=>{
