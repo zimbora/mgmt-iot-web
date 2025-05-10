@@ -16,27 +16,29 @@ module.exports = {
   add : (req, res, next)=>{
 
     if (!req.file || Object.keys(req.file).length === 0) {
-      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"No files were uploaded");
+      return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"No files were uploaded");
     }
 
     const { fw_version,app_version } = req.body;
     if(fw_version == null){
-      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"fw version not defined");
+      return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"fw version not defined");
     }
     if(app_version == null){
-      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"app version not defined");
+      return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"app version not defined");
     }
 
-    let firmware = req.file;
-
+    let firmware = {};
+    firmware['filename'] = req.file?.filename;
+    firmware['originalname'] = req.file?.originalname;
+    
     if(!firmware.hasOwnProperty("filename"))
-      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"filename not defined");
+      return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"filename not defined");
     if(!firmware.hasOwnProperty("originalname"))
-      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"originalname not defined");
+      return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"originalname not defined");
 
     Firmware.add(firmware.filename,firmware.originalname,fw_version,app_version,req.params.model_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      if(!err) return response.send(res,rows);
+      else return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     })
   },
 

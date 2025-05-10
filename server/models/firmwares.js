@@ -146,7 +146,13 @@ module.exports =  {
         }
         db.delete("firmwares",filter)
         .then (rows => {
-          let file_path = path.join(__dirname, "../"+config.public_path+"/firmwares/"+filename);
+          let filePath = "";
+          if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
+            filePath = "/mgmt-iot/devices/firmwares";
+          }else{
+            file_path = path.join(__dirname, "../public/firmwares/"+filename);
+          }
+          
           fs.unlinkSync(file_path)
           return cb(null,rows);
         })

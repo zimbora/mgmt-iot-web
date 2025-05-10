@@ -15,8 +15,7 @@ if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
 
 // set up multer
 const multer = require('multer')
-//var upload;
-//const  upload = multer({ dest: path.join(__dirname, "../public/firmwares/") })
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log("storage:",filePath);
@@ -27,7 +26,13 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   }
 });
-const upload = multer({ storage: storage });
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fieldSize: 4 * 1024 * 1024, // 4MB, adjust as needed
+  },
+});
 
 const router = express.Router();
 
@@ -51,7 +56,39 @@ router.route('/:model_id/permissions')
 
 router.route('/:model_id/firmwares')
   .get(Firmware.listByModel)
-  .post(upload.single('file'),Firmware.add)
+  .post(async (req, res, next) => {
+
+    const filename = req.file ? req.file.originalname : null;
+
+    // Before calling uploadSingle, check if the filename exists
+    if (filename) {
+      const filePathToCheck = path.join(filePath, filename);
+      const exists = await fileExists(filePathToCheck);
+
+      if (exists) {
+        return res.status(400).json({ success: false, message: 'File with the same name already exists.' });
+      }
+    }
+
+    const uploadSingle = upload.single('file');
+
+    uploadSingle(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        // Multer-specific errors (e.g., file too large)
+        return res.status(400).json({ success: false, message: err.message });
+      } else if (err) {
+        // Other errors
+        return res.status(500).json({ success: false, message: 'An unknown error occurred.' });
+      }
+      
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded.' });
+      }
+
+      next();
+    });
+  },(req,res,next)=>{Firmware.add(req,res,next)})
 
 router.route('/:model_id/firmware')
   .get(Firmware.get)
