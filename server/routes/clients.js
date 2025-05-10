@@ -5,6 +5,10 @@ var Client = require('../controllers/clients')
 
 const router = express.Router();
 
+router.route("/id")
+
+  .get(Client.findGoogleClient)
+
 router.use("/:client_id",Client.checkAdminAccess,(req,res,next) => {
   next();
 });

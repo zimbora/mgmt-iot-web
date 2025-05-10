@@ -148,6 +148,20 @@ module.exports = {
     });
   },
 
+  findGoogleClient : (req,res,next)=>{
 
+    const val = Joi.object({
+      email: Joi.string().required(),
+    }).validate(req.query);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Client.findGoogleClient(req.query.email,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
 
 };
