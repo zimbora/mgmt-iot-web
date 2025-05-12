@@ -266,7 +266,7 @@ app.use('/model/:model_id',(req,res,next)=>{
 app.get('/model/:model_id/devices',(req,res)=>{
   if(req.user.level >= 2){
     if(req.user.level >= 4){
-      Device.list(req.params.model_id,(err,devices)=>{
+      Device.list(req.params.model_id,null,(err,devices)=>{
         res.render(path.join(__dirname, config.public_path+'/views/pages/model/devices'),{model:req.model,devices:devices,user:req.user,page:'Devices'});
       })
     }else{
@@ -486,7 +486,7 @@ function collectData(req,callback){
           next(err);
         });
       }else{
-        Device.list(data.device?.model_id,(err,rows)=>{
+        Device.list(data.device?.model_id,null,(err,rows)=>{
           data.devices = rows;
           next(err);
         });

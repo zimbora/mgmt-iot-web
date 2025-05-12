@@ -64,10 +64,17 @@ module.exports = {
 
   list : (req, res, next)=>{
     if(req.user.level >= 4){
-      device.list((err,rows)=>{
-        if(!err) response.send(res,rows);
-        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-      });
+      if(req.query?.updatedAt != null){
+        device.listSynch( req.query?.modelId,req.query?.updatedAt, (err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }else{
+        device.list( req.query?.modelId,null, (err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }
     }else{
       client.getDevices(req.user.client_id, (err,rows)=>{
       //device.listAssociated(req.user.client_id, (err,rows)=>{
@@ -79,10 +86,19 @@ module.exports = {
 
   // get device info
   getInfo : (req, res, next)=>{
-    device.getInfo(req.params.device_id,(err,rows)=>{
-      if(!err) response.send(res,rows);
-      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-    });
+
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getInfo(req.params?.device_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
   },
 
   // get status logs

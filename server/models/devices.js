@@ -67,26 +67,10 @@ var self = module.exports =  {
     });
   },
 
-  // list all devices
-  list : async (...args)=>{
-
-    let cb = ()=>{};
-    let clientId = null;
-    let modelId = null;
-    args.forEach((param,counter)=>{
-      if( typeof param === 'function')
-        cb = param;
-      else{
-        switch(counter){
-          case 0:
-            modelId = param;
-            break;
-          case 1:
-            clientId = param;
-            break;
-        }
-      }
-    })
+  // front end
+  // list all devices matching modelId which client as access
+  list : async (modelId, clientId, cb)=>{
+    
     let query = `select d.*,p.name as project,m.name as model from devices as d
                 inner join projects as p on p.id = d.project_id
                 inner join models as m on m.id = d.model_id`;
@@ -99,9 +83,33 @@ var self = module.exports =  {
       query += " where m.id = ?"
       table.push(modelId);
     }
-    if(clientId != null){
-      query += " and mp.client_id = ?";
-      table.push(clientId);
+    
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  // list all devices matching modelId and with deviceId gth
+  listSynch : async (modelId, updatedAt, cb)=>{
+    
+    let query = `select d.*,p.name as project,m.name as model from devices as d
+                inner join projects as p on p.id = d.project_id
+                inner join models as m on m.id = d.model_id`;
+    let table = [];
+
+    if(modelId != null){
+      query += " where m.id = ?"
+      table.push(modelId);
+    }
+    if(updatedAt != null){
+      query += " and d.updatedAt > ?";
+      table.push(updatedAt);
     }
     query = mysql.format(query,table);
 
