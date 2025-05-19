@@ -63,6 +63,7 @@ module.exports = {
  },
 
   list : (req, res, next)=>{
+
     if(req.user.level >= 4){
       if(req.query?.updatedAt != null){
         device.listSynch( req.query?.modelId,req.query?.updatedAt, (err,rows)=>{
@@ -81,6 +82,18 @@ module.exports = {
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
+    }
+  },
+
+  permissions : (req, res, next)=>{
+
+    if(req.user.level >= 4){
+      device.permissionsSynch( req.query?.updatedAt, (err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      })
+    }else{
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"No permission for this call");
     }
   },
 

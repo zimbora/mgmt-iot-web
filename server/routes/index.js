@@ -62,6 +62,9 @@ router.use('/device', devices);
 router.route('/devices/list')
   .get(Device.list);
 
+router.route('/devices/permissions')
+  .get(Device.permissions);
+
 router.use('/model', models);
 
 router.route('/models')

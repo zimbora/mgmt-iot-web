@@ -95,7 +95,7 @@ var self = module.exports =  {
     })
   },
 
-  // list all devices matching modelId and with deviceId gth
+  // list all devices matching modelId and updated after updatedAt
   listSynch : async (modelId, updatedAt, cb)=>{
     
     let query = `select d.*,p.name as project,m.name as model from devices as d
@@ -109,6 +109,27 @@ var self = module.exports =  {
     }
     if(updatedAt != null){
       query += " and d.updatedAt > ?";
+      table.push(updatedAt);
+    }
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+    // list all devices permissions matching modelId and updated after updatedAt 
+  permissionsSynch : async (updatedAt, cb)=>{
+    
+    let query = `select * from permissions where level > 3`;
+    let table = [];
+
+    if(updatedAt != null){
+      query += " and updatedAt > ?";
       table.push(updatedAt);
     }
     query = mysql.format(query,table);
