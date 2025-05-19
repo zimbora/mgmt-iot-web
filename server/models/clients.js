@@ -172,7 +172,8 @@ var self = module.exports =  {
     let query = `select d.*,p.name as project,m.name as model from devices as d
                 inner join projects as p on p.id = d.project_id
                 inner join models as m on m.id = d.model_id
-                inner join permissions where permissions.client_id = ? and permissions.device_id = d.id`;
+                inner join permissions where permissions.client_id = ? and permissions.device_id = d.id
+                and permissions.level > 3`;
     let table = [clientId];
     query = mysql.format(query,table);
 
