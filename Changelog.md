@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.59
+  recovers call /device/${deviceId}/info for dashboard compatibility
+  
 ## version 1.0.58
   Enhancements
     - devices:
@@ -16,7 +19,7 @@
     - server/models/devices: fixes get info query
     - server/routes/index: fixes api status call
     - fixes model deletion
-    
+
 ## version 1.0.57
   - fixes NODE_ENV var
   - changes fw release names
