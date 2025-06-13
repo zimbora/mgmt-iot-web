@@ -35,13 +35,13 @@ module.exports = {
   delete : (req, res, next)=>{
 
     const val = Joi.object({
-      id: Joi.number().required()
-    }).validate(req.body);
+      model_id: Joi.number().required()
+    }).validate(req.params);
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      Model.delete(req.body.id,(err,rows)=>{
+      Model.delete(req.params.model_id,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
