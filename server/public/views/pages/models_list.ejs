@@ -104,7 +104,6 @@
 
 
     function addRow(id,model,description){
-
       t.row.add([`
         <button id="`+id+`" onclick="deleteModel('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
           <i class="bi bi-folder-x"></i>
@@ -131,6 +130,7 @@
     };
 
     $("#modalProceed").click(()=>{
+      
       api.removeFWModel(id,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");

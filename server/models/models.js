@@ -62,7 +62,6 @@ var self = module.exports = {
     let filter = {
       id : id,
     }
-
     db.delete("models",filter)
     .then (rows => {
       return cb(null,rows);
