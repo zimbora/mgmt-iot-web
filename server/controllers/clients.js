@@ -125,8 +125,36 @@ module.exports = {
     }
   },
 
-  checkDeviceAccess : (req, res, next)=>{
-    Client.checkDeviceAccess(req.user.client_id,req.user.level,req.params.device_id,(err,access)=>{
+  checkDeviceReadAccess : (req, res, next)=>{
+
+    if(req.user.type == "admin")
+      return next();
+
+    Client.checkDeviceReadAccess(req.user.client_id,req.user.level,req.params.device_id,(err,access)=>{
+      if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
+      else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
+      else next();
+    });
+  },
+
+  checkDeviceWriteAccess : (req, res, next)=>{
+
+    if(req.user.type == "admin")
+      return next();
+
+    Client.checkDeviceWriteAccess(req.user.client_id,req.user.level,req.params.device_id,(err,access)=>{
+      if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
+      else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
+      else next();
+    });
+  },
+
+  checkDevicePermissionsAccess : (req, res, next)=>{
+
+    if(req.user.type == "admin")
+      return next();
+
+    Client.checkDevicePermissionsAccess(req.user.client_id,req.user.level,req.params.device_id,(err,access)=>{
       if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
       else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
       else next();

@@ -242,7 +242,49 @@ var self = module.exports =  {
     });
   },
 
-  checkDeviceAccess : async (clientId,level,deviceId,cb)=>{
+  checkDeviceReadAccess : async (clientId,level,deviceId,cb)=>{
+
+    if(level >= 1)
+      return cb(null,true);
+    else{
+
+      let query = `select * from ?? where ?? = ? and ?? = ?`;
+      let table = ["permissions","client_id",clientId,"device_id",deviceId];
+      query = mysql.format(query,table);
+
+      db.queryRow(query)
+      .then(rows => {
+        if(rows.length) return cb(null,true);
+        else return cb(null,false);
+      })
+      .catch(error => {
+        return cb(error,false);
+      })
+    }
+  },
+
+  checkDeviceWriteAccess : async (clientId,level,deviceId,cb)=>{
+
+    if(level >= 2)
+      return cb(null,true);
+    else{
+
+      let query = `select * from ?? where ?? = ? and ?? = ?`;
+      let table = ["permissions","client_id",clientId,"device_id",deviceId];
+      query = mysql.format(query,table);
+
+      db.queryRow(query)
+      .then(rows => {
+        if(rows.length) return cb(null,true);
+        else return cb(null,false);
+      })
+      .catch(error => {
+        return cb(error,false);
+      })
+    }
+  },
+
+  checkDevicePermissionsAccess : async (clientId,level,deviceId,cb)=>{
 
     if(level >= 4)
       return cb(null,true);
