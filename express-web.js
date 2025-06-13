@@ -308,7 +308,7 @@ app.get('/devices',(req,res)=>{
   res.render(path.join(__dirname, config.public_path+'/views/pages/devices_list'),{user:req.user,page:'Devices'});
 });
 
-app.use('/device/:device_id',client.checkDeviceAccess,(req,res,next)=>{
+app.use('/device/:device_id',client.checkDeviceReadAccess,(req,res,next)=>{
 
   if(! (req.originalUrl.endsWith(".js") || req.originalUrl.endsWith(".mjs")) ){
     collectData(req,(err,data)=>{

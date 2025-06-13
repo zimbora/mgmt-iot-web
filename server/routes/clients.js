@@ -9,13 +9,18 @@ router.route("/id")
 
   .get(Client.findGoogleClient)
 
-router.use("/:client_id",Client.checkAdminAccess,(req,res,next) => {
+router.use("/:client_id",Client.checkDeviceReadAccess,(req,res,next) => {
   next();
 });
 
 router.route("/:client_id/devices")
 
   .get(Client.getDevices)
+
+
+router.use("/:client_id",Client.checkDevicePermissionsAccess,(req,res,next) => {
+  next();
+});
 
 router.route("/:client_id/permissions")
 

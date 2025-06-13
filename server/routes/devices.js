@@ -11,7 +11,8 @@ router.use((req,res,next) => {
   next();
 });
 
-router.route("/permission",Client.checkAdminAccess)
+// owner/admin access
+router.route("/permission",Client.checkDevicePermissionsAccess)
   /** POST /api/device/permission **/
   .post(Device.addClientPermission)
   /** DELETE /api/device/permission **/
@@ -19,28 +20,37 @@ router.route("/permission",Client.checkAdminAccess)
   /** PUT /api/device/permission **/
   .put(Device.updateClientPermission)
 
-router.use('/:device_id',Client.checkDeviceAccess,(req,res,next)=>{next()});
+router.use('/:device_id',Client.checkDeviceReadAccess,(req,res,next)=>{next()});
 
-// protected zone
-router.route("/:device_id")
-
-  .delete(Device.delete)
+// protected zone to read access
 
 router.route("/:device_id/clients")
 
   .get(Device.getClientsWithAccess)
 
-router.route("/:device_id/info")
+router.route("/:device_id/project/info")
 
-  .get(Device.getInfo)
+  .get(Device.getProjectInfo)
 
-router.route("/:device_id/status/logs")
+router.route("/:device_id/project/logs")
 
-  .get(Device.getStatusLogs)
+  .get(Device.getProjectLogs)
 
-router.route("/:device_id/sensor/logs")
+router.route("/:device_id/fw/info")
 
-  .get(Device.getSensorLogs)
+  .get(Device.getFwInfo)
+
+router.route("/:device_id/fw/logs")
+
+  .get(Device.getFwLogs)
+
+router.route("/:device_id/model/info")
+
+  .get(Device.getModelInfo)
+
+router.route("/:device_id/model/logs")
+
+  .get(Device.getModelLogs)
 
 router.route("/:device_id/autorequests")
 
@@ -54,6 +64,9 @@ router.route("/:device_id/jscode")
 
   .get(Device.getJSCode)
 
+router.use("/:device_id",Client.checkDeviceWriteAccess,(req,res,next)=>{next()})
+
+// protected zone to write access
 router.route("/:device_id/release")
   .put(Device.updateDeviceRelease)
 
@@ -62,5 +75,13 @@ router.route("/:device_id/settings")
 
 router.route("/:device_id/project/field")
   .put(Device.updateDeviceProjectField)
+
+router.use('/:device_id',Client.checkDevicePermissionsAccess,(req,res,next)=>{next()});
+
+// protected zone to owner or admin
+router.route("/:device_id")
+
+  .delete(Device.delete)
+
 
 module.exports =  router;
