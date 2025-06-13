@@ -152,3 +152,6 @@ created, using email prefix as the client id and the credentials set with env va
 - USER_LVL
 
 for mqtt user and respective permissions.
+
+### API
+check project [mgmt-iot-api](https://www.npmjs.com/package/mgmt-iot-api) to see available calls

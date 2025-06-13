@@ -1,5 +1,22 @@
 # Changelog
 
+## version 1.0.58
+  Enhancements
+    - devices:
+      - Adds: method to get devices with changes from date x
+      - Adds: property owner field
+      - Changes: get devices where client has permissions greater than level 3
+      - Redefines: device storage into project, fw and model.
+      - Supports: query only one field from logs table
+      - fine-tune device access
+    - fw upload
+      - limits file size to 4MB
+      - improves error handling
+  Bug fixes
+    - server/models/devices: fixes get info query
+    - server/routes/index: fixes api status call
+    - fixes model deletion
+    
 ## version 1.0.57
   - fixes NODE_ENV var
   - changes fw release names
