@@ -280,8 +280,7 @@ var self = module.exports =  {
     })
   },
 
-  // get info of device
-  getInfo : async (deviceId,cb)=>{
+  getProjectInfo : async (deviceId,cb)=>{
 
     let project = await self.getProject(deviceId);
     if(project == null)
@@ -312,24 +311,197 @@ var self = module.exports =  {
     })
   },
 
-  // get status logs of device
-  getStatusLogs : async (deviceId,sensor,cb)=>{
+  getProjectLogs : async (deviceId,sensor,cb)=>{
 
     let project = await self.getProject(deviceId);
+    if(project == null)
+      return cb(null,null);
 
-    let query = `SELECT * FROM (SELECT ??,createdAt FROM ?? WHERE ?? IS NOT NULL and device_id = ? ORDER BY createdAt DESC limit 100)  AS sub ORDER BY createdAt ASC;`
-    let table = [sensor,"logs_"+project,sensor,deviceId]
+    let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
+
+    let table = [];
+    let query = `SELECT ??,createdAt FROM ?? where device_id = ? `
+    if(sensor != null)
+      table.push(sensor)
+    else 
+      table.push("*");
+    table.push("logs_"+project);
+    table.push(deviceId);
+    if(sensor != null){
+      query += `and ?? IS NOT NULL `
+      table.push(sensor);
+    }
+    query += `ORDER BY createdAt DESC LIMIT 20;`
+
     query = mysql.format(query,table);
+
     db.queryRow(query)
     .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
       return cb(null,rows);
     })
     .catch(error => {
+      console.log("error:",error)
       return cb(error,null);
     })
   },
 
-  // get sensor of device
+  getFwInfo : async (deviceId,cb)=>{
+
+    let project = await self.getProject(deviceId);
+    if(project == null)
+      return cb(null,null);
+
+    let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
+
+    let query = `Select * from ?? where device_id = ?;`
+    let table = ["fw",deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      return cb(null,rows[0]);
+    })
+    .catch(error => {
+      console.log("error:",error)
+      return cb(error,null);
+    })
+  },
+
+  getFwLogs : async (deviceId,sensor,cb)=>{
+
+    let project = await self.getProject(deviceId);
+    if(project == null)
+      return cb(null,null);
+
+    let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
+
+    let table = [];
+    let query = "";
+
+    if (sensor != null) {
+      query = `SELECT ?,createdAt FROM ?? WHERE device_id = ? `;
+      table.push(sensor);
+    } else {
+      query = `SELECT * FROM ?? WHERE device_id = ? `;
+    }
+
+    table.push("logs_fw");
+    table.push(deviceId);
+    if(sensor != null){
+      query += `and ?? IS NOT NULL `
+      table.push(sensor);
+    }
+    query += `ORDER BY createdAt DESC LIMIT 20;`
+
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      return cb(null,rows);
+    })
+    .catch(error => {
+      console.log("error:",error)
+      return cb(error,null);
+    })
+  },
+
+  getModelInfo : async (deviceId,cb)=>{
+
+    let project = await self.getProject(deviceId);
+    if(project == null)
+      return cb(null,null);
+
+    let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
+
+    if(model == "sniffer-gw"){
+      model = "sniffer";
+    }
+    let query = `Select * from ?? where device_id = ?`;
+
+    let table = [model,deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      return cb(null,rows[0]);
+    })
+    .catch(error => {
+      console.log("error:",error)
+      return cb(error,null);
+    })
+  },
+
+  getModelLogs : async (deviceId,sensor,cb)=>{
+
+    let project = await self.getProject(deviceId);
+    if(project == null)
+      return cb(null,null);
+
+    let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
+
+    if(model == "sniffer-gw"){
+      model = "sniffer";
+    }
+
+    let table = [];
+    let query = "";
+
+    if (sensor != null) {
+      query = `SELECT ??,createdAt FROM ?? WHERE device_id = ? `;
+      table.push(sensor);
+    } else {
+      query = `SELECT * FROM ?? WHERE device_id = ? `;
+    }
+
+    table.push("logs_"+model);
+    table.push(deviceId);
+    if(sensor != null){
+      query += `and ?? IS NOT NULL `
+      table.push(sensor);
+    }
+    query += `ORDER BY createdAt DESC LIMIT 20;`
+
+    query = mysql.format(query,table);
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+      return cb(null,rows);
+    })
+    .catch(error => {
+      console.log("error:",error)
+      return cb(error,null);
+    })
+  },
+
+  // get registered sensors for model
   getSensors : async (deviceId,modelId,cb)=>{
 
     let model_table = await self.getModelTableById(modelId);

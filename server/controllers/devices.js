@@ -97,8 +97,7 @@ module.exports = {
     }
   },
 
-  // get device info
-  getInfo : (req, res, next)=>{
+  getProjectInfo : (req, res, next)=>{
 
     const val = Joi.object({
       device_id: Joi.number().required(),
@@ -107,41 +106,87 @@ module.exports = {
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      device.getInfo(req.params?.device_id,(err,rows)=>{
+      device.getProjectInfo(req.params?.device_id,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }
   },
 
-  // get status logs
-  getStatusLogs : (req, res, next)=>{
+  getProjectLogs : (req, res, next)=>{
 
     const val = Joi.object({
-      sensor: Joi.string().required(),
-    }).validate(req.query);
+      device_id: Joi.number().required(),
+    }).validate(req.params);
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      device.getStatusLogs(req.params.device_id,req.query.sensor,(err,rows)=>{
+      device.getProjectLogs(req.params?.device_id,req.query?.sensor,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }
   },
 
-  // get device logs
-  getSensorLogs : (req, res, next)=>{
+  getFwInfo : (req, res, next)=>{
 
     const val = Joi.object({
-      sensor: Joi.string().required(),
-    }).validate(req.query);
+      device_id: Joi.number().required(),
+    }).validate(req.params);
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      device.getSensorLogs(req.params.device_id,req.query.sensor,(err,rows)=>{
+      device.getFwInfo(req.params?.device_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
+  getFwLogs : (req, res, next)=>{
+
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getFwLogs(req.params?.device_id,req.query?.sensor,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
+  getModelInfo : (req, res, next)=>{
+
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getModelInfo(req.params?.device_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
+  getModelLogs : (req, res, next)=>{
+
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getModelLogs(req.params?.device_id,req.query?.sensor,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
