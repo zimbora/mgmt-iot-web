@@ -280,6 +280,39 @@ var self = module.exports =  {
     })
   },
 
+  getInfo : async (deviceId,cb)=>{
+
+    let project = await self.getProject(deviceId);
+    if(project == null)
+      return cb(null,null);
+
+    let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
+    
+    let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,p.* FROM ?? 
+    as p left join devices as d on d.id = p.device_id 
+    where d.id = ?;`
+    let table = [project,deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      rows[0]["project"] = project;
+      rows[0]["model"] = model;
+
+      return cb(null,rows[0]);
+    })
+    .catch(error => {
+      console.log("error:",error)
+      return cb(error,null);
+    })
+  },
+
   getProjectInfo : async (deviceId,cb)=>{
 
     let project = await self.getProject(deviceId);

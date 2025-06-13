@@ -28,6 +28,10 @@ router.route("/:device_id/clients")
 
   .get(Device.getClientsWithAccess)
 
+router.route("/:device_id/info")
+
+  .get(Device.getInfo)
+
 router.route("/:device_id/project/info")
 
   .get(Device.getProjectInfo)
