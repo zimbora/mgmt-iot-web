@@ -34,7 +34,11 @@ router.use((req,res,next) => {
 router.get('/api-status', (req, res) =>
   res.status(httpStatus.OK)
     .json({
-      status: "ok"
+      Error: false,
+      Message: "",
+      Result:{
+        status: "ok"
+      }
     })
 );
 
