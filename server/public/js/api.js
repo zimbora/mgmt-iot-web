@@ -666,7 +666,6 @@ var api = {
 
   // remove fw model
   removeFWModel : (modelId,cb)=>{
-    console.log("modelId:",modelId);
     fetch(Settings.api+"/model/"+modelId, {
       method: 'DELETE',
       headers: {
