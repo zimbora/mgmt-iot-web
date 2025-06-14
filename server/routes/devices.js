@@ -80,6 +80,9 @@ router.route("/:device_id/settings")
 router.route("/:device_id/project/field")
   .put(Device.updateDeviceProjectField)
 
+router.route("/:device_id/mqtt/message")
+  .post(Device.sendMqttMessage)
+
 router.use('/:device_id',Client.checkDevicePermissionsAccess,(req,res,next)=>{next()});
 
 // protected zone to owner or admin

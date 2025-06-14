@@ -200,6 +200,25 @@ var self = module.exports =  {
     })
   },
 
+  getUID: async (deviceId) =>{
+
+     return new Promise( (resolve,reject)=>{
+
+      let query = `select uid from devices where id = ?`;
+      let table = [deviceId]
+      query = mysql.format(query,table);
+      db.queryRow(query)
+      .then(rows => {
+        if(rows?.length > 0)
+          resolve(rows[0].uid);
+        else resolve(null);
+      })
+      .catch(error => {
+        reject(error);
+      })
+    })
+  },
+
   // not needed for now
   getModelTable : async (model) =>{
 
@@ -284,12 +303,12 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
     if(project == null)
-      return cb(null,null);
+      return cb(`no project found for deviceId ${deviceId}`,null);
 
     let model = await self.getModel(deviceId);
     if(model == null)
       return cb(null,null);
-    
+
     let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,p.* FROM ?? 
     as p left join devices as d on d.id = p.device_id 
     where d.id = ?;`
@@ -317,7 +336,7 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
     if(project == null)
-      return cb(null,null);
+      return cb(`no project found for deviceId ${deviceId}`,null);
 
     let model = await self.getModel(deviceId);
     if(model == null)
@@ -348,7 +367,7 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
     if(project == null)
-      return cb(null,null);
+      return cb(`no project found for deviceId ${deviceId}`,null);
 
     let model = await self.getModel(deviceId);
     if(model == null)
@@ -388,7 +407,7 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
     if(project == null)
-      return cb(null,null);
+      return cb(`no project found for deviceId ${deviceId}`,null);
 
     let model = await self.getModel(deviceId);
     if(model == null)
@@ -416,7 +435,7 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
     if(project == null)
-      return cb(null,null);
+      return cb(`no project found for deviceId ${deviceId}`,null);
 
     let model = await self.getModel(deviceId);
     if(model == null)
@@ -460,7 +479,7 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
     if(project == null)
-      return cb(null,null);
+      return cb(`no project found for deviceId ${deviceId}`,null);
 
     let model = await self.getModel(deviceId);
     if(model == null)
@@ -492,7 +511,7 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
     if(project == null)
-      return cb(null,null);
+      return cb(`no project found for deviceId ${deviceId}`,null);
 
     let model = await self.getModel(deviceId);
     if(model == null)
@@ -635,6 +654,9 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
 
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null)
+
     let query = `select ar from ?? where id = ?`;
     let table = [project,deviceId]
     query = mysql.format(query,table);
@@ -652,8 +674,11 @@ var self = module.exports =  {
   getAlarms : async (deviceId,cb)=>{
 
     let project = await self.getProject(deviceId);
+    
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null)
 
-    let query = `select js_program from ?? where id = ?`;
+    let query = `select alarms from ?? where id = ?`;
     let table = [project,deviceId]
     query = mysql.format(query,table);
 
@@ -670,8 +695,11 @@ var self = module.exports =  {
   getJSCode : async (deviceId,cb)=>{
 
     let project = await self.getProject(deviceId);
+    
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null)
 
-    let query = `select  from ?? where id = ?`;
+    let query = `select js_program from ?? where id = ?`;
     let table = [project,deviceId]
     query = mysql.format(query,table);
 
@@ -708,8 +736,8 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
 
-    if(null)
-      return cb(null,null)
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null)
 
     let obj = {
       fw_release : release,
@@ -733,8 +761,8 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
 
-    if(null)
-      return cb(null,null)
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null)
 
     let obj = {
       settings : settings,
@@ -758,8 +786,8 @@ var self = module.exports =  {
 
     let project = await self.getProject(deviceId);
 
-    if(null)
-      return cb(null,null)
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null)
 
     let obj = {
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
@@ -779,5 +807,62 @@ var self = module.exports =  {
     });
   },
 
-};
+  sendMqttMessage : async (deviceId,topic,payload,qos,retain,cb)=>{
 
+    let project = await self.getProject(deviceId);
+
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null)
+
+    let uid = await self.getUID(deviceId);
+    if(uid == null)
+      return cb(`no uid found for deviceId ${deviceId}`,null)
+    
+    let fullTopic = `${project}/${uid}/${topic}`;
+
+    /*
+    rcvTopic = fullTopic.split('/');
+    subscribeTopic = rcvTopic.slice(0,-1)+"/#";
+    */
+
+    $.mqttClient.publish(fullTopic,payload,qos,retain);
+
+    return cb(null,null);
+  }
+
+};
+/* Use it later if needed
+async function publishAndWaitForResponse(mqttClient, publishTopic, messagePayload, responseTopic, qos, retain, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    // Handler for incoming messages
+    const messageHandler = (topic, message) => {
+      if (topic === responseTopic) {
+        // Unsubscribe and clean up
+        mqttClient.unsubscribe(responseTopic);
+        mqttClient.off('message', messageHandler);
+        resolve(message.toString()); // or parse as needed
+      }
+    };
+
+    // Subscribe to response topic
+    mqttClient.subscribe(responseTopic, { qos }, (err) => {
+      if (err) {
+        return reject(err);
+      }
+
+      // Attach message handler
+      mqttClient.on('message', messageHandler);
+
+      // Publish message
+      mqttClient.publish(publishTopic, messagePayload, { qos, retain });
+
+      // Optional: set a timeout to reject if no response received
+      setTimeout(() => {
+        mqttClient.off('message', messageHandler);
+        mqttClient.unsubscribe(responseTopic);
+        reject(new Error('Response timeout'));
+      }, timeout);
+    });
+  });
+}
+*/
