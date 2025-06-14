@@ -1,3 +1,4 @@
+$ = {}
 const mqtt = require('mqtt')
 const FtpSrv = require('ftp-srv');
 const crc = require('crc');
@@ -34,7 +35,7 @@ module.exports = {
     });
 
     var host = settings?.mqtt?.host;
-    const client  = mqtt.connect({
+    $.mqttClient = mqtt.connect({
       protocolId: settings?.mqtt?.protocol,
       host: settings?.mqtt?.host,
       port:settings?.mqtt?.port,
@@ -63,26 +64,26 @@ module.exports = {
 
                   let rx_bytes = stats.networks?.eth0?.rx_bytes/1000
                   rx_bytes = Math.round((rx_bytes + Number.EPSILON) * 1000) / 1000
-                  client.publish(topic+"/network/rx",String(rx_bytes));
-                  client.publish(topic+"/network/rx/str",rx_bytes+" kB/s");
+                  $.mqttClient.publish(topic+"/network/rx",String(rx_bytes));
+                  $.mqttClient.publish(topic+"/network/rx/str",rx_bytes+" kB/s");
 
                   let tx_bytes = stats.networks?.eth0?.tx_bytes/1000;
                   tx_bytes = Math.round((tx_bytes + Number.EPSILON) * 1000) / 1000
-                  client.publish(topic+"/network/tx",String(tx_bytes));
-                  client.publish(topic+"/network/tx/str",tx_bytes+" kB/s");
+                  $.mqttClient.publish(topic+"/network/tx",String(tx_bytes));
+                  $.mqttClient.publish(topic+"/network/tx/str",tx_bytes+" kB/s");
 
-                  client.publish(topic+"/cpus/online",String(stats.cpu_stats.online_cpus));
+                  $.mqttClient.publish(topic+"/cpus/online",String(stats.cpu_stats.online_cpus));
 
                   let mem_usage = stats.memory_stats?.usage/1000000;
                   mem_usage = Math.round((mem_usage + Number.EPSILON) * 1000) / 1000
-                  client.publish(topic+"/memory/usage",String(mem_usage));
-                  client.publish(topic+"/memory/usage/str",mem_usage+" MB");
+                  $.mqttClient.publish(topic+"/memory/usage",String(mem_usage));
+                  $.mqttClient.publish(topic+"/memory/usage/str",mem_usage+" MB");
 
                   let cpu_usage = stats.cpu_stats?.cpu_usage?.total_usage/stats.cpu_stats?.system_cpu_usage;
                   cpu_usage = Math.round((cpu_usage + Number.EPSILON) * 1000) / 1000
 
-                  client.publish(topic+"/cpu/usage",String(cpu_usage));
-                  client.publish(topic+"/cpu/usage/str",cpu_usage+" %");
+                  $.mqttClient.publish(topic+"/cpu/usage",String(cpu_usage));
+                  $.mqttClient.publish(topic+"/cpu/usage/str",cpu_usage+" %");
 
                 });
 
@@ -102,25 +103,25 @@ module.exports = {
       })
       .catch(error => console.log(error));
 
-    client.on('connect', function () {
+    $.mqttClient.on('connect', function () {
       console.log("mqtt connected to: ",host);
       /*
-      client.subscribe("#", function (err) {
+      $.mqttClient.subscribe("#", function (err) {
         if(err) console.log(err);
       })
       */
     })
 
-    client.on('message', function (topic, message) {
+    $.mqttClient.on('message', function (topic, message) {
       // message is Buffer
       console.log(topic.toString(),message.toString())
     })
 
-    client.on('error', function (error) {
+    $.mqttClient.on('error', function (error) {
       console.log("error:",error)
     })
 
-    client.on('close', function () {
+    $.mqttClient.on('close', function () {
       console.log("mqtt closed")
     })
 
