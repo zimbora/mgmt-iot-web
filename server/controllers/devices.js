@@ -318,11 +318,12 @@ module.exports = {
         req.body.topic,
         req.body.payload,
         req.body.qos,
-        req.body.retain,
+        Number(req.body.retain),
         (err,rows)=>{
-        if(!err) response.send(res,rows);
-        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-      });
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        }
+      );
     }
   }
 };

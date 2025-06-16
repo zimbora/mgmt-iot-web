@@ -818,51 +818,59 @@ var self = module.exports =  {
     if(uid == null)
       return cb(`no uid found for deviceId ${deviceId}`,null)
     
-    let fullTopic = `${project}/${uid}/${topic}`;
+    let publishTopic = `${project}/${uid}/${topic}`;
 
-    /*
-    rcvTopic = fullTopic.split('/');
-    subscribeTopic = rcvTopic.slice(0,-1)+"/#";
-    */
+    if(publishTopic.endsWith("get")){
+      // response comes without "get"
+      rcvTopic = publishTopic.split('/');
+      responseTopic = rcvTopic.slice(0,-1).join('/');
+    }else if(publishTopic.endsWith("set")){
+      // check for unpublish topic
+      responseTopic = publishTopic;
+    }
+    
+    try{
+      //$.mqttClient.publish(fullTopic,payload,qos,retain);
+      let res = await publishAndWaitForResponse(publishTopic, payload, responseTopic, qos, retain);
+      return cb(null,res);
+    }catch(error){
+      return cb(error,null);
+    }
 
-    $.mqttClient.publish(fullTopic,payload,qos,retain);
-
-    return cb(null,null);
   }
 
 };
-/* Use it later if needed
-async function publishAndWaitForResponse(mqttClient, publishTopic, messagePayload, responseTopic, qos, retain, timeout = 5000) {
+
+async function publishAndWaitForResponse(publishTopic, messagePayload, responseTopic, qos, retain, timeout = 5000) {
   return new Promise((resolve, reject) => {
     // Handler for incoming messages
     const messageHandler = (topic, message) => {
       if (topic === responseTopic) {
         // Unsubscribe and clean up
-        mqttClient.unsubscribe(responseTopic);
-        mqttClient.off('message', messageHandler);
+        $.mqttClient.unsubscribe(responseTopic);
+        $.mqttClient.off('message', messageHandler);
         resolve(message.toString()); // or parse as needed
       }
     };
 
+    // Publish message
+    $.mqttClient.publish(publishTopic, messagePayload, { qos, retain });
+
     // Subscribe to response topic
-    mqttClient.subscribe(responseTopic, { qos }, (err) => {
+    $.mqttClient.subscribe(responseTopic, { qos }, (err) => {
       if (err) {
         return reject(err);
       }
 
       // Attach message handler
-      mqttClient.on('message', messageHandler);
-
-      // Publish message
-      mqttClient.publish(publishTopic, messagePayload, { qos, retain });
+      $.mqttClient.on('message', messageHandler);
 
       // Optional: set a timeout to reject if no response received
       setTimeout(() => {
-        mqttClient.off('message', messageHandler);
-        mqttClient.unsubscribe(responseTopic);
-        reject(new Error('Response timeout'));
+        $.mqttClient.off('message', messageHandler);
+        $.mqttClient.unsubscribe(responseTopic);
+        reject('Response timeout');
       }, timeout);
     });
   });
 }
-*/
