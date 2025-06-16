@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.60
+  - supports request to send MQTT message and gets response from to device
+
 ## version 1.0.59
   recovers call /device/${deviceId}/info for dashboard compatibility
   
