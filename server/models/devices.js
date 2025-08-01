@@ -201,9 +201,7 @@ var self = module.exports =  {
   },
 
   getUID: async (deviceId) =>{
-
-     return new Promise( (resolve,reject)=>{
-
+    return new Promise( (resolve,reject)=>{
       let query = `select uid from devices where id = ?`;
       let table = [deviceId]
       query = mysql.format(query,table);
@@ -301,6 +299,8 @@ var self = module.exports =  {
 
   getInfo : async (deviceId,cb)=>{
 
+    let data = {};
+
     let project = await self.getProject(deviceId);
     if(project == null)
       return cb(`no project found for deviceId ${deviceId}`,null);
@@ -309,10 +309,100 @@ var self = module.exports =  {
     if(model == null)
       return cb(null,null);
 
-    let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,p.* FROM ?? 
+    data["project_name"] = project;
+    data["model_name"] = model;
+
+    /*
+    let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,
+    d.version as version, d.app_version as app_version, d.accept_release as build_release, 
+    d.local_settings, d.remote_settings, p.* FROM ?? 
     as p left join devices as d on d.id = p.device_id 
     where d.id = ?;`
-    let table = [project,deviceId]
+    */
+
+    try{
+
+      let query = `SELECT * FROM ?? where id = ?;`
+      let table = ["devices",deviceId]
+      query = mysql.format(query,table);
+      let res = await db.queryRow(query)
+      if(res != null && res.length > 0)
+        data['device'] = res[0];
+
+
+      query = `SELECT * FROM ?? where device_id = ?;`
+      table = [project,deviceId]
+      query = mysql.format(query,table);
+      res = await db.queryRow(query);
+      if(res != null && res.length > 0){
+        data["project"] = res[0];
+      }
+
+      query = `SELECT * FROM ?? where device_id = ?;`
+      table = [model,deviceId]
+      query = mysql.format(query,table);
+      res = await db.queryRow(query);
+      if(res != null && res.length > 0){
+        data["model"] = res[0];
+      }
+
+      query = `SELECT * FROM ?? where device_id = ?;`
+      table = ["fw",deviceId]
+      query = mysql.format(query,table);
+      res = await db.queryRow(query);
+      if(res != null && res.length > 0){
+        data["fw"] = res[0];
+      }
+
+      if(data['device']?.associatedDevice){
+        query = `SELECT * FROM ?? where id = ?;`
+        table = ["devices",data['device']?.associatedDevice]
+        query = mysql.format(query,table);
+        res = await db.queryRow(query);
+        if(res != null && res.length > 0){
+          data["associated"] = res[0];
+
+          let subModel = await self.getModel(data['device']?.associatedDevice);
+          if(subModel){
+            query = `SELECT * FROM ?? where device_id = ?;`
+            table = [subModel,data['device']?.associatedDevice]
+            query = mysql.format(query,table);
+            res = await db.queryRow(query);
+            if(res != null && res.length > 0){
+              data["associated"][subModel] = res[0];
+            }          
+          }
+        }
+
+      }
+      
+    }catch(error){
+      return cb(error,null);
+    }
+
+    return cb(null,data);
+  },
+
+  getLogs : async (deviceId,sensor,cb)=>{
+
+    let table = [];
+    let query = "";
+
+    if (sensor != null) {
+      query = `SELECT ??,createdAt FROM ?? WHERE device_id = ? `;
+      table.push(sensor);
+    } else {
+      query = `SELECT * FROM ?? WHERE device_id = ? `;
+    }
+
+    table.push("logs_devices");
+    table.push(deviceId);
+    if(sensor != null){
+      query += `and ?? IS NOT NULL `
+      table.push(sensor);
+    }
+    query += `ORDER BY createdAt DESC LIMIT 20;`
+
     query = mysql.format(query,table);
 
     db.queryRow(query)
@@ -321,13 +411,10 @@ var self = module.exports =  {
         return cb(null,null);
       }
 
-      rows[0]["project"] = project;
-      rows[0]["model"] = model;
-
-      return cb(null,rows[0]);
+      return cb(null,rows);
     })
     .catch(error => {
-      console.log("error:",error)
+      console.error(error)
       return cb(error,null);
     })
   },
@@ -358,7 +445,7 @@ var self = module.exports =  {
       return cb(null,rows[0]);
     })
     .catch(error => {
-      console.log("error:",error)
+      console.error(error)
       return cb(error,null);
     })
   },
@@ -398,7 +485,7 @@ var self = module.exports =  {
       return cb(null,rows);
     })
     .catch(error => {
-      console.log("error:",error)
+      console.error(error)
       return cb(error,null);
     })
   },
@@ -426,7 +513,7 @@ var self = module.exports =  {
       return cb(null,rows[0]);
     })
     .catch(error => {
-      console.log("error:",error)
+      console.error(error)
       return cb(error,null);
     })
   },
@@ -445,7 +532,7 @@ var self = module.exports =  {
     let query = "";
 
     if (sensor != null) {
-      query = `SELECT ?,createdAt FROM ?? WHERE device_id = ? `;
+      query = `SELECT ??,createdAt FROM ?? WHERE device_id = ? `;
       table.push(sensor);
     } else {
       query = `SELECT * FROM ?? WHERE device_id = ? `;
@@ -470,7 +557,83 @@ var self = module.exports =  {
       return cb(null,rows);
     })
     .catch(error => {
-      console.log("error:",error)
+      console.error(error)
+      return cb(error,null);
+    })
+  },
+
+  getSensorInfo : async (deviceId,cb)=>{
+
+    return cb("Not implemented",null);
+
+    let project = await self.getProject(deviceId);
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null);
+
+    let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
+
+    let query = `Select * from ?? where device_id = ?;`
+    let table = ["sensors",deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      return cb(null,rows[0]);
+    })
+    .catch(error => {
+      console.error(error)
+      return cb(error,null);
+    })
+  },
+
+  getSensorLogs : async (deviceId,sensor,cb)=>{
+
+    return cb("Not implemented",null);
+
+    let project = await self.getProject(deviceId);
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null);
+
+    let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
+
+    let table = [];
+    let query = "";
+
+    if (sensor != null) {
+      query = `SELECT ??,createdAt FROM ?? WHERE device_id = ? `;
+      table.push(sensor);
+    } else {
+      query = `SELECT * FROM ?? WHERE device_id = ? `;
+    }
+
+    table.push("logs_sensor");
+    table.push(deviceId);
+    if(sensor != null){
+      query += `and ?? IS NOT NULL `
+      table.push(sensor);
+    }
+    query += `ORDER BY createdAt DESC LIMIT 20;`
+
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      return cb(null,rows);
+    })
+    .catch(error => {
+      console.error(error)
       return cb(error,null);
     })
   },
@@ -502,7 +665,7 @@ var self = module.exports =  {
       return cb(null,rows[0]);
     })
     .catch(error => {
-      console.log("error:",error)
+      console.error(error)
       return cb(error,null);
     })
   },
@@ -548,7 +711,7 @@ var self = module.exports =  {
       return cb(null,rows);
     })
     .catch(error => {
-      console.log("error:",error)
+      console.error(error)
       return cb(error,null);
     })
   },
@@ -577,6 +740,7 @@ var self = module.exports =  {
     })
   },
 
+  /*
   // get sensor logs of device
   getSensorLogs : async (deviceId,sensor,cb)=>{
 
@@ -599,6 +763,7 @@ var self = module.exports =  {
       return cb(error,null);
     })
   },
+  */
 
   delete : async (deviceId,cb)=>{
 
@@ -734,25 +899,21 @@ var self = module.exports =  {
 
   updateDeviceRelease : async (deviceId,release,cb)=>{
 
-    let project = await self.getProject(deviceId);
-
-    if(project == null)
-      return cb(`no project found for deviceId ${deviceId}`,null)
-
     let obj = {
-      fw_release : release,
+      accept_release : release,
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {
-      device_id : deviceId
+      id : Number(deviceId)
     };
 
-    db.update(project,obj,filter)
+    db.update("devices",obj,filter)
     .then (rows => {
       return cb(null,rows);
     })
     .catch(error => {
+      console.error(error)
       return cb(error,null);
     });
   },

@@ -131,7 +131,7 @@ var self = module.exports = {
         if (typeof data === "object") {
           const keys = Object.keys(data);
           values = Object.values(data);
-          query = `UPDATE ${table} SET ${keys.map(key => `${key} = ?`).join(', ')}`;
+          query = `UPDATE ${table} SET ${keys.map(key => `\`${key}\` = ?`).join(', ')}`;
         } else {
           return reject("data passed is not an object");
         }

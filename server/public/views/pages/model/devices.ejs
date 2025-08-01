@@ -49,8 +49,10 @@
                   <th></th>
                   <th>uid</th>
                   <th>project</th>
-                  <th>created</th>
                   <th>status</th>
+                  <th>version</th>
+                  <th>versionApp</th>
+                  <th>created</th>
                   <th>updated</th>
                 </tr>
               </thead>
@@ -74,11 +76,12 @@
       t = $('#devices').DataTable();
 
       devices.forEach((item, i) => {
-        addRow(item.id,item.uid,item.project,item.model,item.model_id,moment(item.createdAt).format('YY/MM/DD LT'),item.status,moment(item.updatedAt).format('YY/MM/DD LT'));
+        addRow(item.id,item.uid,item.project,item.model,item.model_id,moment(item.createdAt).format('YY/MM/DD LT'),
+          item.status,item?.version,item?.app_version,moment(item.updatedAt).format('YY/MM/DD LT'));
       });
     });
 
-    function addRow(id,uid,project,model,model_id,created,status,updated){
+    function addRow(id,uid,project,model,model_id,created,status,version,versionApp,updated){
 
       if(uid.startsWith("uid:")){
         uid = uid.substring(4);
@@ -90,8 +93,7 @@
           </button>
         </div>`,
         `<a href="../../../device/`+id+`">`+uid+`</a>`,
-        project,
-        created,status,updated]).draw(true);
+        project,status,version,versionApp,created,updated]).draw(true);
     }
 
     function deleteDevice(device_id){

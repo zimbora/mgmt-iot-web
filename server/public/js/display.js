@@ -19,7 +19,6 @@ var Display = {
 	showDeviceLogs : (sensor)=>{
 
     moment.locale('pt');
-    console.log(moment.locale());
     api.getDeviceLogs(deviceID,sensor,(err,res)=>{
       if(err) console(err);
       if(res?.length > 0 && typeof res[0][sensor] === "string" )
@@ -29,7 +28,24 @@ var Display = {
     })
   },
 
-	drawLinearChart : (sensor,data)=>{
+  showFwLogs : (sensor)=>{
+
+    moment.locale('pt');
+    console.log(moment.locale());
+    api.getFwLogs(deviceID,sensor,(err,res)=>{
+      console.log(res);
+      if(err) console(err);
+      if(res?.length > 0 && typeof res[0][sensor] === "string" )
+        Display.showList(sensor,res);
+      else
+        Display.drawLinearChart(sensor,res);
+    })
+  },
+
+	drawLinearChart : (sensor,reversedData)=>{
+
+      const data = [...reversedData].reverse();
+
       let option = {
         legend:{
           data:[sensor],
@@ -88,8 +104,10 @@ var Display = {
       $('#modalChartLogs').modal('show');
     },
 
-	showList : (sensor,data)=>{
+	showList : (sensor,reversedData)=>{
       // Sort the array
+      const data = [...reversedData].reverse();
+
       table_list.clear();
       Display.calculateTimeDifference(data);
       data.map((item,i)=>{

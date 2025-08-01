@@ -58,7 +58,7 @@
                     <div class="mb-3">
                       <div class="input-group py-2">
                         <label class="input-group-text" for="inputGroupSelect23">FW version</label>
-                        <input type="text" id="_fwversion_" class="form-control" placeholder="type your version in format xx.yy.zz">
+                        <input type="text" id="_version_" class="form-control" placeholder="type your version in format xx.yy.zz">
                       </div>
                       <div class="input-group py-2">
                         <label class="input-group-text" for="inputGroupSelect23">App version</label>
@@ -97,8 +97,7 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            console.log(res)
-            addRow(item.id,item.fw_version,item.app_version,item.fw_release,item.originalname,item.token);
+            addRow(item.id,item.version,item?.app_version,item.build_release,item.originalname,item.token);
             if(i == res.length-1){
               $(".fwReleaseOption").change((event)=>{
                 let id = event.target.id;
@@ -124,11 +123,11 @@
     });
 
     $("#submit_fw").click(()=>{
-      let fw_version = $("#_fwversion_").val();
+      let version = $("#_version_").val();
       let app_version = $("#_appversion_").val();
       var input = document.getElementById("formFile");
       var file = input.files[0];
-      api.addFirmware(modelID,file,fw_version,app_version,(err,res)=>{
+      api.addFirmware(modelID,file,version,app_version,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           if(err.hasOwnProperty("sqlMessage"))
@@ -140,7 +139,7 @@
       });
     });
 
-    function addRow(id,fw_version,app_version,release,filename,token){
+    function addRow(id,version,app_version,release,filename,token){
 
       var hostname = window.location.protocol+"//"+window.location.hostname+":"+window.location.port;
       let fileUrl = hostname+"/api/firmware/"+filename+"/download?token="+token;
@@ -148,13 +147,13 @@
         <button id="`+id+`" onclick="deleteFirmware('`+id+`');" type="button" class="delete btn btn-danger btn-sm">
           <i class="fa-sharp fa-solid fa-trash"></i>
         </button>`,
-        fw_version,
+        version,
         app_version,
         `<select class="form-select fwReleaseOption" id="`+id+`">
           <option selected>`+release+`</option>
           <option value="dev">dev</option>
-          <option value="beta">beta</option>
-          <option value="stable">stable</option>
+          <option value="stage">stage</option>
+          <option value="prod">prod</option>
           <option value="critical">critical</option>
         </select>`,
         `<a href="` + fileUrl + `" class="filename-link">` + filename + `</a>`]).draw(true);

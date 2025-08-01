@@ -107,7 +107,7 @@ module.exports =  {
         let obj = {
           filename : filename,
           originalname : originalname,
-          fw_version : fw_version,
+          version : fw_version,
           app_version : app_version,
           model_id : modelId,
           token : token,
@@ -188,7 +188,7 @@ module.exports =  {
   updateRelease : (firmwareId,release,cb)=>{
 
     let obj = {
-      fw_release : release,
+      build_release : release,
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
 

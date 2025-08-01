@@ -319,7 +319,6 @@ app.use('/device/:device_id',client.checkDeviceReadAccess,(req,res,next)=>{
 });
 
 app.get('/device/:device_id',(req,res)=>{
-//app.get('/device/:device_id',(req,res)=>{
   if(req.originalUrl.endsWith("/"))
     res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "dashboard");
   else
@@ -333,10 +332,14 @@ app.get('/device/:device_id/sensors',(req,res)=>{
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/sensors'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
       device:data.device,
-      devices:data.devices,
-      mqtt:data.mqtt,
+      project:data.project,
       model:data.model,
+      fw:data.fw,
+      sensors:data.sensors,
+      mqtt:data.mqtt,
       user:req.user,
       page:'Sensors'});
   }else{
@@ -349,10 +352,14 @@ app.get('/device/:device_id/settings',(req,res)=>{
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
       device:data.device,
-      devices:data.devices,
-      mqtt:data.mqtt,
+      project:data.project,
       model:data.model,
+      fw:data.fw,
+      sensors:data.sensors,
+      mqtt:data.mqtt,
       user:req.user,
       page:'Settings'});
   }else{
@@ -365,10 +372,14 @@ app.get('/device/:device_id/access',(req,res)=>{
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/access'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
       device:data.device,
-      devices:data.devices,
-      mqtt:data.mqtt,
+      project:data.project,
       model:data.model,
+      fw:data.fw,
+      sensors:data.sensors,
+      mqtt:data.mqtt,
       user:req.user,
       page:'Access'});
   }else{
@@ -381,10 +392,14 @@ app.get('/device/:device_id/autorequests',(req,res)=>{
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model?.ar_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/autorequests'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
       device:data.device,
-      devices:data.devices,
-      mqtt:data.mqtt,
+      project:data.project,
       model:data.model,
+      fw:data.fw,
+      sensors:data.sensors,
+      mqtt:data.mqtt,
       user:req.user,
       page:'Autorequests'});
   }else{
@@ -397,10 +412,14 @@ app.get('/device/:device_id/alarms',(req,res)=>{
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model?.alarms_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/alarms'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
       device:data.device,
-      devices:data.devices,
-      mqtt:data.mqtt,
+      project:data.project,
       model:data.model,
+      fw:data.fw,
+      sensors:data.sensors,
+      mqtt:data.mqtt,
       user:req.user,
       page:'Alarms'});
   }else{
@@ -413,10 +432,14 @@ app.get('/device/:device_id/jscode',(req,res)=>{
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model?.js_code_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/jscode'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
       device:data.device,
-      devices:data.devices,
-      mqtt:data.mqtt,
+      project:data.project,
       model:data.model,
+      fw:data.fw,
+      sensors:data.sensors,
+      mqtt:data.mqtt,
       user:req.user,
       page:'JSCODE'});
   }else{
@@ -450,23 +473,35 @@ module.exports = app;
 
 function collectData(req,callback){
   let data ={
+    project_name:null,
+    model_name:null,
     device:null,
-    sensor:null,
-    devices:[],
-    mqtt:null,
+    project:null,
     model:null,
+    fw:null,
+    sensors:null,
+    associated:null,
+    ar:null,
+    alarms:null,
+    mqtt:null,
   }
 
   async.waterfall([
     (next)=>{
       Device.getInfo(req.params.device_id,(err,row)=>{
-        data.device = row;
+        data.project_name = row?.project_name != null ? row.project_name : "";
+        data.model_name = row?.model_name != null ? row.model_name : "";
+        data.device = row?.device != null ? row.device : {};
+        data.project = row?.project != null ? row.project : {};
+        data.model = row?.model != null ? row.model : {};
+        data.fw = row?.fw != null ? row.fw : {};
+        data.associated = row?.associated != null ? row.associated : {};
         next(err);
       });
     },
     (next)=>{
       Device.getSensors(req.params.device_id,data.device?.model_id,(err,row)=>{
-        data.sensor = row;
+        data.sensors = row;
         if(err){
           log.warn(`warning - no table for model ${data.device?.model}`);
         }
@@ -479,25 +514,7 @@ function collectData(req,callback){
         next(err);
       });
     },
-    (next)=>{
-      if(req.user.level <= 4){
-        Device.list(data.device?.model_id,req.user.client_id,(err,rows)=>{
-          data.devices = rows;
-          next(err);
-        });
-      }else{
-        Device.list(data.device?.model_id,null,(err,rows)=>{
-          data.devices = rows;
-          next(err);
-        });
-      }
-    },
-    (next)=>{
-      Model.getModelById(data.device?.model_id,(err,row)=>{
-        data.model = row;
-        next(err);
-      })
-    }
+    
   ],(err)=>{
     if(err) log.error(err);
     return callback(err,data);

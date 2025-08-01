@@ -32,6 +32,10 @@ router.route("/:device_id/info")
 
   .get(Device.getInfo)
 
+router.route("/:device_id/logs")
+
+  .get(Device.getLogs)
+
 router.route("/:device_id/project/info")
 
   .get(Device.getProjectInfo)
@@ -39,6 +43,14 @@ router.route("/:device_id/project/info")
 router.route("/:device_id/project/logs")
 
   .get(Device.getProjectLogs)
+
+router.route("/:device_id/model/info")
+
+  .get(Device.getModelInfo)
+
+router.route("/:device_id/model/logs")
+
+  .get(Device.getModelLogs)
 
 router.route("/:device_id/fw/info")
 
@@ -48,13 +60,13 @@ router.route("/:device_id/fw/logs")
 
   .get(Device.getFwLogs)
 
-router.route("/:device_id/model/info")
+router.route("/:device_id/sensor/info")
 
-  .get(Device.getModelInfo)
+  .get(Device.getSensorInfo)
 
-router.route("/:device_id/model/logs")
+router.route("/:device_id/sensor/logs")
 
-  .get(Device.getModelLogs)
+  .get(Device.getSensorLogs)
 
 router.route("/:device_id/autorequests")
 

@@ -98,7 +98,6 @@ async function authenticate_google(req,res,next){
     const userId = await User.getId(config.new_client.user_type);
 
     Client.findGoogleClient(data.email, (err,result)=>{
-      console.log(err);
       if(err) res.json({message:"Failure"});
       else if(result == null){
         // register user

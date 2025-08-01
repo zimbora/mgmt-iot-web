@@ -167,7 +167,24 @@ var api = {
   getDeviceLogs : function(deviceID,sensor,cb){
 
     $.ajax({
-      url : Settings.api+'/device/'+deviceID+'/status/logs',type: 'GET',
+      url : Settings.api+'/device/'+deviceID+'/logs',type: 'GET',
+      data : {
+        sensor:sensor
+      },
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
+  getFwLogs : function(deviceID,sensor,cb){
+
+    $.ajax({
+      url : Settings.api+'/device/'+deviceID+'/fw/logs',type: 'GET',
       data : {
         sensor:sensor
       },
@@ -712,7 +729,6 @@ var api = {
       })
     })
     .then(function (response) {
-      console.log(response)
       return response.json();
     })
     .then(function (data) {

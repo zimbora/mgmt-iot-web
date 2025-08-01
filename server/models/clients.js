@@ -153,7 +153,7 @@ var self = module.exports =  {
 
   findGoogleClient : async (email,cb)=>{
 
-    let query = `select c.id as client_id from clients as c where c.gmail = ?`;
+    let query = `select u.id as user_id,u.level,u.type,c.id as client_id,c.nick,c.name,c.avatar from users as u inner join clients as c where c.gmail = ? and u.id = c.user_id`;
     let table = [email];
     query = mysql.format(query,table);
 

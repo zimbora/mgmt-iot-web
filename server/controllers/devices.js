@@ -1,4 +1,4 @@
-
+  
 var device = require('../models/devices');
 var client = require('../models/clients');
 
@@ -63,7 +63,7 @@ module.exports = {
  },
 
   list : (req, res, next)=>{
-
+    
     if(req.user.level >= 4){
       if(req.query?.updatedAt != null){
         device.listSynch( req.query?.modelId,req.query?.updatedAt, (err,rows)=>{
@@ -113,6 +113,22 @@ module.exports = {
     }
   },
 
+  getLogs : (req, res, next)=>{
+
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getLogs(req.params?.device_id,req.query?.sensor,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
   getProjectInfo : (req, res, next)=>{
 
     const val = Joi.object({
@@ -145,6 +161,38 @@ module.exports = {
     }
   },
 
+  getModelInfo : (req, res, next)=>{
+
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getModelInfo(req.params?.device_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
+  getModelLogs : (req, res, next)=>{
+
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getModelLogs(req.params?.device_id,req.query?.sensor,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+  
   getFwInfo : (req, res, next)=>{
 
     const val = Joi.object({
@@ -177,7 +225,7 @@ module.exports = {
     }
   },
 
-  getModelInfo : (req, res, next)=>{
+  getSensorInfo : (req, res, next)=>{
 
     const val = Joi.object({
       device_id: Joi.number().required(),
@@ -186,14 +234,14 @@ module.exports = {
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      device.getModelInfo(req.params?.device_id,(err,rows)=>{
+      device.getSensorInfo(req.params?.device_id,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }
   },
 
-  getModelLogs : (req, res, next)=>{
+  getSensorLogs : (req, res, next)=>{
 
     const val = Joi.object({
       device_id: Joi.number().required(),
@@ -202,7 +250,7 @@ module.exports = {
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      device.getModelLogs(req.params?.device_id,req.query?.sensor,(err,rows)=>{
+      device.getSensorLogs(req.params?.device_id,req.query?.sensor,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });

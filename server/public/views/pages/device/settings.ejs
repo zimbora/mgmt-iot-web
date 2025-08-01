@@ -40,29 +40,41 @@
               <div class="mb-1 row">
                 <label for="project" class="col-4 col-form-label">Project</label>
                 <div class="col-6">
-                  <input type="text" readonly class="form-control-plaintext fw-bold" id="project" value="ND">
+                  <input type="text" readonly class="form-control-plaintext fw-bold" id="project" value="<%=project_name%>">
                 </div>
               </div>
               <div class="mb-1 row">
                 <label for="model" class="col-4 col-form-label">Model</label>
                 <div class="col-6">
-                  <input type="text" readonly class="form-control-plaintext fw-bold" id="model" value="ND">
+                  <input type="text" readonly class="form-control-plaintext fw-bold" id="model" value="<%=model_name%>">
                 </div>
               </div>
               <div class="mb-1 row">
-                <label for="fw_version" class="col-4 col-form-label">FW version</label>
+                <label for="fw_version" class="col-4 col-form-label">
+                  <button class="btn btn-primary btn-sm" type="submit" onclick="Display.showDeviceLogs(`app_version`)">
+                    <i class="bi bi-list"></i>
+                  </button>
+                  version
+                </label>
                 <div class="col-6">
-                  <input type="text" readonly class="form-control-plaintext fw-bold" id="fw_version" value="0.0.0">
+                  <input type="text" readonly class="form-control-plaintext fw-bold" id="version" value="<%=device.version%>">
                 </div>
               </div>
               <div class="mb-4 row">
-                <label for="app_version" class="col-4 col-form-label">App version</label>
+                <label for="app_version" class="col-4 col-form-label">
+                  <button class="btn btn-primary btn-sm" type="submit" onclick="Display.showDeviceLogs(`app_version`)">
+                    <i class="bi bi-list"></i>
+                  </button>
+                  App version
+                </label>
                 <div class="col-6">
-                  <input type="text" readonly class="form-control-plaintext fw-bold" id="app_version" value="0.0.0">
+                  <input type="text" readonly class="form-control-plaintext fw-bold" id="app_version" value="<%=device.app_version%>">
                 </div>
               </div>
               <div class="btn-group">
-                <label class="input-group-text" for="inputGroupSelect21">release</label>
+                <label class="input-group-text" for="inputGroupSelect21">
+                  release
+                </label>
                 <select class="form-select fwReleaseOption" id="_fwrelease_">
                 </select>
               </div>
@@ -74,19 +86,19 @@
                 <button class="btn btn-primary btn-sm" type="submit" onclick="Display.showDeviceLogs(`status`)">
                   <i class="bi bi-list"></i>
                 </button>
-                <%= device.name != null ? device.name : device.uid %>
+                <%= device.uid %>
                 <button id="status" type="button" class="btn btn-secondary" disabled></button
               </h5>
             </div>
             <div class="mb-1 row">
               <label for="uptime" class="col-4 col-form-label">
-                <button class="btn btn-light btn-sm" type="submit" onclick="Display.showDeviceLogs(`uptime`)">
+                <button class="btn btn-light btn-sm" type="submit" onclick="Display.showFwLogs(`uptime`)">
                   <i class="bi bi-list"></i>
                 </button>
                 Uptime
               </label>
               <div class="col-6">
-                <input type="text" readonly class="form-control-plaintext fw-bold" id="uptime" value="0">
+                <input type="text" readonly class="form-control-plaintext fw-bold" id="uptime" value="<%=fw?.uptime%>">
               </div>
             </div>
             <div class="mb-1 row">
@@ -97,18 +109,18 @@
                 Tech
               </label>
               <div class="col-6">
-                <input type="text" readonly class="form-control-plaintext fw-bold" id="tech" value="ND">
+                <input type="text" readonly class="form-control-plaintext fw-bold" id="tech" value="<%=device?.tech%>">
               </div>
             </div>
             <div class="mb-3 row">
               <label for="rssi" class="col-4 col-form-label">
-                <button class="btn btn-light btn-sm" type="submit" onclick="Display.showDeviceLogs(`rssi`)">
+                <button class="btn btn-light btn-sm" type="submit" onclick="Display.showFwLogs(`rssi`)">
                   <i class="bi bi-list"></i>
                 </button>
                 RSSI
               </label>
               <div class="col-6">
-                <input type="text" readonly class="form-control-plaintext fw-bold" id="rssi" value="99">
+                <input type="text" readonly class="form-control-plaintext fw-bold" id="rssi" value="<%=fw?.rssi%>">
               </div>
             </div>
             <div class="btn-group">
@@ -118,20 +130,10 @@
                   <% if(device.settings_ref == null){ %>
                     <option selected value="null">own</option>
                   <%} else {%>
-                    <option select value="<%= device.settings_ref %>"><%= device.settings_ref %>
+                    <option select value="<%= device?.settings_ref %>"><%= device?.settings_ref %>
                     <option value="null">own</option>
                     </option>
                   <% } %>
-                  <%devices.map((row)=>{%>
-                    <% if(row.id != device.device_id){ %>
-                      <% if(row.id == device.settings_ref){ %>
-                        <%console.log(row.id,"match")%>;
-                        <option selected value="<%= row.id%>"><%= row.name != null ? row.name : row.uid%></option>
-                      <% }else { %>
-                        <option value="<%= row.id%>"><%= row.name != null ? row.name : row.uid%></option>
-                      <% } %>
-                    <% } %>
-                  <%})%>
                 </select>
             </div>
           </div>
@@ -149,7 +151,7 @@
                   <div class="col-xs-12 col-sm-6">
                     <div class="btn-group">
                       <label class="input-group-text" for="inputGroupSelect31">keepalive</label>
-                      <select <% if(device.settings_ref != null){%> disabled <%}%> class="form-select fwKeepaliveOption" id="_fwkeepalive_">
+                      <select class="form-select fwKeepaliveOption" id="_fwkeepalive_">
                       </select>
                       <button id="keepaliveget" class="btn btn-primary btn-sm" type="submit" onclick="return false;">
                         <i class="bi bi-search"></i>
@@ -201,14 +203,18 @@
                   <form class="row g-3 needs-validation" validate>
                     <div class="col-md-6">
                       <label for="validationCustom01" class="form-label">SSID</label>
-                      <input type="text" class="form-control" id="wifissid" value="" required>
+                      <input type="text" class="form-control" id="wifissid" 
+                        <% if (device?.remote_settings?.wifi?.ssid != null) { %> value="<%= device.remote_settings.wifi.ssid %>" <% } %>
+                        required>
                       <div class="valid-feedback">
                         Looks good!
                       </div>
                     </div>
                     <div class="col-md-6">
                       <label for="validationCustom02" class="form-label">Password</label>
-                      <input type="text" class="form-control" id="wifipassword" value="" required>
+                      <input type="text" class="form-control" id="wifipassword" 
+                        <% if (device?.remote_settings?.wifi?.pwd != null) { %> value="<%= device.remote_settings.wifi.pwd %>" <% } %>
+                        required>
                       <div class="valid-feedback">
                         Looks good!
                       </div>
@@ -231,42 +237,54 @@
                   <form class="row g-3 needs-validation" validate>
                     <div class="col-md-4">
                       <label for="validationCustom11" class="form-label">APN</label>
-                      <input type="text" class="form-control" id="_lte_apn_" value="" required>
+                      <input type="text" class="form-control" id="_lte_apn_" 
+                        <% if (device?.remote_settings?.lte?.apn != null) { %> value="<%= device.remote_settings.lte.apn %>" <% } %>
+                        required>
                       <div class="valid-feedback">
                         Looks good!
                       </div>
                     </div>
                     <div class="col-md-4">
                       <label for="validationCustom12" class="form-label">User</label>
-                      <input type="text" class="form-control" id="_lte_user_" value="">
+                      <input type="text" class="form-control" id="_lte_user_" 
+                        <% if (device?.remote_settings?.lte?.user != null) { %> value="<%= device.remote_settings.lte.user %>" <% } %>
+                        >
                       <div class="valid-feedback">
                         Looks good!
                       </div>
                     </div>
                     <div class="col-md-4">
                       <label for="validationCustom13" class="form-label">Password</label>
-                      <input type="text" class="form-control" id="_lte_pwd_" value="">
+                      <input type="text" class="form-control" id="_lte_pwd_" 
+                        <% if (device?.remote_settings?.lte?.pwd != null) { %> value="<%= device.remote_settings.lte.pwd %>" <% } %>
+                        >
                       <div class="valid-feedback">
                         Looks good!
                       </div>
                     </div>
                     <div class="col-md-4">
                       <label for="validationCustom13" class="form-label">Cops</label>
-                      <input type="number" class="form-control" id="_lte_cops_" value="">
+                      <input type="number" class="form-control" id="_lte_cops_" 
+                        <% if (device?.remote_settings?.lte?.cops != null) { %> value="<%= device.remote_settings.lte.cops %>" <% } %>
+                        >
                       <div class="valid-feedback">
                         Looks good!
                       </div>
                     </div>
                     <div class="col-md-4">
                       <label for="validationCustom13" class="form-label">Band</label>
-                      <input type="number" class="form-control" id="_lte_band_" value="">
+                      <input type="number" class="form-control" id="_lte_band_" 
+                        <% if (device?.remote_settings?.lte?.band != null) { %> value="<%= device.remote_settings.lte.band %>" <% } %>
+                        >
                       <div class="valid-feedback">
                         Looks good!
                       </div>
                     </div>
                     <div class="col-md-4">
                       <label for="validationCustom13" class="form-label">Tech</label>
-                      <select class="form-select fwTechOption" id="_lte_tech_">
+                      <select class="form-select fwTechOption" id="_lte_tech_"
+                        <% if (device?.remote_settings?.lte?.tech != null) { %> value="<%= device.remote_settings.lte.tech %>" <% } %>
+                        >
                       </select>
                     </div>
                     <div class="col-md-4">
@@ -287,28 +305,36 @@
                 <form class="row g-3 needs-validation" novalidate>
                   <div class="col-md-10">
                     <label for="validationMQTT01" class="form-label">Host</label>
-                    <input type="text" class="form-control" id="mqtt_host" value="" required>
+                    <input type="text" class="form-control" id="mqtt_host" 
+                      <% if (device?.remote_settings?.mqtt?.host != null) { %> value="<%= device.remote_settings.mqtt.host %>" <% } %>
+                      required >
                     <div class="valid-feedback">
                       Looks good!
                     </div>
                   </div>
                   <div class="col-md-2">
                     <label for="validationMQTT02" class="form-label">Port</label>
-                    <input type="number" class="form-control" id="mqtt_port" value="" required>
+                    <input type="number" class="form-control" id="mqtt_port" 
+                      <% if (device?.remote_settings?.mqtt?.port != null) { %> value="<%= device.remote_settings.mqtt.port %>" <% } %>
+                      required >
                     <div class="valid-feedback">
                       Looks good!
                     </div>
                   </div>
                   <div class="col-md-6">
                     <label for="validationMQTT03" class="form-label">User</label>
-                    <input type="text" class="form-control" id="mqtt_user" value="" required>
+                    <input type="text" class="form-control" id="mqtt_user" 
+                      <% if (device?.remote_settings?.mqtt?.user != null) { %> value="<%= device.remote_settings.mqtt.user %>" <% } %>
+                      required >
                     <div class="valid-feedback">
                       Looks good!
                     </div>
                   </div>
                   <div class="col-md-6">
                     <label for="validationMQTT04" class="form-label">Password</label>
-                    <input type="text" class="form-control" id="mqtt_pwd" value="" required>
+                    <input type="text" class="form-control" id="mqtt_pwd" 
+                      <% if (device?.remote_settings?.mqtt?.pass != null) { %> value="<%= device.remote_settings.mqtt.pass %>" <% } %>
+                      required >
                     <div class="valid-feedback">
                       Looks good!
                     </div>
@@ -328,6 +354,11 @@
   </div>
 
   <script>
+
+    let device = <%- JSON.stringify(device) %>;
+    let mqtt = <%- JSON.stringify(mqtt) %>;
+    let project_name = <%- JSON.stringify(project_name) %>;
+    let model_name = <%- JSON.stringify(model_name) %>;
 
     var deviceID = api.getDeviceID();
     var project = "";
@@ -366,118 +397,46 @@
 
     var release_arr = [
       "dev",
-      "beta",
-      "stable",
+      "stage",
+      "prod",
       "critical"
     ]
 
     var ctx;
     var table_list;
-    let devices = <%- JSON.stringify(devices) %>;
 
     $(document).ready(()=>{
 
       const app = require('./app.mjs');
       table_list = $('#table_list').DataTable();
       ctx = echarts.init(document.getElementById('myChart'));
-
-      let device = <%- JSON.stringify(device) %>;
-      let mqtt = <%- JSON.stringify(mqtt) %>;
-
-      document.querySelector('#project').value = device.project;
-      document.querySelector('#model').value = device.model;
-      document.querySelector('#fw_version').value = device.fw_version;
-      document.querySelector('#app_version').value = device.app_version || device.version;
+      /*
+      console.log(device);
+      console.log(mqtt);
+      console.log(project_name);
+      console.log(model_name);
+      */
+      document.querySelector('#app_version').value = device?.app_version || device?.version;
       project = device.project;
       uid = device.uid;
 
-      if(device.hasOwnProperty("settings") && device.settings != null){
-
-        if(device.settings.hasOwnProperty("wifi") && device.settings.wifi != null){
-          try{
-            let wifi = JSON.parse(device.settings.wifi);
-            if(document.querySelector('#wifissid') != null){
-              document.querySelector('#wifissid').value = wifi.ssid;
-              document.querySelector('#wifipassword').value = wifi.pwd;
-            }
-          }catch(e){console.log(e)};
-        }
-
-        if(device.settings.hasOwnProperty("modem") && device.settings.modem != null){
-
-          try{
-            let modem = JSON.parse(device.settings.modem);
-            if(document.querySelector('#_lte_apn_') != null){
-              document.querySelector('#_lte_apn_').value = modem.apn;
-              document.querySelector('#_lte_user_').value = modem.user;
-              document.querySelector('#_lte_pwd_').value = modem.pwd;
-              document.querySelector('#_lte_cops_').value = modem.cops;
-              document.querySelector('#_lte_band_').value = modem.band;
-              document.querySelector('#_lte_tech_').value = modem.tech;
-            }
-          }catch(e){console.log(e)};
-        }
-
-        if(device.settings.hasOwnProperty("mqtt") && device.settings.mqtt != null){
-          try{
-            let mqtt = JSON.parse(device.settings.mqtt)
-            document.querySelector('#mqtt_host').value = mqtt.host;
-            document.querySelector('#mqtt_port').value = mqtt.port;
-            document.querySelector('#mqtt_user').value = mqtt.user;
-            document.querySelector('#mqtt_pwd').value = mqtt.pass;
-          }catch(err){}
-        }
-      }
-
-      addSelectedOption('#_fwrelease_',device.fw_release);
       release_arr.forEach((item,i)=>{
-        addOption('#_fwrelease_',item);
+        addOption('#_fwrelease_',item, item == device?.accept_release);
+      });
+            
+      let log = device.remote_settings?.log;
+      logs_level_arr.forEach((item,i)=>{
+        addOptionWithDescription('#_fwlogslevel_',item.value,item.description,item.value == log?.level);
       });
 
-      if(device.settings != null){
-        if(device.settings.hasOwnProperty("keepalive")){
-          let keepalive;
-          try{
-            keepalive = JSON.parse(device.settings.keepalive);
-          }catch(e){}
-          keepalive_arr.forEach((item,i)=>{
-            if(item.value == keepalive?.period)
-              addSelectedOption2('#_fwkeepalive_',item.value,item.description);
-          });
-        }
-        if(device.settings.hasOwnProperty("log")){
-          let log;
-          try{
-            log = JSON.parse(device.settings.log);
-          }catch(e){}
-          logs_level_arr.forEach((item,i)=>{
-            if(item.value == log?.level)
-              addSelectedOption2('#_fwlogslevel_',item.value,item.description);
-          });
-        }
-
-        if(device.settings.hasOwnProperty("modem")){
-          let modem;
-          try{
-            modem = JSON.parse(device.settings.modem);
-          }catch(e){}
-          lte_tech_arr.forEach((item,i)=>{
-            if(item.value == device.fw_settings.modem?.tech)
-              addSelectedOption2('#_lte_tech_',item.value,item.description);
-          });
-        }
-      }
-
+      let keepalive = device.remote_settings?.keepalive;
       keepalive_arr.forEach((item,i)=>{
-        addOption2('#_fwkeepalive_',item.value,item.description);
+        addOptionWithDescription('#_fwkeepalive_',item.value,item.description, item.value == keepalive?.period);
       })
 
-      logs_level_arr.forEach((item,i)=>{
-        addOption2('#_fwlogslevel_',item.value,item.description);
-      })
-
+      let lte = device.remote_settings?.lte;
       lte_tech_arr.forEach((item,i)=>{
-        addOption2('#_lte_tech_',item.value,item.description);
+        addOptionWithDescription('#_lte_tech_',item.value,item.description, item.value == lte?.tech);
       })
 
       $(".fwReleaseOption").change((event)=>{
@@ -524,7 +483,7 @@
           data = {
             period : keepalive
           }
-          sendMessage("fw/settings/keepalive/set",JSON.stringify(data));
+          sendMessage("settings/keepalive/set",JSON.stringify(data));
         });
       });
 
@@ -534,7 +493,7 @@
           data = {
             level : level
           }
-          sendMessage("fw/settings/log/set",JSON.stringify(data));
+          sendMessage("settings/log/set",JSON.stringify(data));
         });
       });
 
@@ -598,7 +557,7 @@
     });
 
     $("#wifiget").click(()=>{
-      sendMessage("fw/settings/wifi/get","");
+      sendMessage("settings/wifi/get","");
     });
 
     $("#lteset").click(()=>{
@@ -622,7 +581,7 @@
     });
 
     $("#lteget").click(()=>{
-      sendMessage("fw/settings/modem/get","");
+      sendMessage("settings/modem/get","");
     });
 
     $("#mqttset").click((event)=>{
@@ -637,19 +596,19 @@
         pass : pwd,
         active : 1
       }
-      sendMessage("fw/settings/mqtt/set",JSON.stringify(data));
+      sendMessage("settings/mqtt/set",JSON.stringify(data));
     });
 
     $("#mqttget").click(()=>{
-      sendMessage("fw/settings/mqtt/get","");
+      sendMessage("settings/mqtt/get","");
     });
 
     $("#keepaliveget").click(()=>{
-      sendMessage("fw/settings/keepalive/get","");
+      sendMessage("settings/keepalive/get","");
     });
 
     $("#logLevelget").click(()=>{
-      sendMessage("fw/settings/log/get","");
+      sendMessage("settings/log/get","");
     });
 
     // called when the client connects
@@ -658,7 +617,7 @@
       let button = document.querySelector('#mqtt_status');
       button.classList.toggle("btn-secondary",false);
       button.classList.toggle("btn-success",true);
-      client.subscribe(project+"/"+uid+"/#");
+      client.subscribe(project_name+"/"+uid+"/#");
     }
 
     // called when the client loses its connection
@@ -676,83 +635,113 @@
 
       let topic = message.destinationName;
       let payload = message.payloadString;
-      if(topic.includes("/status")){
-        let button = document.querySelector('#status');
-        button.classList.toggle("btn-secondary",false);
-        if(payload == "online")
-          button.classList.toggle("btn-success",true);
-        else
-          button.classList.toggle("btn-danger",true);
+
+      let index = topic.indexOf("/");
+      if(index > 0){
+        // filters project
+        topic = topic.substring(index+1);
       }
 
-      if(topic.includes("uptime")){
-        let uptime = document.querySelector('#uptime');
-        uptime.value = payload;
+      index = topic.indexOf("/");
+      if(index > 0){
+        // filters uid
+        topic = topic.substring(index+1);
       }
 
-      if(topic.includes("tech")){
-        let tech = document.querySelector('#tech');
-        tech.value = payload;
-      }
+      if(topic.includes("app"))
+        return;
+      
+      switch(topic){
+        case "status":
+          {
+            let button = document.querySelector('#status');
+            button.classList.toggle("btn-secondary",false);
+            if(payload == "online")
+              button.classList.toggle("btn-success",true);
+            else
+              button.classList.toggle("btn-danger",true);
+            break;
+          }
+        case "fw":
+          {
+            try{
+              payload = JSON.parse(payload)
+              if(payload?.rssi){
+                let rssi = document.querySelector('#uptime');
+                rssi.value = payload.rssi;
+              }
+              if(payload?.uptime){
+                let uptime = document.querySelector('#uptime');
+                uptime.value = payload.uptime;
+              }
+            }catch(e){ console.log(e);}
+            $(document).trigger("closeModalLoading"); // set confirmation
+            break;
+          } 
+        case "tech":
+          {
+            let tech = document.querySelector('#tech');
+            tech.value = payload;
+            break;
+          }
 
-      if(topic.includes("rssi")){
-        let rssi = document.querySelector('#rssi');
-        rssi.value = payload;
-      }
+        case "settings/wifi":
+          {
+            try{
+              payload = JSON.parse(payload)
+              document.querySelector('#wifissid').value = payload.ssid;
+              document.querySelector('#wifipassword').value = payload.pwd;
+            }catch(e){ console.log(e)}
+            $(document).trigger("closeModalLoading"); // get confirmation
+            break;
+          }
+        case "settings/modem":
+          {
+            try{
+              payload = JSON.parse(payload)
+              document.querySelector('#_lte_apn_').value = payload.apn;
+              document.querySelector('#_lte_user_').value = payload.user;
+              document.querySelector('#_lte_pwd_').value = payload.pwd;
+              document.querySelector('#_lte_cops_').value = payload.cops;
+              document.querySelector('#_lte_band_').value = payload.band;
+              document.querySelector('#_lte_tech_').value = payload.tech;
+            }catch(e){ console.log(e)}
+            $(document).trigger("closeModalLoading"); // get confirmation
+            break;
+          }
+        case "settings/mqtt":
+          {
+            try{
+              payload = JSON.parse(payload)
+              document.querySelector('#mqtt_host').value = payload.host;
+              document.querySelector('#mqtt_port').value = payload.port;
+              document.querySelector('#mqtt_user').value = payload.user;
+              document.querySelector('#mqtt_pwd').value = payload.pass;
+            }catch(e){ console.log(e);}
+            $(document).trigger("closeModalLoading"); // get confirmation
+            break;
+          }
+        case "settings/keepalive":
+          {
+            try{
+              payload = JSON.parse(payload)
+              var select = document.getElementById("_fwkeepalive_");
+              select.value = payload.period;
+            }catch(e){ console.log(e);}
+            $(document).trigger("closeModalLoading"); // set confirmation
+            break;
+          }
+        case "settings/log":
+          {
+            try{
+              payload = JSON.parse(payload)
+              var select = document.getElementById("_fwlogslevel_");
+              select.value = payload.level;
 
-      if(topic.endsWith("wifi")){
-        try{
-          payload = JSON.parse(payload)
-          document.querySelector('#wifissid').value = payload.ssid;
-          document.querySelector('#wifipassword').value = payload.pwd;
-        }catch(e){ console.log(e)}
-        $(document).trigger("closeModalLoading"); // get confirmation
-      }
-
-      if(topic.endsWith("modem")){
-        try{
-          payload = JSON.parse(payload)
-          document.querySelector('#_lte_apn_').value = payload.apn;
-          document.querySelector('#_lte_user_').value = payload.user;
-          document.querySelector('#_lte_pwd_').value = payload.pwd;
-          document.querySelector('#_lte_cops_').value = payload.cops;
-          document.querySelector('#_lte_band_').value = payload.band;
-          document.querySelector('#_lte_tech_').value = payload.tech;
-        }catch(e){ console.log(e)}
-        $(document).trigger("closeModalLoading"); // get confirmation
-      }
-
-      if(topic.endsWith("mqtt")){
-        try{
-          payload = JSON.parse(payload)
-          document.querySelector('#mqtt_host').value = payload.host;
-          document.querySelector('#mqtt_port').value = payload.port;
-          document.querySelector('#mqtt_user').value = payload.user;
-          document.querySelector('#mqtt_pwd').value = payload.pass;
-        }catch(e){ console.log(e);}
-        $(document).trigger("closeModalLoading"); // get confirmation
-      }
-
-      if(topic.endsWith("keepalive")){
-        try{
-          payload = JSON.parse(payload)
-
-          var select = document.getElementById("_fwkeepalive_");
-          select.value = payload.period;
-
-        }catch(e){ console.log(e);}
-        $(document).trigger("closeModalLoading"); // set confirmation
-      }
-
-      if(topic.endsWith("log")){
-        try{
-          payload = JSON.parse(payload)
-
-          var select = document.getElementById("_fwlogslevel_");
-          select.value = payload.level;
-
-        }catch(e){ console.log(e);}
-        $(document).trigger("closeModalLoading"); // set confirmation
+            }catch(e){ console.log(e);}
+            $(document).trigger("closeModalLoading"); // set confirmation
+            break;
+          }
       }
 
       if(topic.endsWith("set")){
@@ -764,8 +753,7 @@
 
     function sendMessage(topic,payload){
       message = new Paho.MQTT.Message(payload);
-      message.destinationName = project+"/"+uid+"/"+topic;
-
+      message.destinationName = project_name+"/"+uid+"/"+topic;
       loading.modal('show');
       setTimeout(()=>{
         client.send(message);
@@ -782,28 +770,20 @@
       });
     }
 
-    function addSelectedOption(id,release){
-
-      $(id).append(`<option select value="${release}">${release}</option>`);
+    function addOption(id,value, select){
+      if(select){
+        $(id).append(`<option selected value="${value}">${value}</option>`);
+      }else{
+        $(id).append(`<option value="${value}">${value}</option>`);
+      }
     }
 
-    function addOption(id,release){
-
-      $(id).append(`<option value="${release}">
-                                 ${release}
-                            </option>`);
-    }
-
-    function addSelectedOption2(id,value,description){
-
-      $(id).append(`<option select value="${value}">${description}</option>`);
-    }
-
-    function addOption2(id,value,description){
-
-      $(id).append(`<option value="${value}">
-                                 ${description}
-                            </option>`);
+    function addOptionWithDescription(id,value,description, select){
+      if(select){
+        $(id).append(`<option selected value="${value}">${description}</option>`);
+      }else{
+        $(id).append(`<option value="${value}">${description}</option>`);
+      }
     }
 
     // On mqtt connect, topic subscribe, change status device
