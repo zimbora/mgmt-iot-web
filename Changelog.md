@@ -3,6 +3,7 @@
 ## version 1.0.61
   - Small refactor to db queries and struct shared with frontend.
   - Fixes graph display
+  - Depends on mqtt-devices-parser v1.0.13
 
 ## version 1.0.60
   - supports request to send MQTT message and gets response from to device
