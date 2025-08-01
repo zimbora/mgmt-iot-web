@@ -31,9 +31,7 @@ var Display = {
   showFwLogs : (sensor)=>{
 
     moment.locale('pt');
-    console.log(moment.locale());
     api.getFwLogs(deviceID,sensor,(err,res)=>{
-      console.log(res);
       if(err) console(err);
       if(res?.length > 0 && typeof res[0][sensor] === "string" )
         Display.showList(sensor,res);
