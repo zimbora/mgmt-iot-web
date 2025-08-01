@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.0.61
+  - Small refactor to db queries and struct shared with frontend.
+  - Fixes graph display
+
 ## version 1.0.60
   - supports request to send MQTT message and gets response from to device
 
