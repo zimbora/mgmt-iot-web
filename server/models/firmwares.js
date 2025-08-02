@@ -86,10 +86,10 @@ module.exports =  {
     })
   },
 
-  add : async (filename,originalname,fw_version,app_version,modelId,cb)=>{
+  add : async (filename,originalname,version,app_version,modelId,cb)=>{
 
     let query = "select * from ?? where ?? = ? and ?? = ? and ?? = ?";
-    let table = ["firmwares","fw_version",fw_version,"app_version",app_version,"model_id",modelId];
+    let table = ["firmwares","version",version,"app_version",app_version,"model_id",modelId];
     query = mysql.format(query,table);
 
     db.queryRow(query)
@@ -100,14 +100,14 @@ module.exports =  {
         var token = "";
         
         var SHA256 = require("crypto-js/sha256");
-        let message = originalname+"\º~"+fw_version+app_version;
+        let message = originalname+"\º~"+version+app_version;
         let key = String(Date.now()/3621)
         var token = CryptoJS.HmacSHA256(message, key).toString();
 
         let obj = {
           filename : filename,
           originalname : originalname,
-          version : fw_version,
+          version : version,
           app_version : app_version,
           model_id : modelId,
           token : token,
