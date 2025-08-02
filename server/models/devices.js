@@ -640,10 +640,6 @@ var self = module.exports =  {
 
   getModelInfo : async (deviceId,cb)=>{
 
-    let project = await self.getProject(deviceId);
-    if(project == null)
-      return cb(`no project found for deviceId ${deviceId}`,null);
-
     let model = await self.getModel(deviceId);
     if(model == null)
       return cb(null,null);
@@ -651,9 +647,9 @@ var self = module.exports =  {
     if(model == "sniffer-gw"){
       model = "sniffer";
     }
-    let query = `Select * from ?? where device_id = ?`;
+    let query = `Select * from ?? where name = ?`;
 
-    let table = [model,deviceId]
+    let table = ["models",model]
     query = mysql.format(query,table);
 
     db.queryRow(query)
