@@ -19,7 +19,7 @@ module.exports = {
       return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"No files were uploaded");
     }
 
-    const version = req.body?.version | req.body?.fw_version;
+    const version = req.body?.version || req.body?.fw_version;
     const app_version = req.body?.app_version;
 
     if(version == null){
