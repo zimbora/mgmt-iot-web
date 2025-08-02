@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.0.62
+  - fixes fw upload
+  - server/models/devices: fixes getModelInfo call
+
 ## version 1.0.61
   - Small refactor to db queries and struct shared with frontend.
   - Fixes graph display
