@@ -77,6 +77,9 @@
                 </label>
                 <select class="form-select fwReleaseOption" id="_fwrelease_">
                 </select>
+                <button id="fotaTrigger" class="btn btn-warning btn-sm" type="button" title="Trigger manual FOTA update check">
+                  <i class="bi bi-download"></i> FOTA
+                </button>
               </div>
             </div>
           </div>
@@ -609,6 +612,22 @@
 
     $("#logLevelget").click(()=>{
       sendMessage("settings/log/get","");
+    });
+
+    $("#fotaTrigger").click(()=>{
+      api.triggerFotaCheck(deviceID,(err,res)=>{
+        if(err){
+          $('#error').text("FOTA trigger failed");
+          if(err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          // Show success message - you could add a success modal or notification here
+          console.log("FOTA check triggered successfully:", res);
+        }
+      });
     });
 
     // called when the client connects
