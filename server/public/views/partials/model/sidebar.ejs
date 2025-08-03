@@ -80,7 +80,7 @@
                           class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
                       </li>
                       <%}%>
-                      <% if(model.fw_enabled){%>
+                      <% if(user.level >= 4 && model.fw_enabled){%>
                       <li class="w-100">
                           <a href="./firmwares"
                           <% if(page == "Firmwares"){%>
