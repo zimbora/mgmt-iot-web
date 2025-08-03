@@ -286,8 +286,8 @@ var api = {
     });
   },
 
-  triggerFotaCheck : (deviceID, cb)=>{
-    fetch(Settings.api+"/device/"+deviceID+"/check/fota", {
+  triggerFota : (deviceID, cb)=>{
+    fetch(Settings.api+"/device/"+deviceID+"/trigger/fota", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

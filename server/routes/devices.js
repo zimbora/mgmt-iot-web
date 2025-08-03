@@ -86,8 +86,8 @@ router.use("/:device_id",Client.checkDeviceWriteAccess,(req,res,next)=>{next()})
 router.route("/:device_id/release")
   .put(Device.updateDeviceRelease)
 
-router.route("/:device_id/check/fota")
-  .post(Device.checkFota)
+router.route("/:device_id/trigger/fota")
+  .post(Device.triggerFota)
 
 router.route("/:device_id/settings")
   .put(Device.updateDeviceSettings)
