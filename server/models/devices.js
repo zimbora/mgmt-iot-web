@@ -1001,7 +1001,6 @@ var self = module.exports =  {
 
     lVersion = await firmwares.getLatestVersion(device.model_id, device.accept_release);
     lAppVersion = await firmwares.getLatestAppVersion(device.model_id, device.accept_release);
-    console.log(lVersion);
 
     let firmware = null;
     if(lAppVersion?.version && lAppVersion?.app_version != device.app_version){
