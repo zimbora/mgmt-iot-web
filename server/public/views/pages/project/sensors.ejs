@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <style>
+
+    .float-right {
+      float: right;
+    }
+
+
+  </style>
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../../partials/model/scripts.ejs') %>
+  <%- include('../../partials/model/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/addSensor.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js"></script>
+  <script src="./assets/js/ace.js"></script>
+  <script type="module" src="./app.mjs"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/model/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="content-header">
+              <h3><%= model.name %></h3>
+            </div>
+            <div class="row">
+
+                <div class="card py-3">
+                  <h5 class="card-title">
+                    Available Sensors
+                    <button type="button" class="btn btn-primary mb-2 float-right" onclick="showAddSensorModal()"><i class="fa-solid fa-plus"></i></button>
+                  </h5>
+                  <div class="card-body">
+                    <table id="sensors" class="display">
+                      <thead>
+                        <tr>
+                          <th>active</th>
+                          <th>ref</th>
+                          <th>name</th>
+                          <th>type</th>
+                          <th>created</th>
+                          <th>updated</th>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
+                </div>
+
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+
+    var t;
+    var modelID = api.getModelID();
+    var model = <%- JSON.stringify(model) %>;
+    var timerInputChange = null;
+
+    $(document).ready(function () {
+
+      $('[data-toggle="tooltip"]').tooltip();
+
+      const app = require('./app.mjs');
+      t = $('#sensors').DataTable();
+
+      api.model.getSensors(modelID,(err,res)=>{
+        if(err) console.log(err)
+        else{
+          res.forEach((item, i) => {
+            addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.createdAt).format('YY/MM/DD LT'),moment(item.updatedAt).format('YY/MM/DD LT'));
+
+            if(i==res.length-1){
+              $('.form-check-input').on('change', function() {
+                let id = $(this).attr('id');
+                let active = "0";
+                if ($(this).is(':checked'))
+                    active = "1";
+
+                api.model.updateSensor(modelID,id,"active",active,(err,res)=>{
+                  if(err){
+                    $('#error').text("Your request cannot be executed");
+                    $('#suggestion').text(err);
+                    $('#modalError').modal('show');
+                  }
+                });
+
+              });
+
+              $('.select_type').on('change', function() {
+                  let id = $(this).attr('id');
+                  let type = $(this).val();
+                  api.model.updateSensor(modelID,id,"type",type,(err,res)=>{
+                    if(err){
+                      $('#error').text("Your request cannot be executed");
+                      $('#suggestion').text(err);
+                      $('#modalError').modal('show');
+                    }
+                  });
+              });
+            }
+
+          });
+
+        }
+      })
+    });
+
+    function addRow(id,ref,name,type,active,created,updated){
+      let state = "";
+      if(active)
+        state = "checked"
+      let json = type == "json" ? "selected" : "";
+      let string = type == "string" ? "selected" : "";
+      let number = type == "number" ? "selected" : "";
+      t.row.add([
+        `<div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" id=${id} ${state}>
+        </div>`,
+        ref,
+        `<input type="text" class="form-control" id=${id} value=${name} oninput="handleNameChange(${id},this.value)">`,
+        `<select class="form-control select_type" id=${id} name="dataTypes" value=${type}>
+          <option value=""></option>
+          <option ${json} value="json">json</option>
+          <option ${string} value="string">string</option>
+          <option ${number} value="number">number</option>
+        </select>`,
+        created,
+        updated
+      ]).draw(true);
+
+    }
+
+    function handleNameChange(id,value){
+      clearTimeout(timerInputChange);
+      timerInputChange = setTimeout(function() {
+        api.model.updateSensor(modelID,id,"name",value,(err,res)=>{
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }
+        });
+
+      }, 1000); // 500ms delay
+    }
+
+    function showAddSensorModal(){
+      $('#modalAddSensor').modal('show');
+    }
+
+    function addSensor(){
+      let ref = $("#_modalRef_").val();
+      let name = $("#_modalName_").val();
+      let type = $("#type").val();
+
+      api.model.addSensor(modelID,ref,name,type,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          location.reload();
+        }
+      });
+    }
+
+  </script>
+</body>
+</html>

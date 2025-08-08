@@ -12,12 +12,14 @@
 
   <%- include('../../partials/modal/confirmation.ejs') %>
   <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/success.ejs') %>
   <%- include('../../partials/modal/loading.ejs') %>
   <%- include('../../partials/modal/timeout.ejs') %>
   <%- include('../../partials/modal/logsChart.ejs') %>
   <%- include('../../partials/modal/logsList.ejs') %>
 
 
+  <script src="./assets/js/jquery.min.js"></script>
   <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
   <script src="./assets/js/jquery.dataTables.min.js"></script>
   <script src="./assets/js/ace.js"></script>
@@ -129,17 +131,29 @@
               </div>
             </div>
             <div class="btn-group">
-              <label class="input-group-text" for="inputGroupSelect21">use device config:</label>
-                <select class="form-select settingsDeviceRef" id="_device_ref_">
-                  <% console.log(device) %>
-                  <% if(device.settings_ref == null){ %>
-                    <option selected value="null">own</option>
-                  <%} else {%>
-                    <option select value="<%= device?.settings_ref %>"><%= device?.settings_ref %>
-                    <option value="null">own</option>
-                    </option>
-                  <% } %>
+              <label class="input-group-text" for="inputGroupSelect21">Template:</label>
+                <select class="form-select templateSelect" id="_template_select_">
+                  <option value="">Select a template...</option>
+                  <!-- populated by JS -->
                 </select>
+                <button id="assignTemplate" class="btn btn-primary btn-sm" type="button" title="Assign template to device">
+                  <i class="bi bi-check"></i> Assign
+                </button>
+            </div>
+            
+            <!-- Show assigned templates -->
+            <div class="mt-2" id="assignedTemplates">
+              <% if(device.template_id) { %>
+                <div class="alert alert-info">
+                  <strong>Assigned Template:</strong> 
+                  <span id="currentTemplate">Template ID: <%= device.template_id %></span>
+                  <button class="btn btn-sm btn-outline-danger ms-2" onclick="unassignTemplate()" title="Remove template assignment">
+                    <i class="bi bi-x"></i> Remove
+                  </button>
+                </div>
+              <% } else { %>
+                <div class="text-muted" id="noTemplate">No template assigned</div>
+              <% } %>
             </div>
           </div>
         </div>
@@ -308,6 +322,12 @@
               </div>
               <div class="card-body">
                 <form class="row g-3 needs-validation" novalidate>
+                  <div class="col-md-12">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="mqtt_active">
+                      <label class="form-check-label" for="mqtt_active">Active</label>
+                    </div>
+                  </div>
                   <div class="col-md-10">
                     <label for="validationMQTT01" class="form-label">Host</label>
                     <input type="text" class="form-control" id="mqtt_host" 
@@ -357,6 +377,8 @@
       </div>
     </div>
   </div>
+
+  <!--<script></script>-->
 
   <script>
 
@@ -424,6 +446,9 @@
       document.querySelector('#app_version').value = device?.app_version || device?.version;
       project = device.project;
       uid = device.uid;
+
+      // Load templates for the project
+      loadTemplatesForProject(device.project_id);
 
       release_arr.forEach((item,i)=>{
         addOption('#_fwrelease_',item, item == device?.accept_release);
@@ -533,13 +558,10 @@
 
       // connect the client
       if(mqtt != null){
-        if(window.location.protocol == "https:"){
-          Settings.mqtt.ssl = true;
-          Settings.mqtt.port = 443;
-        }
 
         client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
 
+        console.log(Settings.mqtt)
         // set callback handlers
         client.onConnectionLost = onConnectionLost;
         client.onMessageArrived = onMessageArrived;
@@ -622,12 +644,13 @@
       let port = document.querySelector('#mqtt_port').value;
       let user = document.querySelector('#mqtt_user').value;
       let pwd = document.querySelector('#mqtt_pwd').value;
+      let active = document.querySelector('#mqtt_active').checked ? 1 : 0;
       data = {
         host : host,
         port : port,
         user : user,
         pass : pwd,
-        active : 1
+        active : active
       }
       sendMessage("settings/mqtt/set",JSON.stringify(data));
     });
@@ -645,6 +668,11 @@
     });
 
     $("#fotaTrigger").click(()=>{
+      // enhancements
+      // check last version using api
+      // display model confirmation with version to update
+      // proceed with tigger fota
+      // show modal loading
       api.triggerFota(deviceID,(err,res)=>{
         if(err){
           $('#error').text("FOTA trigger failed");
@@ -655,7 +683,10 @@
           $('#modalError').modal('show');
         }else{
           // Show success message - you could add a success modal or notification here
-          console.log("FOTA check triggered successfully:", res);
+          console.log(res);
+          $('#successMsg').text(res);
+          $('#modalSuccess').modal('show');
+          //console.log("FOTA check triggered successfully:", res);
         }
       });
     });
@@ -766,6 +797,7 @@
               document.querySelector('#mqtt_port').value = payload.port;
               document.querySelector('#mqtt_user').value = payload.user;
               document.querySelector('#mqtt_pwd').value = payload.pass;
+              document.querySelector('#mqtt_active').checked = payload.active == 1;
             }catch(e){ console.log(e);}
             $(document).trigger("closeModalLoading"); // get confirmation
             break;
@@ -832,6 +864,91 @@
         $(id).append(`<option selected value="${value}">${description}</option>`);
       }else{
         $(id).append(`<option value="${value}">${description}</option>`);
+      }
+    }
+
+    // Template management functions
+    function loadTemplatesForProject(projectId) {
+      if (!projectId) return;
+      
+      api.template.list(projectId, function(err, templates) {
+        if (err) {
+          console.error('Error fetching templates:', err);
+          return;
+        }
+        
+        const select = document.getElementById('_template_select_');
+        select.innerHTML = '<option value="">Select a template...</option>';
+        
+        templates.forEach(template => {
+          const opt = document.createElement('option');
+          opt.value = template.id;
+          opt.textContent = `${template.tag} - ${template.name}`;
+          if (template.id == device.template_id) {
+            opt.selected = true;
+          }
+          select.appendChild(opt);
+        });
+        
+        // Update current template display
+        updateCurrentTemplateDisplay(templates);
+      });
+    }
+
+    function updateCurrentTemplateDisplay(templates) {
+      const currentTemplateEl = document.getElementById('currentTemplate');
+      if (device.template_id && currentTemplateEl) {
+        const template = templates.find(t => t.id == device.template_id);
+        if (template) {
+          currentTemplateEl.textContent = `${template.tag} - ${template.name}`;
+        }
+      }
+    }
+
+    $("#assignTemplate").click(() => {
+      const templateSelect = document.getElementById('_template_select_');
+      const templateId = templateSelect.value;
+      
+      if (!templateId) {
+        alert('Please select a template to assign');
+        return;
+      }
+      
+      assignTemplateToDevice(templateId);
+    });
+
+    function assignTemplateToDevice(templateId) {
+      api.updateDeviceField(deviceID, "template_id", templateId, (err, res) => {
+        if (err) {
+          $('#error').text("Failed to assign template");
+          if (err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        } else {
+          // Update the device object and refresh display
+          device.template_id = templateId;
+          location.reload(); // Reload to show updated template assignment
+        }
+      });
+    }
+
+    function unassignTemplate() {
+      if (confirm('Are you sure you want to remove the template assignment?')) {
+        api.updateDeviceField(deviceID, "template_id", null, (err, res) => {
+          if (err) {
+            $('#error').text("Failed to remove template");
+            if (err.hasOwnProperty("sqlMessage"))
+              $('#suggestion').text(err.sqlMessage);
+            else
+              $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          } else {
+            device.template_id = null;
+            location.reload(); // Reload to show updated template assignment
+          }
+        });
       }
     }
 

@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/head.ejs') %>
+  
+  <style>
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+    
+    .object-tabs .nav-link {
+      border-radius: 0;
+    }
+    
+    .object-tabs .nav-link.active {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .small-btn {
+      padding: 0rem 0.5rem;
+      height: 1.5rem;
+    }
+
+    .small-icon {
+      font-size: 0.75rem;
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px; /* Reduced width */
+      height: 20px; /* Reduced height */
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 10px; /* Rounded corners */
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px; /* Reduced size of the toggle */
+      width: 14px; /* Reduced size of the toggle */
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%; /* Rounded toggle */
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+      -webkit-transform: translateX(14px);
+      -ms-transform: translateX(14px);
+      transform: translateX(14px);
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('../../partials/scripts.ejs') %>
+  <%- include('../../partials/project/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/success.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet">
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js"></script>
+
+  <div class="container-fluid">
+    <div class="row flex-nowrap">
+      <%- include('../../partials/device/sidebar.ejs') %>
+      <div id="loading"></div>
+      <div class="col py-3">
+        <div class="content-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h3><%= project?.name %> - Edit device: <%= device?.name || 'Unknown' %></h3>
+          </div>
+        </div>
+
+        <!-- LWM2M Template Objects and Resources Section -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="card-title">LWM2M Objects and Resources</h5>
+              </div>
+              <div id="resourcesTemplate"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="card-title">LWM2M Default Objects and Resources</h5>
+              </div>
+              <div class="card-body d-flex align-items-center">
+                <div id="objectDropdown" class="flex-grow-1"></div>
+                <button class="btn btn-primary ms-3" onclick="addTemplateObject()">addObject</button>
+              </div>
+              <div id="objectContent"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Resource Modal -->
+  <div class="modal fade" id="editResourceModal" tabindex="-1" aria-labelledby="editResourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editResourceModalLabel">Edit Resource</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editResourceForm">
+
+            <!-- Hidden Resource ID -->
+            <input type="hidden" id="resourceEntryId" name="resourceEntryId" placeHolder="defaultId">
+
+            <!-- Resource ID (non-editable) -->
+            <div class="mb-3">
+              <label for="resourceTitle" class="form-label">Title</label>
+              <input type="text" class="form-control" id="resourceTitle" name="resourceTitle">
+            </div>
+
+            <!-- Resource ID (non-editable) -->
+            <div class="mb-3">
+              <label for="resourcePath" class="form-label">Path</label>
+              <input type="text" class="form-control" id="resourcePath" name="resourcePath" readonly>
+            </div>
+
+            <!-- Attributes -->
+            <fieldset class="mb-3">
+              <legend>Attributes</legend>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="observable" name="observable">
+                <label class="form-check-label" for="observable">Observable</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="readable" name="readable">
+                <label class="form-check-label" for="readable">Readable</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="writable" name="writable">
+                <label class="form-check-label" for="writable">Writable</label>
+              </div>
+              <div class="mb-3">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" id="type" name="type">
+                  <option value="integer">Integer</option>
+                  <option value="float">Float</option>
+                  <option value="string">String</option>
+                  <option value="boolean">Boolean</option>
+                  <option value="time">TIME</option>
+                  <option value="json">JSON</option>
+                </select>
+              </div>
+            </fieldset>
+
+            <!-- Observe -->
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="observe" name="observe">
+                <label class="form-check-label" for="observe">Observe</label>
+              </div>
+            </div>
+
+            <!-- Read Interval -->
+            <div class="mb-3">
+              <label for="readInterval" class="form-label">Read Interval</label>
+              <select class="form-select" id="readInterval" name="readInterval">
+                <option value="60">1 Minute</option>
+                <option value="300">5 Minutes</option>
+                <option value="900">15 Minutes</option>
+                <option value="1800">30 Minutes</option>
+                <option value="3600">1 Hour</option>
+                <option value="14400">4 Hours</option>
+                <option value="21600">6 Hours</option>
+                <option value="43200">12 Hours</option>
+                <option value="86400">24 Hours</option>
+              </select>
+            </div>
+
+            <!-- Default Data -->
+            <div class="mb-3">
+              <label for="defaultData" class="form-label">Default Data</label>
+              <input type="text" class="form-control" id="defaultData" name="defaultData" placeholder="Enter default data">
+            </div>
+
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveResource()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.mjs"></script>
+  
+  <script>
+    var deviceId = '<%= device?.id || "" %>';
+    var projectId = '<%= project?.id || "" %>';
+    var deviceResources = [];
+    var objectTables = []; // Store DataTable instances for each object
+    var lwm2mObjects = [];
+
+    $(document).ready(function () {
+      // Validate that we have the required IDs
+      if (!deviceId || !projectId) {
+        $('#loading').html('<div class="alert alert-danger">Error: Missing device or project information.</div>');
+        return;
+      }
+      
+      loadLwm2mDeviceResources();
+
+      loadLwm2mObjects();
+    });
+
+    function loadLwm2mDeviceResources() {
+
+      const contentContainer = $('#resourcesTemplate');
+      contentContainer.empty();
+
+      contentContainer.html(`
+          <div class="mt-3">
+            <h6>Resources for device
+            <button class="btn btn-primary ms-2 small-btn" 
+              data-resource='' 
+              onclick="newResource(this)">
+              <i class="fas fa-plus small-icon"></i> <!-- Font Awesome pencil icon -->
+            </button>
+            </h6>
+            <div id="loading-device" class="text-center py-3">
+              <div class="spinner-border spinner-border-sm" role="status"></div>
+              <span>Loading resources...</span>
+            </div>
+            <div class="table-responsive"> <!-- Add table-responsive for full width -->
+              <table id="resources-table-device" class="display table" style="width: 100%;"> <!-- Set width to 100% -->
+                <thead>
+                  <tr>
+                    <th style="width: 60px;">Edit</th>
+                    <th style="width: 40px;">Path</th>
+                    <th style="width: 120px;">Name</th>
+                    <th style="width: 40px;">Template</th>
+                    <th style="width: 20px;" title="Readable" >R</th>
+                    <th style="width: 20px;" title="Writable" >W</th>
+                    <th style="width: 20px;" title="Observable" >O</th>
+                    <th style="width: 20px;" title="Observe by default" >OD</th>
+                    <th style="width: 20px;" title="Observation Period" >P</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `);
+
+      api.device.getLwm2mResources(deviceId, null, (err, resources) => {
+
+        $('#loading-device').hide();
+        if (err) {
+          console.error('Error loading LWM2M device resources:', err);
+          $('#loading').html('<div class="alert alert-danger">Error loading LWM2M device resources: ' + err + '</div>');
+          return;
+        }
+
+        if (!resources || resources.length === 0) {
+          $('#loading').html('<div class="alert alert-info">No LWM2M device resources found.</div>');
+          return;
+        }
+
+        deviceResources = resources;
+        const loadingEl = $(`#loading-device`);
+        const tableEl = $(`#resources-table-device`);
+        
+        if (err) {
+          console.error(`Error loading device resources:`, err);
+          loadingEl.html(`<div class="alert alert-danger">Error loading resources: ${err}</div>`);
+          return;
+        }
+
+        loadingEl.hide();
+        
+        if (!resources || resources.length === 0) {
+          loadingEl.html(`<div class="alert alert-info">No resources found for this device.</div>`).show();
+          return;
+        }
+
+        // Initialize DataTable
+        const table = tableEl.DataTable({
+          data: resources,
+          columns: [
+            {
+              data: null,
+              render: function(data, type, row) {
+                const resourceId = row.resourceId ? row.resourceId : null;
+                const entryId = row.id;
+
+                return `
+                  <button class="btn btn-danger small-btn" 
+                    data-resource='${JSON.stringify(data)}' 
+                    onclick="deleteResource('${entryId}', this)">
+                    <span class="icon small-icon" >&times;</span>
+                  </button>
+                  <button class="btn btn-primary ms-2 small-btn" 
+                    data-resource='${JSON.stringify(data)}' 
+                    onclick="editResource('${entryId}', this)">
+                    <i class="fas fa-pencil-alt small-icon"></i> <!-- Font Awesome pencil icon -->
+                  </button>
+                  `;
+                
+
+              }
+            },
+            {
+              data: null,
+              render: function(data, type, row) {
+                // Safely access row.description.attributes.title
+                if(row.resourceId != null)
+                  return `${row.objectId}/${row.objectInstanceId}/${row.resourceId}`;
+                else
+                  return `${row.objectId}`;
+              }
+            },
+            {
+              data: null,
+              render: function(data, type, row) {
+                // Safely access row.description.attributes.title
+                return row.description?.attributes?.title || 'No Title';
+              }
+            },
+            {
+              data: null,
+              render: function(data, type, row) {
+                // Render template tag as green badge if it exists
+                if (row.template_tag) {
+                  return `<span class="badge bg-success">${row.template_tag}</span>`;
+                } else {
+                  return '';
+                }
+              }
+            },
+            {
+              data: null,
+              render: function (data, type, row) {
+                // Render readable attribute
+                return row.description?.attributes?.readable ? 'Yes' : 'No';
+              },
+            },
+            {
+              data: null,
+              render: function (data, type, row) {
+                // Render writable attribute
+                return row.description?.attributes?.writable ? 'Yes' : 'No';
+              },
+            },
+            {
+              data: null,
+              render: function (data, type, row) {
+                // Render observable attribute
+                return row.description?.attributes?.observable ? 'Yes' : 'No';
+              },
+            },
+            {
+              data: null,
+              render: function (data, type, row) {
+                // Render observable attribute
+                return row.observe ? 'Yes' : 'No';
+              },
+            },
+            {
+              data: null,
+              render: function (data, type, row) {
+                // Render observable attribute
+                return row.readInterval;
+              },
+            },
+          ],
+          pageLength: 10,
+          searching: true,
+          ordering: true,
+          order: [], // Disable initial automatic ordering
+        });
+
+        tableEl.show();
+      });
+    }
+
+    // --- Default Objects and Resources calls ---
+    function loadLwm2mObjects(objectId) {
+      api.lwm2m.getObjects((err, objects) => {
+        if (err) {
+          console.error('Error loading LWM2M objects:', err);
+          $('#loading').html('<div class="alert alert-danger">Error loading LWM2M objects: ' + err + '</div>');
+          return;
+        }
+
+        if (!objects || objects.length === 0) {
+          $('#loading').html('<div class="alert alert-info">No LWM2M objects found.</div>');
+          return;
+        }
+        
+        createObjectDropdown(objects, objectId)
+        $('#loading').hide();
+        
+      });
+    }
+
+    function createObjectDropdown(objects, objectId) {
+
+      objectId = objectId != null ? objectId : 0;
+      const dropdownContainer = $('#objectDropdown');
+      const contentContainer = $('#objectContent');
+
+      dropdownContainer.empty();
+      contentContainer.empty();
+
+      lwm2mObjects = objects;
+
+      // Create dropdown menu with the first object as the selected object
+      const firstObject = objects[objectId];
+      const dropdownMenu = `
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="objectDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+            Object ${firstObject.objectId !== undefined ? firstObject.objectId : firstObject.id} - ${firstObject.name || 'Unknown'}
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="objectDropdownButton" id="objectDropdownMenu">
+            ${objects
+              .map(
+                (object, index) => `
+                <li>
+                  <a class="dropdown-item ${index === 0 ? 'active' : ''}" href="#" data-object-id="${object.objectId !== undefined ? object.objectId : object.id}">
+                    Object ${object.objectId !== undefined ? object.objectId : object.id} - ${object.name || 'Unknown'}
+                  </a>
+                </li>
+              `
+              )
+              .join('')}
+          </ul>
+        </div>
+      `;
+
+
+      dropdownContainer.append(dropdownMenu);
+
+      // Load initial content for the first object
+      const firstObjectId = firstObject.objectId !== undefined ? firstObject.objectId : firstObject.id;
+      updateContentForObject(firstObjectId);
+
+      // Handle dropdown item selection
+      $('#objectDropdownMenu .dropdown-item').on('click', function (e) {
+        e.preventDefault();
+
+        const objectId = $(this).data('object-id');
+
+        // Remove `active` class from all dropdown items
+        $('#objectDropdownMenu .dropdown-item').removeClass('active');
+
+        // Add `active` class to the clicked item
+        $(this).addClass('active');
+
+        // Update the dropdown button text
+        $('#objectDropdownButton').text($(this).text());
+
+        // Update content for the selected object
+        updateContentForObject(objectId);
+      });
+
+      function updateContentForObject(objectId) {
+        
+        const object = objects.find((obj) => obj.objectId !== undefined ? obj.objectId : obj.id);
+
+        contentContainer.html(`
+          <div class="mt-3">
+            <h6>Resources for Object ${objectId}</h6>
+            <div id="loading-${objectId}" class="text-center py-3">
+              <div class="spinner-border spinner-border-sm" role="status"></div>
+              <span>Loading resources...</span>
+            </div>
+            <div class="table-responsive"> <!-- Add table-responsive for full width -->
+              <table id="resources-table-${objectId}" class="display table" style="width: 100%;"> <!-- Set width to 100% -->
+                <thead>
+                  <tr>
+                    <th style="width: 80px;">Include</th>
+                    <th style="width: 120px;">Resource ID</th>
+                    <th>Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `);
+
+        // Load resources for this object
+        loadResourcesForObject(objectId, true);
+      }
+    }
+
+    function loadResourcesForObject(objectId, isActive) {
+      api.lwm2m.getResources(objectId, (err, resources) => {
+        const loadingEl = $(`#loading-${objectId}`);
+        const tableEl = $(`#resources-table-${objectId}`);
+        
+        if (err) {
+          console.error(`Error loading resources for object ${objectId}:`, err);
+          loadingEl.html(`<div class="alert alert-danger">Error loading resources: ${err}</div>`);
+          return;
+        }
+
+        loadingEl.hide();
+        
+        if (!resources || resources.length === 0) {
+          loadingEl.html(`<div class="alert alert-info">No resources found for this object.</div>`).show();
+          return;
+        }
+
+        // Initialize DataTable
+        const table = tableEl.DataTable({
+          data: resources,
+          columns: [
+            {
+              data: null,
+              render: function(data, type, row) {
+                const resourceId = row.resourceId != null ? row.resourceId : null;
+                const objectId = row.objectId;
+
+                // Function to find an element that matches the criteria
+                function findMatchingResource(deviceResources, objectId, resourceId) {
+                  return deviceResources.find(resource => 
+                    resource.objectId === objectId &&
+                    resource.resourceId === resourceId
+                  );
+                }
+                
+                const resource = findMatchingResource(deviceResources, objectId, resourceId); // This would come from device_resources table
+                
+                return `
+                  <label class="switch">
+                    <input type="checkbox" data-resource='${JSON.stringify(data)}' ${resource ? 'checked' : ''} 
+                           onchange="toggleResource('${resource?.id}', this, this.checked)">
+                    <span class="slider"></span>
+                  </label>
+                `;
+              }
+            },
+            { data: 'resourceId' },
+            { data: 'name' },
+          ],
+          pageLength: 10,
+          searching: true,
+          ordering: true,
+          order: [], // Disable initial automatic ordering
+        });
+
+        objectTables[objectId] = table;
+        tableEl.show();
+      });
+    }
+
+    function toggleResource(entryId, element, isIncluded) {
+      const resourceData = JSON.parse(element.getAttribute('data-resource'));
+      
+      let resource = {};
+      resource.objectId = resourceData.objectId;
+      resource.objectInstanceId = 0;
+      resource.resourceId = resourceData.resourceId;
+      resource.description = {}
+      resource.description.attributes = resourceData.description?.attributes;
+      resource.defaultData = {};
+      resource.observe = false;
+      resource.readInterval = 0;
+      
+      if (isIncluded) {
+
+        // Check if object is already associated to the device
+        const objectExists = deviceResources.find(deviceResource => 
+          deviceResource.objectId == resource.objectId && 
+          deviceResource.objectInstanceId === null && 
+          deviceResource.resourceId === null
+        );
+        
+        if (!objectExists) {
+          $('#error').text('Error adding resource to device');
+          $('#suggestion').text(`Object ${resource.objectId} is not associated with this device. Please add the object first before adding resources to it.`);
+          $('#modalError').modal('show');
+          
+          // Revert the toggle
+          $(element).prop('checked', false);
+          return;
+        }
+        
+        // Add resource to device
+        api.device.lwm2m.addResource(deviceId, resource, (err, res) => {
+          if (err) {
+            console.error('Error adding device resource:', err);
+            $('#error').text('Error adding resource to device');
+            $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+            $('#modalError').modal('show');
+            
+            // Revert the toggle
+            $(element).prop('checked', false);
+          } else {
+            loadLwm2mDeviceResources();
+            loadLwm2mObjects(resource.objectId);
+          }
+        });
+      } else {
+        api.device.lwm2m.deleteResource(deviceId, entryId, (err, res) => {
+          if (err) {
+            console.error('Error removing device resource:', err);
+            $('#error').text('Error removing resource from device');
+            $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+            $('#modalError').modal('show');
+            
+            // Revert the toggle
+            $(element).prop('checked', true);
+          } else {
+            loadLwm2mDeviceResources();
+            loadLwm2mObjects(resource.objectId);
+          }
+        });
+      }
+    }
+
+    function addTemplateObject() {
+      // Get the selected dropdown item's ID
+      const selectedObjectId = $('#objectDropdownMenu .dropdown-item.active').data('object-id');
+
+      // Check if there's a valid selection
+      if (selectedObjectId === undefined) {
+        console.error('No object selected from the dropdown.');
+        alert('Please select an object from the dropdown before adding.');
+        return;
+      }
+
+      selectedObject = lwm2mObjects[selectedObjectId];
+
+      const object = {
+        objectId : selectedObject.objectId,
+        description: {
+          attributes: {
+            type: 'json',
+            title: selectedObject.name,
+            readable: true,
+            writable: false,
+            observable: false,
+          }
+        },
+        defaultData: {},
+        observe: false,
+        readInterval: 0,
+      };
+      
+      // Call the API to add the device object
+      api.device.lwm2m.addObject(deviceId, object, (err, response) => {
+        if (err) {
+          console.error('Error adding device object:', err);
+          $('#error').text('Error adding object to device');
+          $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+          $('#modalError').modal('show');
+          return;
+        }
+
+        loadLwm2mDeviceResources();
+      });
+      
+    }
+
+    // --- Editable Template calls ---
+
+    // objects and resources
+    function deleteResource(entryId, element) {
+      const resourceData = JSON.parse(element.getAttribute('data-resource'));
+      
+      if(resourceData?.id !== undefined){
+        api.device.lwm2m.deleteResource(deviceId, entryId,(err,res)=>{
+          if(!err){
+            loadLwm2mDeviceResources();
+          }else{
+            console.log(err)
+            $('#error').text('Error deleting device resource');
+            $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+            $('#modalError').modal('show');
+            return;
+          }
+        })
+      }
+    }
+
+    function newResource(element) {
+      //const resourceData = JSON.parse(element.getAttribute('data-resource'));
+      openAddResourceModal();
+    }
+
+    // objects and resources
+    function editResource(entryId, element) {
+      const resourceData = JSON.parse(element.getAttribute('data-resource'));
+      openEditResourceModal(resourceData);
+    }
+
+    // objects and resources
+    function openAddResourceModal(resource) {
+      // Show the modal
+      let resourcePath = document.getElementById('resourcePath');
+      // Make it editable
+      resourcePath.readOnly = false;
+      // Set the placeholder
+      resourcePath.placeholder = "/0/0/0";
+
+      document.getElementById('defaultData').value = '{"value":""}'
+
+      const modal = new bootstrap.Modal(document.getElementById('editResourceModal'));
+      modal.show();
+    }
+
+    // objects and resources
+    function openEditResourceModal(resource) {
+      
+      const attributes = resource.description?.attributes;
+      const modalTitle = document.getElementById('editResourceModalLabel');
+      
+      document.getElementById('resourceEntryId').value = resource.id;
+      document.getElementById('resourceTitle').value = attributes.title;
+
+      // Populate the modal with the resource data
+      document.getElementById('observable').checked = attributes?.observable || false;
+      document.getElementById('readable').checked = attributes?.readable || false;
+      document.getElementById('writable').checked = attributes?.writable || false;
+      if(resource.resourceId != null){
+        modalTitle.textContent = `Edit Resource: ${attributes?.title || 'Unnamed'}`; // Fallback to 'Unnamed' if title is not available
+        document.getElementById('resourcePath').value = resource.objectId + "/" + resource.objectInstanceId + "/" + resource.resourceId;
+        document.getElementById('type').value = attributes?.type || 'string';
+      }
+      else{
+        modalTitle.textContent = `Edit Object: ${attributes?.title || 'Unnamed'}`; // Fallback to 'Unnamed' if title is not available
+        document.getElementById('resourcePath').value = resource.objectId
+        document.getElementById('type').value = attributes?.type || 'json';
+      }
+
+      document.getElementById('observe').checked = resource.observe || false;
+      document.getElementById('readInterval').value = resource.readInterval;
+      document.getElementById('defaultData').value = 
+        typeof resource.defaultData === 'object' && resource.defaultData !== null
+          ? JSON.stringify(resource.defaultData, null, 2) // Format as JSON string
+          : resource.defaultData || '';
+
+      // Show the modal
+      const modal = new bootstrap.Modal(document.getElementById('editResourceModal'));
+      modal.show();
+    }
+
+    // objects and resources
+    function saveResource() {
+      // Gather updated values from the form
+      const entryId = document.getElementById('resourceEntryId').value // Include the non-editable ID
+      const path = document.getElementById('resourcePath').value // Include the non-editable ID
+      
+      let defaultData = document.getElementById('defaultData').value;
+      if(defaultData){
+        try{
+          defaultData = JSON.parse(defaultData)
+          if( document.getElementById('type').value === "json" && typeof defaultData?.value !== 'object'){
+            alert(
+              'Error updating device resource\n' +
+              'default data value property is not an object as selected previously'
+            );
+            return;
+          }else if(document.getElementById('type').value !== "json" && typeof defaultData?.value === 'object'){
+            alert(
+              'Error updating device resource\n' +
+              'default data value property is an object and different property was selected'
+            );
+            return;
+          }
+        }catch(err){
+          console.log(err)
+          alert(
+            'Error updating device resource\n' +
+            'default data is not a JSON string'
+          );
+          return;
+        }
+      }
+
+      const updatedResource = {
+        description: {
+          attributes: {
+            observable: document.getElementById('observable').checked,
+            readable: document.getElementById('readable').checked,
+            writable: document.getElementById('writable').checked,
+            type: document.getElementById('type').value,
+            title: document.getElementById('resourceTitle').value,
+          },
+        },
+        observe: document.getElementById('observe').checked,
+        readInterval: document.getElementById('readInterval').value != "" ? document.getElementById('readInterval').value : 0,
+        defaultData,
+      };
+
+      const [objectId, objectInstanceId, resourceId] = path.split('/')
+
+      if(entryId !== ""){
+        api.device.lwm2m.updateResource(deviceId, entryId, updatedResource,(err,res)=>{
+          if(!err){
+            loadLwm2mDeviceResources();
+          }else{
+            console.log(err)  
+            $('#error').text('Error updating device resource');
+            $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+            $('#modalError').modal('show');
+            return;
+          }
+        })
+      }else{
+
+        const parts = path.replace(/^\/+/, '').split('/');
+        const [objectId, objectInstanceId, resourceId] = parts;
+
+        if(objectId !== undefined && objectInstanceId !== undefined && resourceId !== undefined){
+          // Check if object x is already associated to the device
+          const objectExists = deviceResources.find(resource => 
+            resource.objectId == objectId && 
+            resource.objectInstanceId === null && 
+            resource.resourceId === null
+          );
+          
+          if (!objectExists) {
+            alert(
+              'Error adding resource\n' +
+              `Object ${objectId} is not associated with this device.\n` +
+              'Please add the object first before adding resources to it.'
+            );
+            return;
+          }
+          
+          updatedResource.objectId = objectId;
+          updatedResource.objectInstanceId = objectInstanceId;
+          updatedResource.resourceId = resourceId;
+          api.device.lwm2m.addResource(deviceId, updatedResource,(err,res)=>{
+            if(!err){
+              loadLwm2mDeviceResources();
+            }else{
+              console.log(err)  
+              $('#error').text('Error adding new resource');
+              $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+              $('#modalError').modal('show');
+              return;
+            }
+          })
+        }else if(objectId && objectInstanceId && resourceId === undefined){
+          alert(
+            'Error creating new path\n' +
+            'adding instances without resource specified is not supported at the moment'
+          );
+          return;
+        }else if(objectId && objectInstanceId == undefined && resourceId == undefined){
+          updatedResource.objectId = objectId;
+          api.device.lwm2m.addObject(deviceId, updatedResource,(err,res)=>{
+            if(!err){
+              loadLwm2mDeviceResources();
+            }else{
+              console.log(err)  
+              $('#error').text('Error adding new object');
+              $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+              $('#modalError').modal('show');
+              return;
+            }
+          })
+        }else{
+          alert(
+            'Error creating new path\n' +
+            'Something is wrong with the new path'
+          );
+          return;
+        }
+      }
+
+      // Close the modal
+      const modalElement = document.getElementById('editResourceModal');
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      modal.hide();
+    }
+
+  </script>
+
+</body>
+</html>

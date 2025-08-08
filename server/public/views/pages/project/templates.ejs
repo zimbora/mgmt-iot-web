@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <style>
+    td.center {
+      text-align:left;
+    }
+
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;  /* Or whatever width you want */
+    }
+
+  </style>
+
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+<%- include('../../partials/project/scripts.ejs') %>
+  <%- include('../../partials/project/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/success.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js"></script>
+
+  <div class="container-fluid">
+    <div class="row flex-nowrap">
+      <%- include('../../partials/project/sidebar.ejs') %>
+      <div class="col py-3">
+        <div class="content-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h3><%= project?.name %> - Templates</h3>
+            <button id="openTemplateBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#templateModal">
+              + 
+            </button>
+          </div>
+        </div>
+      <div class="row">
+        <!--<div class="col-sm-12 mb-3 mb-sm-0">-->
+        <div class="card overflow-auto" style="width:100%">
+          <div class="card-body">
+            <table id="templates" class="display">
+              <caption><b>Templates</b></caption>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Tag</th>
+                  <th>Name</th>
+                  <th>Created At</th>
+                  <th>Updated At</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+        </div>
+        <!--</div>-->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Template Creation -->
+  <div class="modal fade" id="templateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Template</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="templateForm">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="templateTag" class="form-label">Tag</label>
+              <input type="text" class="form-control" id="templateTag" required>
+            </div>
+            <div class="mb-3">
+              <label for="templateName" class="form-label">Name</label>
+              <input type="text" class="form-control" id="templateName" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="./assets/js/ace.js"></script>
+  <script type="module" src="./app.mjs"></script>
+
+  <script>
+    var t;
+    var id;
+    let templates = <%- JSON.stringify(templates) %>;
+    var projectID = api.getProjectID();
+
+    $(document).ready(function () {
+      t = $('#templates').DataTable();
+
+      templates.forEach((item, i) => {
+        addRow(item.id, item.tag, item.name, item.createdAt, item.updatedAt);
+      });
+
+      // Handle template form submission
+      document.getElementById('templateForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent form from submitting the default way
+
+        const templateTag = document.getElementById('templateTag').value.trim();
+        const templateName = document.getElementById('templateName').value.trim();
+        
+        // Basic validation
+        if (!templateTag || !templateName) {
+          $('#error').text("Some required fields are empty");
+          $('#suggestion').text("Please enter both tag and name for the template");
+          $('#modalError').modal('show');
+          return;
+        }
+
+        // Call API to add template
+        api.addTemplate(templateTag, templateName, projectID, (err, res) => {
+          if(err){
+            $('#error').text("Error adding template");
+            if(err.hasOwnProperty("sqlMessage"))
+              $('#suggestion').text(err.sqlMessage);
+            else
+              $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }else{
+            // Show success message
+            $("#successHeader").text("Template successfully added");
+            $('#successMsg').text("Template '" + templateName + "' has been created successfully");
+            $('#modalSuccess').modal('show');
+            
+            // Reload page to show the new template
+            setTimeout(() => {
+              location.reload();
+            }, 2000);
+          }
+
+          // Close modal
+          var modalInstance = bootstrap.Modal.getInstance(document.getElementById('templateModal'));
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        });
+      });
+    });
+
+    function addRow(id, tag, name, createdAt, updatedAt){
+      const formattedCreatedAt = new Date(createdAt).toLocaleDateString();
+      const formattedUpdatedAt = new Date(updatedAt).toLocaleDateString();
+      
+      t.row.add([`
+        <button id="`+id+`" onclick="deleteTemplate('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
+          <i class="bi bi-folder-x"></i>
+        </button>`,
+        `<a href="../../templates/`+id+`/edit">`+tag+`</a>`,
+        name,
+        formattedCreatedAt,
+        formattedUpdatedAt
+      ]).draw(true);
+    }
+
+    function deleteTemplate(template_id){
+      id = template_id;
+      $('#modal_message').text('This action will permanently delete the selected template.');
+      $('#modalConfirmation').modal('show');
+    }
+
+    $("#modalProceed").click(()=>{
+      api.deleteTemplate(id, projectID, (err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          $("#successHeader").text("Template successfully deleted");
+          $('#successMsg').text("The template has been deleted successfully");
+          $('#modalSuccess').modal('show');
+          
+          // Reload page after 2s
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        }
+      });
+    })
+
+  </script>
+</body>
+</html>

@@ -19,6 +19,14 @@ var api = {
     return clientID;
   },
 
+  getProjectID : function(cb){
+    let path = "project/"
+    let indexB = location.pathname.indexOf(path);
+    let indexF = location.pathname.lastIndexOf("/");
+    let modelID = location.pathname.substring(indexB+path.length,indexF);
+    return modelID;
+  },
+
   getModelID : function(cb){
     let path = "model/"
     let indexB = location.pathname.indexOf(path);
@@ -27,6 +35,164 @@ var api = {
     return modelID;
   },
 
+  // get all registered projects
+  getProjects : function(cb){
+
+    $.ajax({
+      url : Settings.api+'/projects',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+
+  },
+
+  // get all registered models
+  getModels : function(cb){
+
+    $.ajax({
+      url : Settings.api+'/models',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+
+  },
+
+
+  // get all registered devices
+  getDevices : function(cb){
+
+    $.ajax({
+      url : Settings.api+'/devices/list',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+
+  },
+
+  // add fw project
+  addProject : (name, description, uid_prefix, uid_length, cb)=>{
+    fetch(Settings.api+"/projects", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: name,
+        description: description,
+        uid_prefix: uid_prefix,
+        uid_length: uid_length
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // remove project
+  removeProject : (projectId, cb)=>{
+    fetch(Settings.api+"/projects", {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: projectId
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // --- projects ---
+  project : {
+    listPermissions : function(projectId,cb){
+      $.ajax({
+        url : Settings.api+"/project/"+projectId+"/permissions",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    grantPermission : function(projectId,clientId,level,cb){
+      fetch(Settings.api+"/project/"+projectId+"/permissions", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          clientId: clientId,
+          level: level,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    removePermission : function(projectId,clientId,cb){
+      fetch(Settings.api+"/project/"+projectId+"/permissions", {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          clientId: clientId,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+  },
 
   // --- models ---
   model : {
@@ -113,25 +279,276 @@ var api = {
     },
   },
 
-  // get all registered devices
-  getDevices : function(cb){
-
-    $.ajax({
-      url : Settings.api+'/devices/list',type: 'GET',
-      data : {},
-      success: function(data,status,xhr){
-        parseResponse(data,cb);
-      },
-      error: (data,status,xhr)=>{
-        parseError(data,cb);
-      },
-      dataType : "JSON"
-    });
-
-  },
-
   // --- requests related to a device ---
 
+  device: {
+
+    addSensor: (deviceId,ref,name,type,cb)=>{
+      fetch(Settings.api+"/device/"+deviceId+"/sensors", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ref: ref,
+          name: name,
+          type: type
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    getSensors: (deviceId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/sensors",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    getLwm2mObjects: (deviceId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/objects",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    getLwm2mResources: (deviceId, objectId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/resources",type: 'GET',
+        data : {
+          objectId
+        },
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    getMqttTopics: (deviceId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/mqtt/topics",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    lwm2m: {
+
+      // Add new object
+      addObject: (deviceId, object, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/object`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(object)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing object
+      updateObject: (deviceId, entryId, object, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/object/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(object)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete object
+      deleteObject: (deviceId, entryId, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/object/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Add new resource
+      addResource: (deviceId, resourceData, cb) => {
+        console.log(Settings.api + `/device/${deviceId}/lwm2m/resource`);
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/resource`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(resourceData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing resource
+      updateResource: (deviceId, entryId, resourceData, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/resource/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(resourceData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete resource
+      deleteResource: (deviceId, entryId, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/resource/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      }
+    },
+    
+    mqtt: {
+
+      // Add new topic
+      addTopic: (deviceId, topic, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/mqtt/topic`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(topic)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing topic
+      updateTopic: (deviceId, entryId, topic, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/mqtt/topic/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(topic)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete topic
+      deleteTopic: (deviceId, entryId, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/mqtt/topic/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      }
+    },
+    
+  },
   // get clients with access to the device
   getClientsWithAccessToDevice : function(deviceID,cb){
 
@@ -347,6 +764,55 @@ var api = {
     });
   },
 
+  updateDeviceField : (deviceID,field,data,cb)=>{
+    fetch(Settings.api+"/device/"+deviceID+"/field", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        field: field,
+        data: data
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  addDevice: (deviceData, cb)=>{
+    fetch(Settings.api+"/devices", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        projectName: deviceData.projectName,
+        modelName: deviceData.modelName,
+        templateId: deviceData.templateId,
+        uid: deviceData.uid,
+        name: deviceData?.name,
+        protocol: deviceData.protocol,
+        psk: deviceData?.psk
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   deleteDevice : (deviceID, cb)=>{
 
     fetch(Settings.api+"/device/"+deviceID, {
@@ -471,8 +937,24 @@ var api = {
       },
       dataType : "JSON"
     });
-
   },
+
+  // get all available mqtt clients with an email registered
+  getHumanClients : function(cb){
+
+    $.ajax({
+      url : Settings.api+'/clientsHuman',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
   // add mqtt client
   addClient : (client,user,password,cb)=>{
     fetch(Settings.api+"/clients", {
@@ -622,11 +1104,6 @@ var api = {
   },
   getMqttCredentials : (cb)=>{
 
-    if(window.location.protocol == "https:"){
-      Settings.mqtt.ssl = true;
-      Settings.mqtt.port = 443;
-    }
-
     $.ajax({
       url : Settings.api+'/mqtt/credentials',type: 'GET',
       data : {},
@@ -677,14 +1154,15 @@ var api = {
   },
 
   // add fw model
-  addFWModel : (model,description,cb)=>{
+  addModel : (name, project_id, description, cb)=>{
     fetch(Settings.api+"/models", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: model,
+        name: name,
+        project_id: project_id,
         description: description
       })
     })
@@ -700,7 +1178,7 @@ var api = {
   },
 
   // remove fw model
-  removeFWModel : (modelId,cb)=>{
+  removeModel : (modelId,cb)=>{
     fetch(Settings.api+"/model/"+modelId, {
       method: 'DELETE',
       headers: {
@@ -736,14 +1214,15 @@ var api = {
   },
 
   // add FW Model Permission to client
-  grantFWModelPermission : (model,clientID,cb)=>{
+  grantFWModelPermission : (model,clientId,level,cb)=>{
     fetch(Settings.api+"/model/"+model+"/permissions", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        clientID: clientID
+        clientId: clientId,
+        level: level,
       })
     })
     .then(function (response) {
@@ -796,12 +1275,13 @@ var api = {
   },
 
   // add permission to client to access device
-  addFirmware : (modelID,file,fw_version,app_version,cb)=>{
+  addFirmware : (modelID,file,fw_version,app_version,release,cb)=>{
 
     const formData = new FormData();
 
     formData.append('fw_version', fw_version);
     formData.append('app_version', app_version);
+    formData.append('release', release);
     formData.append('file', file);
 
     fetch(Settings.api+"/model/"+modelID+"/firmwares", {
@@ -886,6 +1366,49 @@ var api = {
     });
   },
   */
+  
+  // add template
+  addTemplate : (tag, name, project_id, cb)=>{
+    fetch(Settings.api+"/project/"+project_id+"/template", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tag: tag,
+        name: name
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // delete template
+  deleteTemplate : (templateId, project_id, cb)=>{
+    fetch(Settings.api+"/project/"+project_id+"/template/"+templateId, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   getDBLoad : (cb)=>{
     fetch(Settings.api+"/db/load", {
       method: 'GET',
@@ -900,14 +1423,338 @@ var api = {
     .catch(function (error) {
       return parseError(error,cb);
     });
-  }
+  },
+
+  // LWM2M Objects and Resources API
+  
+  lwm2m: {
+
+    // Get objects
+    getObjects: (cb) => {
+      fetch(Settings.api + "/lwm2m/objects", {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data, cb);
+      })
+      .catch(function (error) {
+        return parseError(error, cb);
+      });
+    },
+
+    // Get resources
+    getResources: (objectId, cb) => {
+      const url = new URL(Settings.api + "/lwm2m/resources");
+      url.searchParams.append('objectId', objectId); // Add objectId as a query parameter
+
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data, cb);
+      })
+      .catch(function (error) {
+        return parseError(error, cb);
+      });
+    },
+
+  },
+
+  template: {
+
+    list: (projectId, cb) => {
+      const url = new URL(Settings.api + "/templates");
+      if(projectId)
+        url.searchParams.append('projectId', projectId); // Add projectId as a query parameter
+
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data, cb);
+      })
+      .catch(function (error) {
+        return parseError(error, cb);
+      });
+    },
+
+    lwm2m: { // LWM2M Template Resources API
+
+      // Get template objects
+      getObjects: (templateId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/objects`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Get template resources
+      getResources: (templateId, objectId, cb) => {
+        const url = new URL(`${Settings.api}/template/${templateId}/lwm2m/resources`);
+        if (objectId) {
+          url.searchParams.append('objectId', objectId);
+        }
+        fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          query: {
+            objectId
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Add new object
+      addObject: (templateId, object, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/object`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(object)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing object
+      updateObject: (templateId, entryId, object, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/object/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(object)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete object
+      deleteObject: (templateId, entryId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/object/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Add new resource
+      addResource: (templateId, resourceData, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/resource`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(resourceData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing resource
+      updateResource: (templateId, entryId, resourceData, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/resource/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(resourceData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete resource
+      deleteResource: (templateId, entryId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/resource/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      }
+    },
+
+    mqtt: { // mqtt Template Topics API
+
+      // Get template topics
+      getTopics: (templateId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topics`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Add new topic
+      addTopic: (templateId, topicData, cb) => {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topic`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(topicData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing topic
+      updateTopic: (templateId, entryId, topicData, cb) => {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topic/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(topicData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete topic
+      deleteTopic: (templateId, entryId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topic/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      }
+    },
+  },
+  
+
+
 };
 
 function parseResponse(data,cb){
-  if(!data.Error) cb(null,data.Result);
-  else cb(data.Message,null);
+  if(!data?.Error && !data?.error) cb(null,data.Result);
+  else if(data?.Error) cb(data?.Message,null)
+  else cb(data?.error,null);
 }
 
 function parseError(error,cb){
   console.log(error)
+  cb(error.error)
 }

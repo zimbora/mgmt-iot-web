@@ -20,14 +20,30 @@ module.exports = {
 
     const val = Joi.object({
       name: Joi.string().required(),
+      project_id: Joi.number().required(),
+      description: Joi.string().optional()
     }).validate(req.body);
+
+    if(req.user.level != 5){
+      return response.error(res,httpStatus.BAD_REQUEST,"You have no permission to add a new model");
+    }
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      Model.add(req.body.name,(err,rows)=>{
-        if(!err) response.send(res,rows);
-        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      Model.getId(req.body.name)
+      .then(existingId => {
+        if(existingId) {
+          response.error(res,httpStatus.BAD_REQUEST,"Model with this name already exists");
+        } else {
+          Model.add(req.body.name, req.body.project_id, req.body.description,(err,rows)=>{
+            if(!err) response.send(res,rows);
+            else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+          });
+        }
+      })
+      .catch(err => {
+        response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }
   },
@@ -37,6 +53,10 @@ module.exports = {
     const val = Joi.object({
       model_id: Joi.number().required()
     }).validate(req.params);
+
+    if(user.level != 5){
+      return response.error(res,httpStatus.BAD_REQUEST,"You have no permission to delete the model");
+    }
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
@@ -100,13 +120,14 @@ module.exports = {
   grantPermission : (req, res, next)=>{
 
     const val = Joi.object({
-      clientID: Joi.string().required(),
+      clientId: Joi.string().required(),
+      level: Joi.string().required(),
     }).validate(req.body);
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      Model.grantPermission(req.body.clientID,req.params.model_id,(err,rows)=>{
+      Model.grantPermission(req.body.clientId,req.body.level,req.params.model_id,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });

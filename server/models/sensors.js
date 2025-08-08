@@ -4,10 +4,11 @@ const moment = require('moment');
 
 var self = module.exports = {
 
-  add : async(model_id,ref,name,type,cb)=>{
+  add : async(model_id,device_id,ref,name,type,cb)=>{
 
     let obj = {
       model_id : model_id,
+      device_id : device_id,
       ref : ref,
       name : name,
       type: type,
@@ -44,10 +45,20 @@ var self = module.exports = {
     });
   },
 
-  list : async (cb)=>{
+  list : async (modelId, deviceId, cb)=>{
 
-    var query = `select * from sensors`;
+    if(!modelId && !deviceId)
+      return cb("Add modelId or deviceId to params",null);
+
     var table = [];
+    var query = `select * from sensors where `;
+    if(deviceId){
+      query += `device_id = ?`
+      table.push(deviceId);
+    }else if(modelId){
+      query += `model_id = ?`
+      table.push(modelId);
+    }
     query = mysql.format(query,table);
 
     db.queryRow(query)

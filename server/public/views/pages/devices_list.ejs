@@ -35,7 +35,12 @@
       <%- include('../partials/sidebar.ejs') %>
       <div class="col py-3">
         <div class="content-header">
-          <h5>Display Devices</h5>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0">Display</h5>
+            <button id="openBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#deviceModal">
+              + 
+            </button>
+          </div>
         </div>
       <div class="row">
         <!--<div class="col-sm-12 mb-3 mb-sm-0">-->
@@ -63,7 +68,92 @@
     </div>
   </div>
 
+<!-- Modal -->
+<div class="modal fade" id="deviceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" id="deviceForm" novalidate>
+      <div class="modal-header">
+        <h5 class="modal-title">Add Device</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Project -->
+        <div class="mb-3">
+          <label for="projectSelect" class="form-label">Project</label>
+          <select id="projectSelect" class="form-select" required>
+            <!-- populated by JS -->
+          </select>
+          <div class="invalid-feedback">Please select a project.</div>
+        </div>
+
+        <!-- Template -->
+        <div class="mb-3">
+          <label for="templateSelect" class="form-label">Template</label>
+
+          <select id="templateSelect" class="form-select">
+            <!-- populated by JS -->
+          </select>
+          <div class="invalid-feedback">Template selection is optional.</div>
+
+        </div>
+
+        <!-- Model -->
+        <div class="mb-3">
+          <label for="modelSelect" class="form-label">Model</label>
+          <select id="modelSelect" class="form-select" required>
+            <option value="">Select a project first</option>
+          </select>
+          <div class="invalid-feedback">Please select a model.</div>
+        </div>
+
+        <!-- Device ID -->
+        <div class="mb-3">
+          <label for="deviceUID" class="form-label">Device UID</label>
+          <input id="deviceUID" class="form-control" type="text" placeholder="e.g. device-123" required />
+          <div class="invalid-feedback">Please enter a device ID.</div>
+        </div>
+
+        <!-- Device Name -->
+        <div class="mb-3">
+          <label for="deviceName" class="form-label">Device Name</label>
+          <input id="deviceName" class="form-control" type="text" placeholder="e.g. device-123" required />
+          <div class="invalid-feedback">You can add a device Name.</div>
+        </div>
+
+        <!-- Protocol -->
+        <div class="mb-3">
+          <label class="form-label d-block">Protocol</label>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="protocol" id="protoMqtt" value="MQTT" required>
+            <label class="form-check-label" for="protoMqtt">MQTT</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="protocol" id="protoLwM2M" value="LwM2M" required>
+            <label class="form-check-label" for="protoLwM2M">LwM2M</label>
+          </div>
+          <div class="invalid-feedback">Please select a protocol.</div>
+        </div>
+
+        <!-- PSK -->
+        <div class="mb-3">
+          <label for="psk" class="form-label">PSK</label>
+          <input id="psk" type="password" class="form-control" placeholder="Pre-Shared Key" required />
+          <div class="invalid-feedback">Please enter the PSK.</div>
+        </div>
+        
+      </div><!-- /.modal-body -->
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
   <%- include('../partials/modal/confirmation.ejs') %>
+  <%- include('../partials/modal/success.ejs') %>
   <%- include('../partials/modal/error.ejs') %>
 
   <script>
@@ -74,6 +164,58 @@
       const app = require('./app.mjs');
       t = $('#devices').DataTable();
 
+      api.getProjects((err, res) => {
+        if (err) {
+          console.error("Error fetching projects:", err);
+          return;
+        }
+
+        const projectSelect = document.getElementById('projectSelect');
+        
+        // Clear any existing options
+        projectSelect.innerHTML = '';
+
+        // Create a placeholder option
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = 'Select a project';
+        projectSelect.appendChild(placeholderOption);
+
+        // Populate the select element with projects
+        res.forEach(project => {
+          const option = document.createElement('option');
+          option.value = project.id;
+          option.textContent = project.name;
+          projectSelect.appendChild(option);
+        });
+      });
+
+      api.getModels((err, res) => {
+        if (err) {
+          console.error("Error fetching models:", err);
+          return;
+        }
+
+        const modelSelect = document.getElementById('modelSelect');
+        
+        // Clear existing options
+        modelSelect.innerHTML = '';
+
+        // Add default placeholder option
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = 'Select a model';
+        modelSelect.appendChild(placeholderOption);
+
+        // Populate with models from API response
+        res.forEach(model => {
+          const option = document.createElement('option');
+          option.value = model.id;
+          option.textContent = model.name;
+          modelSelect.appendChild(option);
+        });
+      });
+
       api.getDevices((err,res)=>{
         if(err) console.log("err:",err)
         else{
@@ -83,6 +225,7 @@
           });
         }
       });
+
     });
 
     function addRow(id,uid,project,model,model_id,created,status,version,appVersion,updated){
@@ -106,6 +249,92 @@
         status,version,appVersion,created,updated]).draw(true);
     }
 
+    document.getElementById('deviceForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent form from submitting the default way
+
+      // Get form values
+      const projectSelect = document.getElementById('projectSelect');
+      const templateSelect = document.getElementById('templateSelect');
+      const modelSelect = document.getElementById('modelSelect');
+      const deviceUID = document.getElementById('deviceUID').value.trim();
+      const deviceName = document.getElementById('deviceName').value.trim();
+      const psk = document.getElementById('psk').value.trim();
+      
+      // Get selected protocol
+      const protocolRadios = document.querySelectorAll('input[name="protocol"]');
+      let selectedProtocol = '';
+      protocolRadios.forEach(radio => {
+        if (radio.checked) {
+          selectedProtocol = radio.value;
+        }
+      });
+
+      // Validate fields before calling API
+      if (
+        projectSelect.value === '' ||
+        modelSelect.value === '' ||
+        deviceUID === '' ||
+        selectedProtocol === ''
+      ) {
+        // Show validation error, the invalid-feedback will be shown if using Bootstrap validation
+        // You can trigger validation or show custom messages here
+        $('#error').text("Some of required fields are empty");
+        $('#suggestion').text("Check project, model, uid and protocol");
+        $('#modalError').modal('show');
+        return;
+      }
+
+      // Safely get template ID (optional field)
+      let templateId = null;
+      if (templateSelect.selectedIndex >= 0 && templateSelect.options[templateSelect.selectedIndex] && templateSelect.options[templateSelect.selectedIndex].value) {
+        templateId = parseInt(templateSelect.options[templateSelect.selectedIndex].value) || null;
+      }
+
+      // Prepare device data object
+      const deviceData = {
+        projectName: projectSelect.options[projectSelect.selectedIndex].text,
+        templateId: templateSelect.options[templateSelect.selectedIndex].value,
+        modelName: modelSelect.options[modelSelect.selectedIndex].text,
+        uid: deviceUID,
+        name: deviceName,
+        protocol: selectedProtocol,
+        psk: psk
+      };
+
+      // Only include templateId if a valid template is selected
+      if (templateId) {
+        deviceData.templateId = templateId;
+      }
+
+      
+      // Call API to add device
+      api.addDevice(deviceData, (err, res) => {
+        if(err){
+          $('#error').text("Error adding device");
+          if(err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          // Show success message - you could add a success modal or notification here
+          $("#successHeader").text("Device successfully added");
+          $('#successMsg').text(res);
+          $('#modalSuccess').modal('show');
+          setTimeout(()=>{location.reload()},2000);
+        }
+
+        // Handle success (e.g., close modal, refresh list)
+        // Close modal
+        var modalInstance = bootstrap.Modal.getInstance(document.getElementById('deviceModal'));
+        modalInstance.hide();
+
+        // Optionally, reset the form
+        document.getElementById('deviceForm').reset();
+      });
+      
+    });
+
     function deleteDevice(device_id){
       id = device_id;
       $('#modalConfirmation').modal('show');
@@ -114,12 +343,44 @@
     $("#modalProceed").click(()=>{
       api.deleteDevice(id,(err,res)=>{
         if(err){
-          $('#error').text("Your request cannot be executed");
-          $('#suggestion').text(err);
+          $('#error').text("Error deleting device");
+          $('#suggestion').text(err?.sqlMessage);
           $('#modalError').modal('show');
-        }else location.reload();
+        }else{
+          // Show success message - you could add a success modal or notification here
+          $("#successHeader").text("Device successfully deleted");
+          $('#modalSuccess').modal('show');
+          setTimeout(()=>{location.reload()},2000);
+        } 
       });
     })
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const projectSelect = document.getElementById('projectSelect');
+
+      projectSelect.addEventListener('change', function() {
+        const projectId = this.value;
+        if (projectId) {
+          api.template.list(projectId, function(err, templates) {
+            if (err) {
+              // handle error
+              console.error('Error fetching templates:', err);
+            } else {
+              console.log(templates)
+              const select = document.getElementById('templateSelect');
+              select.innerHTML = '<option value="">Select a template...</option>'; // default
+
+              templates.forEach(template => {
+                const opt = document.createElement('option');
+                opt.value = template.id;
+                opt.textContent = template.tag;
+                select.appendChild(opt);
+              });
+            }
+          });
+        }
+      });
+    });
 
   </script>
 </body>

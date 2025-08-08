@@ -130,11 +130,6 @@
 
     let mqtt = <%- JSON.stringify(mqtt) %>;
 
-    if(window.location.protocol == "https:"){
-      Settings.mqtt.ssl = true;
-      Settings.mqtt.port = 443;
-    }
-
     api.getDevices((err,rows)=>{
       if(err) console.log(err)
       else{

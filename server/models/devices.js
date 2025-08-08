@@ -1,11 +1,29 @@
 var mysql = require('mysql2');
 var db = require('../controllers/db');
 var firmwares = require('./firmwares');
+var Project = require('./projects');
+var Model = require('./models');
 
 const semver = require('semver');
 const moment = require('moment');
 
 var self = module.exports =  {
+
+  getId : async(uid,cb)=>{
+
+    let query = `select id from devices where uid = ?`;
+    let table = [uid]
+    query = mysql.format(query,table);
+    db.queryRow(query)
+    .then(rows => {
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error);
+    })
+  },
 
   getById : async (deviceId)=>{
     return new Promise( (resolve,reject)=>{
@@ -25,6 +43,86 @@ var self = module.exports =  {
     })
   },
 
+  getPreSharedKey : async (deviceId,cb)=>{
+
+    let query = `select psk from devices where id = ?`;
+    let table = [deviceId]
+    query = mysql.format(query,table);
+    db.queryRow(query)
+    .then(rows => {
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error);
+    })
+  },
+
+  getObservations : async (deviceId,cb)=>{
+
+    let query = `select id, device_id, objectId, objectInstanceId, resourceId, observing, observationTkn from lwm2m where device_id = ? and observing = true`;
+    let table = [deviceId]
+    
+    query = mysql.format(query,table);
+    
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+
+  },
+
+  getObservationStatus : async (deviceId,data,cb)=>{
+
+    let query = `select id, observing, observationTkn from lwm2m where device_id = ? and objectId = ? and objectInstanceId = ? and resourceId = ?`;
+    let table = [deviceId, data.objectId, data.objectInstanceId, data.resourceId]
+    
+    query = mysql.format(query,table);
+    
+    db.queryRow(query)
+    .then(rows => {
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else
+        return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+
+  },
+
+  updateObservationStatus : async (deviceId,data,cb)=>{
+
+    let obj = {
+      observing : data.observing,
+      observationTkn : data.token,
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    let filter = {
+      device_id: deviceId,
+      objectId: data.objectId,
+      objectInstanceId: data.objectInstanceId,
+      resourceId: data.resourceId,
+    };
+
+    db.update("lwm2m",obj,filter)
+    .then (rows => {
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else
+        return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
   addClientPermission : async (deviceId,clientId,level,cb)=>{
 
     let obj = {
@@ -35,7 +133,16 @@ var self = module.exports =  {
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
 
-    return await db.insert("permissions",obj);
+    db.insert("permissions",obj)
+    .then (rows => {
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else
+        return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
 
   },
 
@@ -300,7 +407,7 @@ var self = module.exports =  {
 
     return new Promise( (resolve,reject)=>{
 
-      return resolve("sensor_logs");
+      return resolve("logs_sensor");
       /*
       let query = `select logs_table from models where name = ?`;
       let table = [model]
@@ -358,13 +465,21 @@ var self = module.exports =  {
       if(res != null && res.length > 0){
         data["project"] = res[0];
       }
-
+      /*
       query = `SELECT * FROM ?? where device_id = ?;`
       table = [model,deviceId]
       query = mysql.format(query,table);
       res = await db.queryRow(query);
       if(res != null && res.length > 0){
         data["model"] = res[0];
+      }
+      */
+      query = `SELECT * FROM ?? where name = ?;`
+      table = ["models",model]
+      query = mysql.format(query,table);
+      res = await db.queryRow(query);
+      if(res != null && res.length > 0){
+        data["modelFeat"] = res[0];
       }
 
       query = `SELECT * FROM ?? where device_id = ?;`
@@ -448,9 +563,9 @@ var self = module.exports =  {
 
     let model = await self.getModel(deviceId);
     if(model == null)
-      return cb(null,null);
+      return cb(`no model found for deviceId ${deviceId}`,null);
 
-    let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,p.* FROM ?? as p left join devices as d on d.id = p.device_id where d.id = ?;`
+    let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,p.* FROM devices as d left join ?? as p on d.id = p.device_id where d.id = ?;`
     let table = [project,deviceId]
     query = mysql.format(query,table);
 
@@ -613,34 +728,15 @@ var self = module.exports =  {
     })
   },
 
-  getSensorLogs : async (deviceId,sensor,cb)=>{
-
-    return cb("Not implemented",null);
-
-    let project = await self.getProject(deviceId);
-    if(project == null)
-      return cb(`no project found for deviceId ${deviceId}`,null);
-
-    let model = await self.getModel(deviceId);
-    if(model == null)
-      return cb(null,null);
+  getSensorLogs : async (deviceId,sensorId,cb)=>{
 
     let table = [];
-    let query = "";
 
-    if (sensor != null) {
-      query = `SELECT ??,createdAt FROM ?? WHERE device_id = ? `;
-      table.push(sensor);
-    } else {
-      query = `SELECT * FROM ?? WHERE device_id = ? `;
-    }
-
+    let query = `SELECT value,createdAt,updatedAt FROM ?? WHERE sensor_id = ? and device_id = ? `;
     table.push("logs_sensor");
+    table.push(sensorId);
     table.push(deviceId);
-    if(sensor != null){
-      query += `and ?? IS NOT NULL `
-      table.push(sensor);
-    }
+
     query += `ORDER BY createdAt DESC LIMIT 20;`
 
     query = mysql.format(query,table);
@@ -782,6 +878,343 @@ var self = module.exports =  {
   },
   */
 
+  getLwm2mObjects : async (deviceId,cb)=>{
+
+    let project_name = await self.getProject(deviceId)
+    if(project_name != 'lwm2m')
+      return cb('Device is not in lwm2m category');
+
+    let query = `SELECT * FROM lwm2m where device_id = ? 
+      and objectInstanceId IS NULL and resourceId IS NULL 
+      order BY objectId`;
+    let table = [deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+
+  },
+
+  getLwm2mResources : async (deviceId,objectId,cb)=>{
+
+    let project_name = await self.getProject(deviceId)
+    if(project_name != 'lwm2m')
+      return cb('Device is not in lwm2m category');
+
+    let query = `SELECT lwm2m.*, templates.tag as template_tag 
+                 FROM lwm2m 
+                 LEFT JOIN templates ON lwm2m.template_id = templates.id 
+                 WHERE lwm2m.device_id = ?`
+    let table = [deviceId]
+    if(objectId){
+      query += ` AND lwm2m.objectId = ?`
+      table.push(objectId);
+    }
+
+    query += ` ORDER BY lwm2m.objectId, lwm2m.objectInstanceId, lwm2m.resourceId`
+
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+
+  },
+
+    // Add a new object
+  addObject: async (deviceId, objectId, description, defaultData, observe, readInterval, cb) => {
+    let obj = {
+      device_id: deviceId,
+      objectId: objectId,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      observe: observe,
+      readInterval: readInterval,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    db.insert("lwm2m", obj)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  // Add a new resource
+  addResource: async (deviceId, objectId, objectInstanceId, resourceId, description, defaultData, observe, readInterval, cb) => {
+    let obj = {
+      device_id: deviceId,
+      objectId: objectId,
+      objectInstanceId: objectInstanceId,
+      resourceId: resourceId,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      observe: observe,
+      readInterval: readInterval,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // check if objectId, objectInstanceId and resourceId already exists for device_id
+    let query = "Select * from lwm2m where device_id = ? and objectId = ? and objectInstanceId = ? and resourceId = ?";
+    let table = [deviceId,objectId,objectInstanceId,resourceId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows?.length > 0){
+        return cb("resource already exists",null); 
+      }else{
+        db.insert("lwm2m", obj)
+        .then(rows => {
+          console.log(rows)
+          return cb(null, rows);
+        })
+        .catch(error => {
+          return cb(error, null);
+        });
+      }
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  // Update an existing object
+  updateEntry: async (entryId, updateData, cb) => {
+    let obj = {
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // Add fields that are being updated
+    if (updateData.description !== undefined) {
+      obj.description = JSON.stringify(updateData.description);
+    }
+    if (updateData.defaultData !== undefined) {
+      obj.defaultData = updateData.defaultData ? JSON.stringify(updateData.defaultData) : null;
+    }
+    if (updateData.observe !== undefined) {
+      obj.observe = updateData.observe;
+    }
+    if (updateData.readInterval !== undefined) {
+      obj.readInterval = updateData.readInterval;
+    }
+
+    let filter = {
+      id: entryId
+    };
+
+    console.log(obj)
+    db.update("lwm2m", obj, filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  // Delete a resource
+  deleteEntry: async (entryId, cb) => {
+    let filter = {
+      id: entryId
+    };
+
+    db.delete("lwm2m", filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  // MQTT Topics methods
+  getMqttTopics : async (deviceId,cb)=>{
+    let query = `SELECT * FROM mqtt WHERE device_id = ? ORDER BY topic`
+    let table = [deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  addMqttTopic: async (deviceId, topic, description, defaultData, readInterval, cb) => {
+    let obj = {
+      device_id: deviceId,
+      topic: topic,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      localData: defaultData ? JSON.stringify(defaultData) : null,
+      readInterval: readInterval,
+      synch,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // check if name already exists for device_id
+    let query = "SELECT * FROM mqtt WHERE device_id = ? AND topic = ?";
+    let table = [deviceId, topic];
+    query = mysql.format(query, table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if (rows.length > 0) {
+        return cb("MQTT topic name already exists for this device", null);
+      } else {
+        return db.insert("mqtt", obj);
+      }
+    })
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  updateMqttTopic: async (entryId, updateData, cb) => {
+    let obj = {
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // Add fields that are being updated
+    if (updateData.topic !== undefined) {
+      obj.topic = updateData.topic;
+    }
+    if (updateData.description !== undefined) {
+      obj.description = JSON.stringify(updateData.description);
+    }
+    if (updateData.localData !== undefined) {
+      obj.localData = updateData.localData ? JSON.stringify(updateData.localData) : null;
+    }
+    if (updateData.readInterval !== undefined) {
+      obj.readInterval = updateData.readInterval;
+    }
+    if (updateData.synch !== undefined) {
+      obj.synch = updateData.synch;
+    }
+
+    let filter = {
+      id: entryId
+    };
+
+    db.update("mqtt", obj, filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  deleteMqttTopic: async (entryId, cb) => {
+    let filter = {
+      id: entryId
+    };
+
+    db.delete("mqtt", filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  add : async (device,cb)=>{
+
+    const projectId = await Project.getId(device.projectName);
+    const modelId = await Model.getId(device.modelName);
+
+    if(!projectId){
+      return cb('project not found');
+    }
+    if(!modelId){
+      return cb('model not found');
+    }
+
+    const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    
+    // Convert empty string or undefined template_id to null to avoid MySQL error
+    const templateId = device?.templateId || null;
+    
+    const obj = {
+      uid : device.uid,
+      name : device?.name,
+      project_id : projectId,
+      template_id: templateId,
+      model_id : modelId,
+      protocol : device.protocol,
+      psk : device?.psk,
+      createdAt : timestamp,
+      updatedAt : timestamp
+    }
+    
+    try {
+      const res = await db.insert('devices', obj);
+
+      if(res?.insertId){
+        // Add owner permission for the user who created the device
+        if(device.clientId){
+          try {
+            await new Promise((resolve, reject) => {
+              self.addClientPermission(res.insertId, device.clientId, 5, (err, permRes) => {
+                if(err) {
+                  reject(err);
+                } else {
+                  resolve(permRes);
+                }
+              });
+            });
+          } catch(permError) {
+            console.error('Error adding owner permission:', permError);
+            // Continue with device creation even if permission fails
+          }
+        }
+        
+        if(device.projectName === "lwm2m" && templateId){
+          try {
+            // copy template to lwm2m table
+            await associateLwm2mTemplateToDevice(res?.insertId,templateId);
+          } catch(templateError) {
+            console.error('Error associating lwm2m template:', templateError);
+          }
+        }else if(templateId){
+          try {
+            // copy template to mqtt table (not lwm2m)
+            await associateMqttTemplateToDevice(res?.insertId,templateId);
+          } catch(templateError) {
+            console.error('Error associating mqtt template:', templateError);
+          }
+        }
+        return cb(null, res[0]);
+      }else{
+        return cb('Error adding device', null);
+      }
+    } catch(error) {
+      return cb(error, null);
+    }
+        
+  },
+
   delete : async (deviceId,cb)=>{
 
     let project_table = await self.getProject(deviceId);
@@ -796,26 +1229,38 @@ var self = module.exports =  {
       device_id : deviceId,
     }
 
+    try{
 
-    if(project_table != null)
-      if( await db.tableExists(model_table)){
-        await db.delete(project_table,filter);
+      if(project_table != null){
+        console.log(`deleting project_table ${project_table}`)
+        if( await db.tableExists(project_table)){
+          await db.delete(project_table,filter);
+        }
       }
-    if(project_logs_table != null)
-      if( await db.tableExists(model_table)){
-        await db.delete(project_logs_table,filter);
+      if(project_logs_table != null){
+        console.log(`deleting project_logs_table ${project_logs_table}`)
+        if( await db.tableExists(project_logs_table)){
+          await db.delete(project_logs_table,filter);
+        }
       }
-    if(model_table != null){
-      if( await db.tableExists(model_table)){
-        await db.delete(model_table,filter);
+      if(model_table != null){
+        console.log(`deleting model_table ${model_table}`)
+        if( await db.tableExists(model_table)){
+          await db.delete(model_table,filter);
+        }
       }
+      if(model_logs_table != null){
+        console.log(`deleting model_logs_table ${model_logs_table}`)
+        if( await db.tableExists(model_logs_table)){
+          await db.delete(model_logs_table,filter);
+        }
+      }
+      await db.delete("permissions",filter);
+
+    }catch(err){
+      console.log(err)
+      return cb(err,null);
     }
-    if(model_logs_table != null){
-      if( await db.tableExists(model_table)){
-        await db.delete(model_logs_table,filter);
-      }
-    }
-    await db.delete("permissions",filter);
 
     // this must be executed only after all previous delete calls
     filter = {
@@ -985,6 +1430,82 @@ var self = module.exports =  {
     });
   },
 
+  updateDeviceField : async (deviceId,field,data,cb)=>{
+
+    let obj = {
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+    obj[field] = data;
+
+    let filter = {
+      id : deviceId
+    };
+
+    db.update("devices",obj,filter)
+    .then (async rows => {
+      if(field === "template_id"){
+        templateId = data;
+        // validate templateId
+        device = await self.getById(deviceId);
+        project = await Project.getById(device.project_id); // fix this function, requires callback !!
+        let rows = null;
+        let error = null;
+
+        if(data == null){
+          // remove old template if any
+          console.log("project name:",project.name);
+          console.log("remove old template");
+          if(project.name == "lwm2m"){
+            // copy template to lwm2m table
+            try{
+              rows = await removeLwm2mTemplateFromDevice(res?.insertId,templateId)
+            }catch(err){
+              error = err
+            }
+          }else{
+            // copy template to lwm2m table
+            try{
+              rows = await removeMqttTemplateFromDevice(res?.insertId,templateId)
+            }catch(err){
+              error = err
+            }
+          }
+        }else if(data != null){
+          console.log(device);
+          console.log("associate new template")
+          // associate new template
+          if(device.projectName == "lwm2m"){
+            // copy template to lwm2m table
+            try{
+              rows = await associateLwm2mTemplateToDevice(res?.insertId,templateId)
+            }catch(err){
+              error = err
+            }
+          }else{
+            // copy template to lwm2m table
+            try{
+              rows = await associateMqttTemplateToDevice(res?.insertId,templateId)
+            }catch(err){
+              error = err
+            }
+          }
+        }
+        console.log(error)
+        console.log(rows);
+        if(error)
+          return cb(error,null);
+        else
+          return cb(null,rows);
+
+      }else{
+        return cb(null,rows);
+      }
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
   triggerFota : async(deviceId,version,app_version,cb)=>{
 
     try{
@@ -1001,7 +1522,6 @@ var self = module.exports =  {
 
     lVersion = await firmwares.getLatestVersion(device.model_id, device.accept_release);
     lAppVersion = await firmwares.getLatestAppVersion(device.model_id, device.accept_release);
-    console.log(lVersion);
 
     let firmware = null;
     if(lAppVersion?.version && lAppVersion?.app_version != device.app_version){
@@ -1083,7 +1603,7 @@ var self = module.exports =  {
         mqtt_prefix += `/app/sniffer`;
     }
     else{
-      mqtt_prefix = `${projectName}/${device.uid}`;
+      mqtt_prefix = `${projectName}/${uid}`;
     }
 
     let publishTopic = `${mqtt_prefix}/${topic}`;
@@ -1140,4 +1660,147 @@ async function publishAndWaitForResponse(publishTopic, messagePayload, responseT
       }, timeout);
     });
   });
+}
+
+/**
+ * Copies all elements from lwm2mTemplate (where template_id = deviceTemplateId)
+ * to lwm2m, setting device_id = deviceId for each inserted row.
+ * 
+ * @param {number} deviceId - The target device's ID (res[0].insertId)
+ * @param {number} deviceTemplateId - The source template's ID (device.templateId)
+ * @returns {Promise}
+ */
+async function associateLwm2mTemplateToDevice(deviceId, deviceTemplateId) {
+  
+  // 1. Get all rows from lwm2mTemplate for the given templateId
+  let query = `SELECT * FROM ?? where template_id = ?;`
+  let table = ["lwm2mTemplate",deviceTemplateId];
+  query = mysql.format(query,table);
+  let templates = await db.queryRow(query);
+
+  if (!templates || !templates.length) return res; // nothing to copy, return empty array
+
+  const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+  let res = [];
+  
+  // 2. Insert each template into lwm2m with device_id
+  for (const tpl of templates) {
+    // Remove the primary key (if it exists), createdAt and updatedAt
+    const { id, createdAt, updatedAt, ...rest } = tpl;
+    const data = {
+      device_id: deviceId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ...rest
+    };
+    const insertRes = await db.insert('lwm2m', data);
+    res.push(insertRes);
+  }
+
+  return res;
+}
+
+/**
+ * Copies all elements from mqttTemplate (where template_id = deviceTemplateId)
+ * to mqtt, setting device_id = deviceId for each inserted row.
+ * 
+ * @param {number} deviceId - The target device's ID (res[0].insertId)
+ * @param {number} deviceTemplateId - The source template's ID (device.templateId)
+ * @returns {Promise}
+ */
+async function associateMqttTemplateToDevice(deviceId, deviceTemplateId) {
+  
+  // 1. Get all rows from mqttTemplate for the given templateId
+  let query = `SELECT * FROM ?? where template_id = ?;`
+  let table = ["mqttTemplate",deviceTemplateId];
+  query = mysql.format(query,table);
+  let templates = await db.queryRow(query);
+
+  let res = [];
+
+  if (!templates || !templates?.length) return res; // nothing to copy, return empty array
+
+  const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+  
+  // 2. Insert each template into lwm2m with device_id
+  for (const tpl of templates) {
+    // Remove the primary key (if it exists), createdAt and updatedAt
+    const { id, createdAt, updatedAt, ...rest } = tpl;
+    const data = {
+      device_id: deviceId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ...rest
+    };
+    const insertRes = await db.insert('mqtt', data);
+    res.push(insertRes);
+  }
+
+  return res;
+}
+
+/**
+ * Removes all lwm2m rows from a device that were originally associated with a particular template.
+ *
+ * @param {number} deviceId - The target device's ID.
+ * @param {number} deviceTemplateId - The template ID whose elements should be removed from the device.
+ * @returns {Promise} - Resolves with the result of the delete operation.
+ */
+async function removeLwm2mTemplateFromDevice(deviceId, deviceTemplateId) {
+  // 1. Get all row keys from lwm2mTemplate for the given templateId
+  let query = `SELECT * FROM ?? WHERE template_id = ?;`;
+  let table = ["lwm2mTemplate", deviceTemplateId];
+  query = mysql.format(query, table);
+  let templates = await db.queryRow(query);
+
+  if (!templates || !templates.length) return []; // nothing to delete
+
+  let deleteResults = [];
+  for (const tpl of templates) {
+    // Build a where clause to match device_id and all template-specific identifying columns except id/timestamps
+    const { id, createdAt, updatedAt, template_id, ...keyFields } = tpl;
+    // device_id and all key fields must match for deletion
+    const where = {
+      device_id: deviceId,
+      ...keyFields
+    };
+    // You may want to add template_id: deviceTemplateId to where if it's also stored in lwm2m
+    const delRes = await db.delete('lwm2m', where);
+    deleteResults.push(delRes);
+  }
+
+  return deleteResults;
+}
+
+/**
+ * Removes all mqtt rows from a device that were originally associated with a particular template.
+ *
+ * @param {number} deviceId - The target device's ID.
+ * @param {number} deviceTemplateId - The template ID whose elements should be removed from the device.
+ * @returns {Promise} - Resolves with the result of the delete operation.
+ */
+async function removeMqttTemplateFromDevice(deviceId, deviceTemplateId) {
+  // 1. Get all row keys from mqttTemplate for the given templateId
+  let query = `SELECT * FROM ?? WHERE template_id = ?;`;
+  let table = ["mqttTemplate", deviceTemplateId];
+  query = mysql.format(query, table);
+  let templates = await db.queryRow(query);
+
+  if (!templates || !templates.length) return []; // nothing to delete
+
+  let deleteResults = [];
+  for (const tpl of templates) {
+    // Build a where clause to match device_id and all template-specific identifying columns except id/timestamps
+    const { id, createdAt, updatedAt, template_id, ...keyFields } = tpl;
+    // device_id and all key fields must match for deletion
+    const where = {
+      device_id: deviceId,
+      ...keyFields
+    };
+    // You may want to add template_id: deviceTemplateId to where if it's also stored in mqtt
+    const delRes = await db.delete('mqtt', where);
+    deleteResults.push(delRes);
+  }
+
+  return deleteResults;
 }

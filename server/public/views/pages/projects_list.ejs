@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../partials/head.ejs') %>
+
+  <style>
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;  /* Or whatever width you want */
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/scripts.ejs') %>
+  <%- include('../partials/navbar.ejs') %>
+
+  <%- include('../partials/modal/confirmation.ejs') %>
+  <%- include('../partials/modal/error.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js" crossorigin="anonymous"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../partials/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="content-header">
+              <div class="d-flex align-items-center justify-content-between">
+                <h3 class="mb-0">Projects</h3>
+                <% if(user.level == 5){ %>
+                <button id="openBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#projectModal">
+                  + 
+                </button>
+                <% } %>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-12 mb-3 mb-sm-0">
+                <div class="card py-3" style="width:100%" overflow-x:scroll>
+                  <table id="projects" class="display">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>project</th>
+                            <th>uid prefix</th>
+                            <th>uid length</th>
+                            <th>description</th>
+                        </tr>
+                    </thead>
+                  </table>
+                </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+<!-- Modal -->
+<div class="modal fade" id="projectModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" id="projectForm" novalidate>
+      <div class="modal-header">
+        <h5 class="modal-title">Add Project</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Project Name -->
+        <div class="mb-3">
+        <label for="projectName" class="form-label">Project Name</label>
+        <input
+          id="projectName"
+          class="form-control"
+          type="text"
+          placeholder="e.g. IoT Sensors"
+          required
+        />
+        <div class="invalid-feedback">Please enter a project name using only letters and numbers, with no spaces or symbols.</div>
+      </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <label for="projectDescription" class="form-label">Description</label>
+          <textarea id="projectDescription" class="form-control" placeholder="Optional description"></textarea>
+          <div class="invalid-feedback">You can add a description.</div>
+        </div>
+
+        <!-- UID Prefix -->
+        <div class="mb-3">
+          <label for="uidPrefix" class="form-label">UID Prefix</label>
+          <input id="uidPrefix" class="form-control" type="text" placeholder="e.g. SENSOR" required />
+          <div class="invalid-feedback">Please enter a UID prefix.</div>
+        </div>
+
+        <!-- UID Length -->
+        <div class="mb-3">
+          <label for="uidLength" class="form-label">UID Length</label>
+          <input id="uidLength" class="form-control" type="number" placeholder="e.g. 6" min="1" required />
+          <div class="invalid-feedback">Please enter a valid UID length (minimum 1).</div>
+        </div>
+        
+      </div><!-- /.modal-body -->
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+  <%- include('../partials/modal/confirmation.ejs') %>
+  <%- include('../partials/modal/success.ejs') %>
+  <%- include('../partials/modal/error.ejs') %>
+
+  <script>
+
+    var t;
+    var id;
+    let projects = <%- JSON.stringify(projects) %>;
+    let user = <%- JSON.stringify(user) %>;
+    const projectNameInput = document.getElementById('projectName');
+    const uidPrefixInput = document.getElementById('uidPrefix');
+
+    $(document).ready(function () {
+
+      t = $('#projects').DataTable();
+
+      projects.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
+
+      projects.forEach((item, i) => {
+        addRow(item.id,item.name,item.uidPrefix,item.uidLength,item.description);
+      });
+    });
+
+
+    function addRow(id,project,prefix,len,description){
+      const buttonHtml = `
+        <button 
+          id="${id}" 
+          onclick="deleteProject('${id}');" 
+          type="button" 
+          class="delete btn btn-secondary btn-sm"
+          ${user.level !== 5 ? 'disabled' : ''}
+        >
+          <i class="bi bi-folder-x"></i>
+        </button>
+      `;
+      t.row.add([
+        buttonHtml,
+        `<a href="./project/`+id+`/models">`+project+`</a>`,
+        `<a>`+prefix+`<a/>`,
+        `<a>`+len+`<a/>`,
+        description]).draw(true);
+    }
+    /*
+    $("#submit_project").click(()=>{
+      let project = $("#_name_").val();
+      let description = $("#_description_").val();
+      api.addProject(project,description,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    });
+    */
+    // Handle project form submission
+    document.getElementById('projectForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent form from submitting the default way
+
+      var modalInstance = bootstrap.Modal.getInstance(document.getElementById('projectModal'));
+
+      // Get form values
+      const projectName = document.getElementById('projectName').value.trim();
+      const projectDescription = document.getElementById('projectDescription').value.trim();
+      const uidPrefix = document.getElementById('uidPrefix').value.trim();
+      const uidLength = parseInt(document.getElementById('uidLength').value.trim());
+
+      // Validate fields before calling API
+      if (projectName === '' || uidPrefix === '' || !uidLength || uidLength < 1) {
+        $('#error').text("Some of required fields are empty or invalid");
+        $('#suggestion').text("Check project name, UID prefix and UID length");
+        $('#modalError').modal('show');
+        return;
+      }
+
+      // Regular expression to test input
+      var regex = /^[A-Za-z0-9]*$/;
+
+      if (!regex.test(projectName)) {
+        modalInstance.hide();
+        $('#error').text("Error adding project");
+        $('#suggestion').text("Name: Only letters and numbers are allowed, no spaces or symbols. Please try again");
+        $('#modalError').modal('show');
+        modalInstance.show();
+        return;
+      }
+
+      regex = /^[A-Za-z0-9:]*$/
+      if (!regex.test(uidPrefix)) {
+        modalInstance.hide();
+        $('#error').text("Error adding project");
+        $('#suggestion').text("prefix: Only letters and numbers and colon are allowed, no spaces or symbols. Please try again");
+        $('#modalError').modal('show');
+        modalInstance.show();
+        return;
+      }
+
+      // Allows letters, numbers, and colon
+
+      // Call API to add project
+      api.addProject(projectName, projectDescription, uidPrefix, uidLength, (err, res) => {
+
+        // Close modal
+        modalInstance.hide();
+
+        if(err){
+          $('#error').text("Error adding project");
+          if(err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          // Show success message
+          $("#successHeader").text("Project successfully added");
+          $('#successMsg').text("Project '" + projectName + "' was created successfully");
+          $('#modalSuccess').modal('show');
+          // Reset the form
+          //document.getElementById('projectForm').reset();  
+          location.reload();
+        }
+
+        modalInstance.show();
+        
+      });
+      
+    });
+
+    function deleteProject(project_id){
+      id = project_id
+      $('#modalConfirmation').modal('show');
+    };
+
+    $("#modalProceed").click(()=>{
+      
+      api.removeProject(id,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err.sqlMessage);
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    })
+
+    projectNameInput.addEventListener('input', () => {
+      const value = projectNameInput.value;
+      const isValid = /^[A-Za-z0-9]*$/.test(value); // Only letters and numbers
+
+      if (!isValid) {
+        // Set input border to red
+        projectNameInput.style.borderColor = 'red';
+      } else {
+        // Reset to default border color
+        projectNameInput.style.borderColor = 'green';
+      }
+    });
+
+    uidPrefixInput.addEventListener('input', () => {
+      const value = uidPrefixInput.value;
+      const isValid = /^[A-Za-z0-9:]*$/.test(value); // Allows letters, numbers, and colon
+
+      if (!isValid) {
+        // Set input border to red
+        uidPrefixInput.style.borderColor = 'red';
+      } else {
+        // Reset to default border color
+        uidPrefixInput.style.borderColor = 'green';
+      }
+    });
+
+
+  </script>
+</body>
+</html>

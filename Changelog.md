@@ -1,5 +1,87 @@
 # Changelog
 
+## version 1.0.74
+  server/controllers/db:delete: fix call
+    truncate table, fix filter construction
+  server/models/devices:delete: add curly brackets
+  pages/devices_list:deleteDevice: fix object text
+
+## version 1.0.73
+  fix device registration
+    catch error while double inserting a device
+    fix associateMqttTemplateToDevice if no template is selected
+
+## version 1.0.72
+  ftp-serv updated to 4.6.3
+  Add active state checkbox to MQTT second connection settings (#49)
+  server/models/devices: fix getProjectInfo query
+
+## version 1.0.71
+  feat: Add template association functionality to device settings page (#45)
+    * Add template selection UI and functionality to device settings page
+    * Add backend support for updating device template_id field
+    * Complete template association feature implementation and testing
+    * Adds remove lwm2m and mqtt templates
+  Add release option support for firmware uploads with multiple releases per version (#47)
+    * Add release option to firmware upload with validation
+    * Complete firmware release feature implementation with testing
+
+## version 1.0.70
+  Mqtt template (#43) (Fixes previous PR - mqtt templates)
+    * Add freeRTOS2 template support for MQTT-based projects (#39)
+    * Add freeRTOS2 template support - models, controllers, routes and UI
+    * Complete freeRTOS2 template implementation with database schema
+    * mqtt: Supports mqtt template and CRUD for device mqtt settings
+
+## version 1.0.69
+  Add global exception handling to prevent application exit except in dev mode
+  Supports templates for mqtt projects
+
+## version 1.0.68
+  template/lwm2mEdit: fixes error defaultData.value not defined
+  
+## version 1.0.67
+  - Supports LWM2M
+  - Supports templates for LWM2M
+  - Adds methods: getObservations and getObservationsStatus
+  - Fixes addClientPermission, deleteClientPermission, updateClientPermission
+
+## version 1.0.66
+  - fixes: Create new model (backend)
+    Only admin can create project or model
+  - fixes add sensor:
+    allows sensor creation by model and device
+  server/models/devices: implement getSensorLogs (1st version)
+  server/public/js/display: fixes showSensorsLogs (deviceId)
+  List sensors by modelId and deviceId
+  Supports 2 new routes for lwm2m: (#15):
+    - /:device_id/objects
+    - /:device_id/resources
+  Adds routes for preSharedKey and observationStatus (lwm2m)
+  Adds getId and fixes getPreSharedKey.
+  Fixes sendMqttMessage and return message success on api.status call
+
+## version 1.0.65
+  - Add MQTT password generation on user creation (#10)
+  - Add project creation modal with UID prefix and length validation (#12)
+  - Add model creation functionality with project association (#14)
+  
+## version 1.0.64
+  Projects (#8)
+  * Supports project Management, Adds models access management:
+    Project features:
+    - Adds project list
+    - Adds project Models
+    - Adds project settings (to be defined yet)
+    - Adds project Access
+    Models new features:
+    - Adds model Access
+  * enables AR, Alarms and JS code features (#7)
+
+## version 1.0.63
+  - shows firmware sidebar tab only for users with a privileged level >= 4
+  - Add manual FOTA trigger button (settings)
+
 ## version 1.0.62
   - fixes fw upload
   - server/models/devices: fixes getModelInfo call

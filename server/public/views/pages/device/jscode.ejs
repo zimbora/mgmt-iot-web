@@ -93,10 +93,7 @@ function foo(items) {
   return x;
 }`)
 
-      editor.setTheme("ace/theme/monokai");
-      editor.session.setMode("ace/mode/javascript");
-
-      var project = "";
+      var project_name = "";
       var uid = "";
 
       deviceID = api.getDeviceID();
@@ -205,13 +202,9 @@ gpio.write(led.pin, led.on);
 
         let device = <%- JSON.stringify(device) %>;
         let mqtt = <%- JSON.stringify(mqtt) %>;
-        project = device.project;
+        project_name = <%- JSON.stringify(project_name) %>;
         uid = device.uid;
 
-        if(window.location.protocol == "https:"){
-          Settings.mqtt.ssl = true;
-          Settings.mqtt.port = 443;
-        }
         client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
 
         // set callback handlers
@@ -233,15 +226,14 @@ gpio.write(led.pin, led.on);
 
       // called when the client connects
       function onConnect() {
-        console.log("connected");
         // Once a connection has been made, make a subscription and send a message.
         let button = document.querySelector('#mqtt_status');
         button.classList.toggle("btn-secondary",false);
         button.classList.toggle("btn-success",true);
-        console.log("uid:",uid)
-        client.subscribe(project+"/"+uid+"/status");
-        client.subscribe(project+"/"+uid+"/fw/js_program/#");
-        client.subscribe(project+"/"+uid+"/js/#");
+
+        client.subscribe(project_name+"/"+uid+"/status");
+        client.subscribe(project_name+"/"+uid+"/fw/js_program/#");
+        client.subscribe(project_name+"/"+uid+"/js/#");
       }
 
       function onConnectionLost(responseObject) {
@@ -285,7 +277,7 @@ gpio.write(led.pin, led.on);
 
       function sendScript(payload){
         message = new Paho.MQTT.Message(payload);
-        message.destinationName = project+"/"+uid+"/fw/js_program/set";
+        message.destinationName = project_name+"/"+uid+"/fw/js_program/set";
 
         var loading = $('#modalLoading');
         loading.modal('show');

@@ -9,57 +9,147 @@ var response = require('./response');
 
 module.exports = {
 
+  getId : async (req,res,next)=>{
+
+    const val = Joi.object({
+      uid: Joi.string().required(),
+      project: Joi.string(),
+    }).validate(req.query);
+
+    device.getId(req.query.uid,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+    
+  },
+
+  getPreSharedKey : async (req, res, next)=>{
+    
+    device.getPreSharedKey(req.params.device_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+    
+  },
+
+  getObservations : async (req, res, next)=>{
+
+    const projectName = await device.getProject(req.params.device_id)
+
+    if(projectName != 'lwm2m'){
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"Device is not classified in lwm2m project");
+    }else{
+      device.getObservations(req.params.device_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
+  getObservationStatus : async (req, res, next)=>{
+
+    const projectName = await device.getProject(req.params.device_id)
+
+    if(projectName != 'lwm2m'){
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"Device is not classified in lwm2m project");
+    }else{
+
+      const val = Joi.object({
+        objectId: Joi.number().required(),
+        objectInstanceId: Joi.number().required(),
+        resourceId: Joi.number().required(),
+      }).validate(req.query);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.getObservationStatus(req.params.device_id,req.query,(err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }
+    }
+  },
+
+  updateObservationStatus : async (req, res, next)=>{
+
+    const projectName = await device.getProject(req.params.device_id)
+
+    if(projectName != 'lwm2m'){
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"Device is not classified in lwm2m project");
+    }else{
+
+      const val = Joi.object({
+        objectId: Joi.number().required(),
+        objectInstanceId: Joi.number().required(),
+        resourceId: Joi.number().required(),
+        observing: Joi.boolean().truthy('true').falsy('false').required(),
+        token: Joi.string().max(16).allow('', null), // ensures max length of 16 characters
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.updateObservationStatus(req.params.device_id,req.body,(err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }
+    }
+  },
+
+
   addClientPermission : (req, res, next)=>{
 
-   const val = Joi.object({
-     deviceID: Joi.string().required(),
-     clientID: Joi.string().required(),
-     level: Joi.number().required()
-   }).validate(req.body);
+    const val = Joi.object({
+      deviceID: Joi.string().required(),
+      clientID: Joi.string().required(),
+      level: Joi.number().required()
+    }).validate(req.body);
 
-   if(val.error){
-     response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
-   }else{
-     Device.addClientPermission(req.body.deviceID,req.body.clientID,req.body.level,(err,rows)=>{
-       if(!err) response.send(res,rows);
-       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-     });
-   }
- },
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.addClientPermission(req.body.deviceID,req.body.clientID,req.body.level,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
 
   deleteClientPermission : (req, res, next)=>{
 
-   const val = Joi.object({
-     deviceID: Joi.string().required(),
-     clientID: Joi.string().required()
-   }).validate(req.body);
+    const val = Joi.object({
+      deviceID: Joi.string().required(),
+      clientID: Joi.string().required()
+    }).validate(req.body);
 
-   if(val.error){
-     response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
-   }else{
-     Device.deleteClientPermission(req.body.deviceID,req.body.clientID,(err,rows)=>{
-       if(!err) response.send(res,rows);
-       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-     });
-   }
- },
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.deleteClientPermission(req.body.deviceID,req.body.clientID,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
 
   updateClientPermission : (req, res, next)=>{
 
-   const val = Joi.object({
-     deviceID: Joi.string().required(),
-     clientID: Joi.string().required(),
-     level: Joi.number().required()
-   }).validate(req.body);
+    const val = Joi.object({
+      deviceID: Joi.string().required(),
+      clientID: Joi.string().required(),
+      level: Joi.number().required()
+    }).validate(req.body);
 
-   if(val.error){
-     response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
-   }else{
-     Device.updateClientPermission(req.body.deviceID,req.body.clientID,req.body.level,(err,rows)=>{
-       if(!err) response.send(res,rows);
-       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-     });
-   }
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.updateClientPermission(req.body.deviceID,req.body.clientID,req.body.level,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
  },
 
   list : (req, res, next)=>{
@@ -257,8 +347,32 @@ module.exports = {
     }
   },
 
+  // add device
+  add : (req, res, next)=>{
+    const val = Joi.object({
+      projectName: Joi.string().required(),
+      templateId: Joi.number().optional(),
+      modelName: Joi.string().required(),
+      uid: Joi.string().required(),
+      name: Joi.string(),
+      protocol: Joi.string().valid('MQTT', 'LwM2M', 'mqtt', 'lwm2m').required(),
+      psk: Joi.string(),
+    }).validate(req.body);
+
+    // Add client_id from authenticated user to device data
+    const deviceData = {
+      ...req.body,
+      clientId: req.user?.client_id
+    };
+
+    device.add(deviceData,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
   // delete device
-  delete  : (req, res, next)=>{
+  delete : (req, res, next)=>{
     device.delete(req.params.device_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
@@ -284,6 +398,27 @@ module.exports = {
   // get device jscode
   getJSCode : (req, res, next)=>{
     device.getJSCode(req.params.device_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
+  getLwm2mObjects : (req, res, next)=>{
+
+    // check if project is 'lwm2m'
+    device.getLwm2mObjects(req.params.device_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
+  getLwm2mResources : (req, res, next)=>{
+
+    const val = Joi.object({
+      objectId: Joi.number(),
+    }).validate(req.query);
+
+    device.getLwm2mResources(req.params.device_id,req.query?.objectId,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
@@ -360,6 +495,23 @@ module.exports = {
     }
   },
 
+  updateDeviceField : (req, res, next)=>{
+
+    const val = Joi.object({
+      field: Joi.required(),
+      data: Joi.optional().allow(null),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.updateDeviceField(req.params.device_id,req.body.field,req.body.data,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
   sendMqttMessage : (req,res,next)=>{
 
     const val = Joi.object({
@@ -384,7 +536,367 @@ module.exports = {
         }
       );
     }
-  }
+  },
+
+    // Add a new object
+  addObject: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+
+      const val = Joi.object({
+        objectId: Joi.number().required(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('json') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.object().optional()
+        }).required(),
+        observe: Joi.boolean().truthy('true').falsy('false').required(),
+        readInterval: Joi.number().required(),
+      }).validate(req.body);
+
+      const { objectId, description, defaultData, observe, readInterval } = req.body;
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.addObject(
+          deviceId,
+          objectId,
+          description,
+          defaultData,
+          observe,
+          readInterval,
+          (err, result) => {
+            if (err) {
+              return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+            }
+            return response.send(res, result);
+          }
+        );
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Add a new resource
+  addResource: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+
+      const val = Joi.object({
+        objectId: Joi.number().required(),
+        objectInstanceId: Joi.number().required(),
+        resourceId: Joi.number().required(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'execute', 'time') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.optional()
+        }).required(),
+        observe: Joi.boolean().truthy('true').falsy('false').required(),
+        readInterval: Joi.number().required(),
+      }).validate(req.body);
+
+      const { objectId, objectInstanceId, resourceId, description, defaultData, observe, readInterval } = req.body;
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.addResource(
+          deviceId,
+          objectId,
+          objectInstanceId,
+          resourceId,
+          description,
+          defaultData,
+          observe,
+          readInterval,
+          (err, result) => {
+            if (err) {
+              return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+            }
+            return response.send(res, result);
+          }
+        );
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Update an existing object
+  updateObject: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+      const updateData = req.body;
+
+      if (!deviceId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      const val = Joi.object({
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('json') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.optional()
+        }).optional(),
+        observe: Joi.boolean().truthy('true').falsy('false').optional(),
+        readInterval: Joi.number().optional(),
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.updateEntry(entryId, updateData, (err, result) => {
+          if (err) {
+            return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          }
+          return response.send(res, result);
+        });
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Update an existing resource
+  updateResource: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+      const updateData = req.body;
+
+      if (!deviceId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      const val = Joi.object({
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'json', 'time') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.required()
+        }).optional(),
+        observe: Joi.boolean().truthy('true').falsy('false').optional(),
+        readInterval: Joi.number().optional(),
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.updateEntry(entryId, updateData, (err, result) => {
+          if (err) {
+            return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          }
+          return response.send(res, result);
+        });
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete a object
+  deleteObject: async (req, res, next) => {
+
+    // check access to deviceId - req.params.device_id
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+
+      if (!deviceId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      device.deleteEntry(entryId, (err, result) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        return response.send(res, result);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete a resource
+  deleteResource: async (req, res, next) => {
+
+    // check access to deviceId - req.params.device_id
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+
+      if (!deviceId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      device.deleteEntry(entryId, (err, result) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        return response.send(res, result);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+    // MQTT Topics methods
+  getMqttTopics : (req, res, next)=>{
+    device.getMqttTopics(req.params.device_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
+  // Add a new MQTT topic
+  addMqttTopic: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+
+      const val = Joi.object({
+        topic: Joi.string().required(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'json') // Allowed data types
+              .required(),
+            title: Joi.string().required(),
+            readable: Joi.boolean().required(),
+            writable: Joi.boolean().required(),
+          }).required(),
+        }).optional(),
+        defaultData: Joi.object({
+          value: Joi.required()
+        }).optional(),
+        readInterval: Joi.number().min(0).optional(), // Publishing interval in seconds
+        synch: Joi.boolean().required(), // synch local data with remote
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        const { topic, description, defaultData, readInterval, synch } = req.body;
+        device.addMqttTopic(
+          deviceId,
+          topic,
+          description,
+          defaultData,
+          readInterval,
+          synch,
+          (err, result) => {
+            if (err) {
+              return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+            }
+            return response.send(res, result);
+          }
+        );
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Update MQTT topic
+  updateMqttTopic: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+
+      if (!deviceId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Device ID and Entry ID are required");
+      }
+
+      const val = Joi.object({
+        topic: Joi.string().optional(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'json')
+              .required(),
+            title: Joi.string().required(),
+            readable: Joi.boolean().required(),
+            writable: Joi.boolean().required(),
+          }).required(),
+        }).optional(),
+        localData: Joi.object({
+          value: Joi.required()
+        }).optional(),
+        readInterval: Joi.number().min(0).optional(),
+        synch: Joi.boolean().optional(), // synch local data with remote
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.updateMqttTopic(entryId, req.body, (err, result) => {
+          if (err) {
+            return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          }
+          return response.send(res, result);
+        });
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete MQTT topic
+  deleteMqttTopic: async (req, res, next) => {
+    try {
+      const entryId = req.params.entry_id;
+
+      if (!entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Entry ID is required");
+      }
+
+      device.deleteMqttTopic(entryId, (err, result) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        return response.send(res, result);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
 };
 /*
 function update(req, res, next) {

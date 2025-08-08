@@ -86,21 +86,21 @@ module.exports =  {
     })
   },
 
-  add : async (filename,originalname,version,app_version,modelId,cb)=>{
+  add : async (filename,originalname,version,app_version,release,modelId,cb)=>{
 
-    let query = "select * from ?? where ?? = ? and ?? = ? and ?? = ?";
-    let table = ["firmwares","version",version,"app_version",app_version,"model_id",modelId];
+    let query = "select * from ?? where ?? = ? and ?? = ? and ?? = ? and ?? = ?";
+    let table = ["firmwares","version",version,"app_version",app_version,"build_release",release,"model_id",modelId];
     query = mysql.format(query,table);
 
     db.queryRow(query)
     .then(rows => {
       if(rows.length > 0){
-        return cb("this version already exists for this model, try increase it",null)
+        return cb("this version and release combination already exists for this model, try increase it or use different release",null)
       }else{
         var token = "";
         
         var SHA256 = require("crypto-js/sha256");
-        let message = originalname+"\º~"+version+app_version;
+        let message = originalname+"\º~"+version+app_version+release;
         let key = String(Date.now()/3621)
         var token = CryptoJS.HmacSHA256(message, key).toString();
 
@@ -109,6 +109,7 @@ module.exports =  {
           originalname : originalname,
           version : version,
           app_version : app_version,
+          build_release : release,
           model_id : modelId,
           token : token,
           createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),

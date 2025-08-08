@@ -18,6 +18,7 @@ var validate = require('./server/controllers/params_validator');
 var user = require('./server/controllers/users');
 var client = require('./server/controllers/clients');
 var firmware = require('./server/controllers/firmwares');
+var project = require('./server/controllers/projects');
 var model = require('./server/controllers/models');
 
 var Device = require('./server/models/devices');
@@ -27,6 +28,9 @@ var Project = require('./server/models/projects');
 var Model = require('./server/models/models');
 var Firmware = require('./server/models/firmwares');
 var Sensor = require('./server/models/sensors');
+var Templates = require('./server/models/templates');
+var Lwm2mTemplate = require('./server/models/lwm2mTemplate');
+var mqttTemplate = require('./server/models/mqttTemplate');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -99,6 +103,37 @@ app.use(auth.check_authentication,(req,res,next)=>{
     req.user.mgmt_iot_version = mgmt_iot_version;
     next()
   }
+});
+
+// server.js (express example)
+app.get('*/settings.js', (req, res) => {
+  /*
+  fs.readFile(path.join(__dirname, config.public_path+'/js/settings.js'), function(err, data) {
+    if (err) {
+      res.writeHead(500, {'Content-Type': 'text/plain'});
+      res.end('Error loading module');
+    } else {
+      res.writeHead(200, {'Content-Type': 'application/javascript'});
+      res.end(data);
+    }
+  });
+  */
+  
+  const mqttHost = $.config.mqtt.host || req.hostname;
+  const mqttPort = $.config.web.mqttPort || 443;
+  const mqttSSL = $.config.web.mqttSSL || true;
+  res.type('application/javascript').send(`
+    var Settings = {
+      url : window.location.protocol+"//"+window.location.hostname+":"+window.location.port,
+      api : window.location.protocol+"//"+window.location.hostname+":"+window.location.port+"/api",
+      mqtt : {
+        host : "${mqttHost}",
+        port : ${mqttPort} ,
+        ssl : ${mqttSSL}
+      }
+    };
+  `);
+  
 });
 
 app.use('*/js',express.static(path.join(__dirname, config.public_path+'/js')))
@@ -239,7 +274,92 @@ app.get('/client/:client_id/access',(req,res,next)=>{
     res.render(path.join(__dirname, config.public_path+'/views/pages/client/access'),{user:req.user,page:'Access'});
 });
 
-// --- firmwares ---
+
+// --- projects ---
+app.get('/projects',(req,res)=>{
+  if(req.user.level >= 2){
+    if(req.user.level >= 4){
+      Project.list((err,projects)=>{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/projects_list'),{user:req.user,projects:projects,page:'Projects'});
+      });
+    }else{
+      Project.listWithClientPermission(req.user.client_id,(err,projects)=>{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/projects_list'),{user:req.user,projects:projects,page:'Projects'});
+      });
+    }
+  }
+});
+
+app.use('/project/:project_id',(req,res,next)=>{
+  Project.getById(req.params.project_id,(err,project)=>{
+    req.project = project;
+    next();
+  })
+})
+
+app.get('/project/:project_id/models',(req,res)=>{
+  
+  project.checkAccess(req,res,()=>{
+    Project.getModels(req.params?.project_id,(err,models)=>{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/project/models'),{project:req.project,models:models,user:req.user,page:'ProjectModels'});
+    })
+  });
+});
+
+app.get('/project/:project_id/access',project.checkOwnership,(req,res)=>{
+  if(req.user.level >= 4){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/project/access'),{project:req.project,user:req.user,page:'ProjectAccess'});
+  }
+});
+
+app.get('/project/:project_id/settings',project.checkOwnership,(req,res)=>{
+  if(req.user.level >= 4){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/project/settings'),{project:req.project,user:req.user,page:'ProjectSettings'});
+  }
+});
+
+app.get('/project/:project_id/sensors',(req,res)=>{
+  if(req.user.level >= 4 ){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/project/sensors'),{project:req.project,user:req.user,page:'ProjectSensors'});
+  }
+});
+
+app.get('/project/:project_id/templates',(req,res)=>{
+  
+  project.checkAccess(req,res,()=>{
+    Project.getTemplates(req.params?.project_id,(err,templates)=>{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/project/templates'),{project:req.project,templates:templates,user:req.user,page:'ProjectTemplates'});
+    })
+  });
+});
+
+app.get('/templates/:template_id/edit',(req,res)=>{
+  
+  Templates.getById(req.params?.template_id,(err,template)=>{
+    console.log(template);
+    Project.getById(template.project_id,(err,projectData) => {
+      console.log(projectData)
+      if(projectData.name === "lwm2m"){
+        res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
+          project:projectData,
+          template,
+          user:req.user,
+          page:'Edit'
+        });
+      }else{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/template/mqttEdit'),{
+          project:projectData,
+          template,
+          user:req.user,
+          page:'Edit'
+        });
+      }
+    })
+  })
+
+});
+
+// --- models ---
 app.get('/models',(req,res)=>{
   if(req.user.level >= 2){
     if(req.user.level >= 4){
@@ -254,7 +374,6 @@ app.get('/models',(req,res)=>{
   }
 });
 
-// --- models ---
 app.use('/model/:model_id',(req,res,next)=>{
   Model.getModelById(req.params.model_id,(err,model)=>{
     req.model = model;
@@ -301,6 +420,19 @@ app.get('/model/:model_id/firmwares',(req,res)=>{
   }
 });
 
+// --- templates ---
+app.get('/template/:template_id/edit',(req,res)=>{
+  if(req.user.level >= 4){
+    const templateId = req.params.template_id;
+    res.render(path.join(__dirname, config.public_path+'/views/template/edit/templateLwm2mEdit'),{
+      user: req.user,
+      templateId: templateId,
+      page: 'Template Edit'
+    });
+  } else {
+    res.redirect('/home');
+  }
+});
 
 // --- devices ---
 
@@ -337,6 +469,7 @@ app.get('/device/:device_id/sensors',(req,res)=>{
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -351,17 +484,58 @@ app.get('/device/:device_id/settings',(req,res)=>{
 
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model){
-    res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{
+
+    if(data.project_name === "lwm2m"){
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/lwm2mSettings'),{
+        project_name:data.project_name,
+        model_name:data.model_name,
+        device:data.device,
+        project:data.project,
+        model:data.model,
+        modelFeat:data.modelFeat,
+        fw:data.fw,
+        sensors:data.sensors,
+        mqtt:data.mqtt,
+        user:req.user,
+        page:'Settings'
+      });
+    }else{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{
+        project_name:data.project_name,
+        model_name:data.model_name,
+        device:data.device,
+        project:data.project,
+        model:data.model,
+        modelFeat:data.modelFeat,
+        fw:data.fw,
+        sensors:data.sensors,
+        mqtt:data.mqtt,
+        user:req.user,
+        page:'Settings'
+      });
+    }
+  }else{
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
+  }
+});
+
+app.get('/device/:device_id/mqttSettings',(req,res)=>{
+
+  let data = req.user.data;
+  if(data.device != null && data.mqtt != null && data.model){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqttSettings'),{
       project_name:data.project_name,
       model_name:data.model_name,
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
       user:req.user,
-      page:'Settings'});
+      page:'MqttSettings'
+    });
   }else{
     res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }
@@ -377,6 +551,7 @@ app.get('/device/:device_id/access',(req,res)=>{
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -390,13 +565,14 @@ app.get('/device/:device_id/access',(req,res)=>{
 app.get('/device/:device_id/autorequests',(req,res)=>{
 
   let data = req.user.data;
-  if(data.device != null && data.mqtt != null && data.model?.ar_enabled){
+  if(data.device != null && data.mqtt != null && data.modelFeat?.ar_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/autorequests'),{
       project_name:data.project_name,
       model_name:data.model_name,
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -410,13 +586,14 @@ app.get('/device/:device_id/autorequests',(req,res)=>{
 app.get('/device/:device_id/alarms',(req,res)=>{
 
   let data = req.user.data;
-  if(data.device != null && data.mqtt != null && data.model?.alarms_enabled){
+  if(data.device != null && data.mqtt != null && data.modelFeat?.alarms_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/alarms'),{
       project_name:data.project_name,
       model_name:data.model_name,
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -430,13 +607,14 @@ app.get('/device/:device_id/alarms',(req,res)=>{
 app.get('/device/:device_id/jscode',(req,res)=>{
 
   let data = req.user.data;
-  if(data.device != null && data.mqtt != null && data.model?.js_code_enabled){
+  if(data.device != null && data.mqtt != null && data.modelFeat?.js_code_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/jscode'),{
       project_name:data.project_name,
       model_name:data.model_name,
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -494,6 +672,7 @@ function collectData(req,callback){
         data.device = row?.device != null ? row.device : {};
         data.project = row?.project != null ? row.project : {};
         data.model = row?.model != null ? row.model : {};
+        data.modelFeat = row?.modelFeat != null ? row.modelFeat : {};
         data.fw = row?.fw != null ? row.fw : {};
         data.associated = row?.associated != null ? row.associated : {};
         next(err);

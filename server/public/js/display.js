@@ -1,8 +1,9 @@
 var Display = {
 
-	showSensorsLogs : (sensorID,type)=>{
+	showSensorsLogs : (sensorId,type)=>{
 
-    api.getSensorLogs(deviceID,sensorID,(err,res)=>{
+    const dId = deviceID ?? deviceId;
+    api.getSensorLogs(dId,sensorId,(err,res)=>{
       if(err) console(err);
       else if(res?.length > 0){
         if(type.toLowerCase() == "string" )
@@ -18,8 +19,9 @@ var Display = {
 
 	showDeviceLogs : (sensor)=>{
 
+    const dId = deviceID ?? deviceId;
     moment.locale('pt');
-    api.getDeviceLogs(deviceID,sensor,(err,res)=>{
+    api.getDeviceLogs(dId,sensor,(err,res)=>{
       if(err) console(err);
       if(res?.length > 0 && typeof res[0][sensor] === "string" )
         Display.showList(sensor,res);
@@ -30,8 +32,9 @@ var Display = {
 
   showFwLogs : (sensor)=>{
 
+    const dId = deviceID ?? deviceId;
     moment.locale('pt');
-    api.getFwLogs(deviceID,sensor,(err,res)=>{
+    api.getFwLogs(dId,sensor,(err,res)=>{
       if(err) console(err);
       if(res?.length > 0 && typeof res[0][sensor] === "string" )
         Display.showList(sensor,res);

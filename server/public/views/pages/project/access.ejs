@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+  
+  <%- include('../../partials/project/scripts.ejs') %>
+  <%- include('../../partials/project/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/project/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="content-header">
+              <h3><%= project.name %></h3>
+            </div>
+            <div class="row">
+              <div class="col-sm-7 mb-3 mb-sm-0">
+                <div class="card py-3">
+                  <h5 class="card-title">Model Access</h5>
+                  <table id="projects" class="display" style="width:100%" overflow-x:scroll>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>client</th>
+                            <th>level</th>
+                        </tr>
+                    </thead>
+                  </table>
+                </div>
+              </div>
+              <div class="col-sm-5 mb-3 mb-sm-0">
+                <div class="card py-3">
+                  <div class="card-header">
+                    <h5 class="card-title">Grant permissions</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="input-group mb-3">
+                      <label class="input-group-text" for="inputGroupSelect01">to client</label>
+                      <input class="form-control" list="datalistOptions" id="_clientID_" placeholder="Type to search...">
+                      <datalist id="datalistOptions">
+                      </datalist>
+                      <div>
+                        <select class="form-select small-width" id="_levelID_">
+                          <option default>1</option>
+                          <option value="5">5</option>
+                          <option value="4">4</option>
+                          <option value="3">3</option>
+                          <option value="2">2</option>
+                          <option value="1">1</option>
+                        </select>
+                      </div>
+                      <button id="submit_permission" type="button" class="btn btn-primary btn-sm">
+                        <i class="fa-sharp fa-solid fa-user-plus"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+
+    var t;
+    var projectID = api.getProjectID();
+
+    $(document).ready(function () {
+
+      t = $('#projects').DataTable();
+
+      api.project.listPermissions(projectID,(err,res)=>{
+        if(err) console.log("err:",err)
+        else{
+          res.forEach((item, i) => {
+            console.log(item)
+            addRow(item.client_id,item.nick,item.level);
+          });
+        }
+      });
+
+      api.getHumanClients((err,res)=>{
+        if(err) console.log(err)
+        else{
+          var datalist = document.getElementById('datalistOptions');
+          res.forEach((item,i)=>{
+            var option = document.createElement('option');
+            let nick = item.nick
+            if(nick.indexOf("uid:") === -1){
+              option.value = nick;
+              option.id = item.id;
+              datalist.appendChild(option);
+            }
+          })
+        }
+      });
+
+    });
+
+    $("#submit_permission").click(()=>{
+      let nick = $("#_clientID_").val();
+      let level = $("#_levelID_").val();
+      var clientID = $("#datalistOptions option[value='" + nick + "']").attr("id");
+      api.project.grantPermission(projectID,clientID,level,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    });
+
+    function addOption(project){
+
+      $('#_fwproject_').append(`<option value="${project}">
+                                 ${project}
+                            </option>`);
+    }
+
+    function addRow(clientID,nick,level){
+
+      t.row.add([`
+        <button id="`+clientID+`" onclick="deletePermission('`+clientID+`');" type="button" class="delete btn btn-danger btn-sm">
+          <i class="fa-sharp fa-solid fa-user-minus"></i>
+        </button>`,
+        nick,
+        level]).draw(true);
+
+    }
+
+    function deletePermission(id){
+      api.project.removePermission(projectID,id,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    }
+
+  </script>
+</body>
+</html>

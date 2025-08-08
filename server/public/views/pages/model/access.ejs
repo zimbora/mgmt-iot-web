@@ -33,6 +33,7 @@
                         <tr>
                             <th></th>
                             <th>client</th>
+                            <th>level</th>
                         </tr>
                     </thead>
                   </table>
@@ -49,6 +50,16 @@
                       <input class="form-control" list="datalistOptions" id="_clientID_" placeholder="Type to search...">
                       <datalist id="datalistOptions">
                       </datalist>
+                      <div>
+                        <select class="form-select small-width" id="_levelID_">
+                          <option default>1</option>
+                          <option value="5">5</option>
+                          <option value="4">4</option>
+                          <option value="3">3</option>
+                          <option value="2">2</option>
+                          <option value="1">1</option>
+                        </select>
+                      </div>
                       <button id="submit_permission" type="button" class="btn btn-primary btn-sm">
                         <i class="fa-sharp fa-solid fa-user-plus"></i>
                       </button>
@@ -74,12 +85,12 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.client_id,item.nick);
+            addRow(item?.client_id,item?.nick,item?.level);
           });
         }
       });
 
-      api.getClients((err,res)=>{
+      api.getHumanClients((err,res)=>{
         if(err) console.log(err)
         else{
           var datalist = document.getElementById('datalistOptions');
@@ -100,7 +111,8 @@
     $("#submit_permission").click(()=>{
       let nick = $("#_clientID_").val();
       var clientID = $("#datalistOptions option[value='" + nick + "']").attr("id");
-      api.grantFWModelPermission(modelID,clientID,(err,res)=>{
+      let level = $("#_levelID_").val();
+      api.grantFWModelPermission(modelID,clientID,level,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);
@@ -116,13 +128,14 @@
                             </option>`);
     }
 
-    function addRow(clientID,nick){
+    function addRow(clientID,nick,level){
 
       t.row.add([`
         <button id="`+clientID+`" onclick="deletePermission('`+clientID+`');" type="button" class="delete btn btn-danger btn-sm">
           <i class="fa-sharp fa-solid fa-user-minus"></i>
         </button>`,
-        nick]).draw(true);
+        nick,
+        level]).draw(true);
 
     }
 
