@@ -316,15 +316,13 @@ module.exports = {
 
   // trigger manual FOTA check
   triggerFota : (req, res, next)=>{
-    // For now, this is a simple trigger that responds with success
-    // In a real implementation, this could trigger firmware update checks,
-    // notify the device to check for updates, etc.
-    response.send(res, {
-      status: "success",
-      message: "FOTA check triggered successfully",
-      deviceId: req.params.device_id,
-      timestamp: new Date().toISOString()
+
+    // checks if device is using latest version and if not, updates no matter what..
+    device.triggerFota(req.params.device_id,req.body?.version, req.body?.app_version,(err,msg)=>{
+      if(!err) response.send(res,msg);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
+
   },
 
   // update device settings

@@ -1,8 +1,29 @@
 var mysql = require('mysql2');
 var db = require('../controllers/db');
+var firmwares = require('./firmwares');
+
+const semver = require('semver');
 const moment = require('moment');
 
 var self = module.exports =  {
+
+  getById : async (deviceId)=>{
+    return new Promise( (resolve,reject)=>{
+
+      let query = `select * from devices where id = ?`;
+      let table = [deviceId]
+      query = mysql.format(query,table);
+      db.queryRow(query)
+      .then(rows => {
+        if(rows?.length > 0)
+          resolve(rows[0]);
+        else resolve(null);
+      })
+      .catch(error => {
+        reject(error);
+      })
+    })
+  },
 
   addClientPermission : async (deviceId,clientId,level,cb)=>{
 
@@ -964,18 +985,108 @@ var self = module.exports =  {
     });
   },
 
+  triggerFota : async(deviceId,version,app_version,cb)=>{
+
+    try{
+      let query = `SELECT * FROM ?? where id = ?;`
+      let table = ["devices",deviceId]
+      query = mysql.format(query,table);
+      let res = await db.queryRow(query)
+      if(res != null && res.length > 0)
+        device = res[0];
+
+    }catch(error){
+      return cb(error,null)
+    }
+
+    lVersion = await firmwares.getLatestVersion(device.model_id, device.accept_release);
+    lAppVersion = await firmwares.getLatestAppVersion(device.model_id, device.accept_release);
+    console.log(lVersion);
+
+    let firmware = null;
+    if(lAppVersion?.version && lAppVersion?.app_version != device.app_version){
+      firmware = lAppVersion;
+    }else if(lVersion?.version && lVersion.version != device.version){
+      firmware = lVersion;
+    }
+
+    if(firmware){
+
+      console.log(`update fw to: ${firmware.filename}`);
+
+      let topic = "";
+
+      const modelName = await self.getModel(deviceId);
+      if(modelName == "sniffer") // this is temporary..
+        topic = "fota/update/set";
+      else
+        topic = "fw/fota/update/set"; // topic should be always this one !!
+      
+      // for now just supports links to http servers..
+      let link = `${$.config?.web?.protocol}${$.config?.web?.domain}${$.config?.web?.fw_path}${firmware?.filename}/download?token=${firmware?.token}`;
+      const payload = `{"url":"${link}"}`;
+
+      const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+      obj = {
+        device_id : device.id,
+        local_version : device.version,
+        local_app_version : device.app_version,
+        target_version : lVersion.version,
+        target_app_version : lAppVersion.app_version,
+        target_file : firmware.filename,
+        nAttempt : device.nAttempts,
+        createdAt : timestamp,
+        updatedAt : timestamp
+      }
+      db.insert("logs_fota",obj);
+
+      await self.sendMqttMessage(deviceId,topic,payload,qos = 1,retain = false,()=>{
+        return cb(null, `updating fw to ${firmware.filename}`)
+      })
+
+    }else{
+      return cb(null, `no new version available`);
+    }
+
+  },
+
   sendMqttMessage : async (deviceId,topic,payload,qos,retain,cb)=>{
 
-    let project = await self.getProject(deviceId);
+    let projectName = await self.getProject(deviceId);
 
-    if(project == null)
+    if(projectName == null)
       return cb(`no project found for deviceId ${deviceId}`,null)
 
     let uid = await self.getUID(deviceId);
     if(uid == null)
       return cb(`no uid found for deviceId ${deviceId}`,null)
     
-    let publishTopic = `${project}/${uid}/${topic}`;
+    const modelName = await self.getModel(deviceId);
+    
+    let mqtt_prefix = "";
+
+    // !! A different way should thought to trigger message through a different device
+    if(modelName == "sniffer"){
+
+      const associatedUID = await self.getUID(device.associatedDevice);
+      const associatedProjectName = await self.getProject(device.associatedDevice);
+
+      if(associatedProjectName == null)
+        return cb(`no project found for deviceId ${deviceId}`,null)
+
+      mqtt_prefix = `${associatedProjectName}/${associatedUID}`;
+
+      associatedDevice = await self.getById(device.associatedDevice);
+      if (semver.gt(associatedDevice?.app_version, "1.0.5"))
+        mqtt_prefix += `/app/sniffer/${uid}`;
+      else
+        mqtt_prefix += `/app/sniffer`;
+    }
+    else{
+      mqtt_prefix = `${projectName}/${device.uid}`;
+    }
+
+    let publishTopic = `${mqtt_prefix}/${topic}`;
 
     if(publishTopic.endsWith("get")){
       // response comes without "get"
@@ -987,7 +1098,6 @@ var self = module.exports =  {
     }
     
     try{
-      //$.mqttClient.publish(fullTopic,payload,qos,retain);
       let res = await publishAndWaitForResponse(publishTopic, payload, responseTopic, qos, retain);
       return cb(null,res);
     }catch(error){
