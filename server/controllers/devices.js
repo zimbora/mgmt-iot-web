@@ -315,7 +315,7 @@ module.exports = {
   },
 
   // trigger manual FOTA check
-  checkFota : (req, res, next)=>{
+  triggerFota : (req, res, next)=>{
     // For now, this is a simple trigger that responds with success
     // In a real implementation, this could trigger firmware update checks,
     // notify the device to check for updates, etc.

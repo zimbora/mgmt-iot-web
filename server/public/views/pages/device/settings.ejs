@@ -615,7 +615,7 @@
     });
 
     $("#fotaTrigger").click(()=>{
-      api.triggerFotaCheck(deviceID,(err,res)=>{
+      api.triggerFota(deviceID,(err,res)=>{
         if(err){
           $('#error').text("FOTA trigger failed");
           if(err.hasOwnProperty("sqlMessage"))
