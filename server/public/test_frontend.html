@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Latest Versions Display</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <h1>Test Latest Firmware Versions Display</h1>
+  
+  <div class="mb-1 row">
+    <label>Version:</label>
+    <div>
+      <input type="text" readonly id="version" value="1.0.0">
+      <small class="text-muted">Latest: <span id="latest_version">-</span></small>
+    </div>
+  </div>
+  
+  <div class="mb-4 row">
+    <label>App version:</label>
+    <div>
+      <input type="text" readonly id="app_version" value="2.0.0">
+      <small class="text-muted">Latest: <span id="latest_app_version">-</span></small>
+    </div>
+  </div>
+
+  <script>
+    // Mock device data
+    var device = {
+      model_id: '123',
+      accept_release: 'prod'
+    };
+    
+    // Mock Settings object
+    var Settings = {
+      api: 'http://localhost:3000/api'
+    };
+    
+    // Simulate our AJAX call (with mocked response)
+    function testLatestVersionsDisplay() {
+      console.log('Testing latest versions display...');
+      
+      // Mock successful response
+      var mockResponse = {
+        Error: false,
+        Result: {
+          latest_version: '1.2.3',
+          latest_app_version: '2.1.0'
+        }
+      };
+      
+      // Simulate the success callback
+      if (mockResponse && !mockResponse.Error) {
+        const result = mockResponse.Result;
+        if (result && result.latest_version) {
+          document.getElementById('latest_version').textContent = result.latest_version;
+          console.log('✅ Latest version updated to:', result.latest_version);
+        }
+        if (result && result.latest_app_version) {
+          document.getElementById('latest_app_version').textContent = result.latest_app_version;
+          console.log('✅ Latest app version updated to:', result.latest_app_version);
+        }
+      }
+      
+      console.log('✅ Frontend logic test completed');
+    }
+    
+    // Run test when page loads
+    $(document).ready(function() {
+      console.log('Page loaded, testing...');
+      testLatestVersionsDisplay();
+    });
+  </script>
+</body>
+</html>
