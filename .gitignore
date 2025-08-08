@@ -37,3 +37,9 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# config
+config/env/keys.js
+
+# firmwares
+server/public/firmwares/
