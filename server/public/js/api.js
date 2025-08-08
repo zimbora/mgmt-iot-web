@@ -286,6 +286,24 @@ var api = {
     });
   },
 
+  triggerFota : (deviceID, cb)=>{
+    fetch(Settings.api+"/device/"+deviceID+"/trigger/fota", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   updateDeviceSettings : (deviceID,settings,cb)=>{
     fetch(Settings.api+"/device/"+deviceID+"/settings", {
       method: 'PUT',

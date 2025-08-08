@@ -314,6 +314,17 @@ module.exports = {
     }
   },
 
+  // trigger manual FOTA check
+  triggerFota : (req, res, next)=>{
+
+    // checks if device is using latest version and if not, updates no matter what..
+    device.triggerFota(req.params.device_id,req.body?.version, req.body?.app_version,(err,msg)=>{
+      if(!err) response.send(res,msg);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+
+  },
+
   // update device settings
   updateDeviceSettings : (req, res, next)=>{
 

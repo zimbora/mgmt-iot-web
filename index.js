@@ -24,12 +24,13 @@ module.exports = {
 
   init : (settings)=>{
 
+    $.config = settings;
     var db = require('./server/controllers/db');
     db.connect(settings,() => {
       db_setup();
       mgmt_iot_version = settings?.version ? settings.version : "";
-      web.listen(settings?.web_port, () => {
-        log.info('Web Server started and listening on port: ' +settings?.web_port + ' ' + settings?.env);
+      web.listen(settings?.web?.port, () => {
+        log.info('Web Server started and listening on port: ' +settings?.web?.port + ' ' + settings?.env);
       });
       log.info("connected to DB");
     });
