@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.0.63
+  - shows firmware sidebar tab only for users with a privileged level >= 4
+  - Add manual FOTA trigger button (settings)
+
 ## version 1.0.62
   - fixes fw upload
   - server/models/devices: fixes getModelInfo call
