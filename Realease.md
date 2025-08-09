@@ -20,5 +20,4 @@
 ## 3rd step
 	
 	launch release on git and npm:
-		>> gh release create ${tag} // creates release on github..
 		>> npm publish
