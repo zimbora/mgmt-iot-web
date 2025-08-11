@@ -100,13 +100,14 @@ module.exports = {
   grantPermission : (req, res, next)=>{
 
     const val = Joi.object({
-      clientID: Joi.string().required(),
+      clientId: Joi.string().required(),
+      level: Joi.string().required(),
     }).validate(req.body);
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      Model.grantPermission(req.body.clientID,req.params.model_id,(err,rows)=>{
+      Model.grantPermission(req.body.clientId,req.body.level,req.params.model_id,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });

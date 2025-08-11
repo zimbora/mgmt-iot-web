@@ -143,7 +143,7 @@ var self = module.exports = {
 
   listPermissions : (modelId,cb)=>{
 
-    var query = `select c.nick,p.id,p.client_id from modelPermissions as p inner join clients as c where ?? = ? and p.client_id = c.id`;
+    var query = `select c.nick,p.id,p.client_id,p.level from modelPermissions as p inner join clients as c where ?? = ? and p.client_id = c.id`;
     var table = ["model_id",modelId];
     query = mysql.format(query,table);
     db.queryRow(query)
@@ -155,7 +155,7 @@ var self = module.exports = {
     })
   },
 
-  grantPermission : (clientId,modelId,cb)=>{
+  grantPermission : (clientId,level,modelId,cb)=>{
 
     let query = "select * from ?? where ?? = ? and ?? = ?";
     let table = ["modelPermissions","client_id",clientId,"model_id",modelId];
@@ -169,6 +169,7 @@ var self = module.exports = {
         let obj = {
           client_id : clientId,
           model_id : modelId,
+          level : level,
           createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
           updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
         }

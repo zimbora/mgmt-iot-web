@@ -18,6 +18,7 @@ var validate = require('./server/controllers/params_validator');
 var user = require('./server/controllers/users');
 var client = require('./server/controllers/clients');
 var firmware = require('./server/controllers/firmwares');
+var project = require('./server/controllers/projects');
 var model = require('./server/controllers/models');
 
 var Device = require('./server/models/devices');
@@ -239,7 +240,56 @@ app.get('/client/:client_id/access',(req,res,next)=>{
     res.render(path.join(__dirname, config.public_path+'/views/pages/client/access'),{user:req.user,page:'Access'});
 });
 
-// --- firmwares ---
+
+// --- projects ---
+app.get('/projects',(req,res)=>{
+  if(req.user.level >= 2){
+    if(req.user.level >= 4){
+      Project.list((err,projects)=>{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/projects_list'),{user:req.user,projects:projects,page:'Projects'});
+      });
+    }else{
+      Project.listWithClientPermission(req.user.client_id,(err,projects)=>{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/projects_list'),{user:req.user,projects:projects,page:'Projects'});
+      });
+    }
+  }
+});
+
+app.use('/project/:project_id',(req,res,next)=>{
+  Project.getById(req.params.project_id,(err,project)=>{
+    req.project = project;
+    next();
+  })
+})
+
+app.get('/project/:project_id/models',(req,res)=>{
+  if(req.user.level >= 4){
+    Project.getModels(req.params.project_id,(err,models)=>{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/project/models'),{project:req.project,models:models,user:req.user,page:'ProjectModels'});
+    })
+  }
+});
+
+app.get('/project/:project_id/access',project.checkOwnership,(req,res)=>{
+  if(req.user.level >= 4){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/project/access'),{project:req.project,user:req.user,page:'ProjectAccess'});
+  }
+});
+
+app.get('/project/:project_id/settings',project.checkOwnership,(req,res)=>{
+  if(req.user.level >= 4){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/project/settings'),{project:req.project,user:req.user,page:'ProjectSettings'});
+  }
+});
+
+app.get('/project/:project_id/sensors',(req,res)=>{
+  if(req.user.level >= 4 ){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/project/sensors'),{project:req.project,user:req.user,page:'ProjectSensors'});
+  }
+});
+
+// --- models ---
 app.get('/models',(req,res)=>{
   if(req.user.level >= 2){
     if(req.user.level >= 4){
@@ -254,7 +304,6 @@ app.get('/models',(req,res)=>{
   }
 });
 
-// --- models ---
 app.use('/model/:model_id',(req,res,next)=>{
   Model.getModelById(req.params.model_id,(err,model)=>{
     req.model = model;

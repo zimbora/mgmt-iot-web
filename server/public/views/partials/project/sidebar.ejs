@@ -28,7 +28,7 @@
                   class="active"
                 <% } %>
                 class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-people"></i> <span class="ms-1 d-none d-sm-inline">Users</span></a>
+                <i class="fs-4 bi-people"></i> <span class="ms-1 d-none d-sm-inline">Users</span></a>
             </li>
             <% } %>
             <% if(user.level >= 4){%>
@@ -48,7 +48,7 @@
               <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
                 <li class="w-100">
                   <a href="./models"
-                  <% if(page == "Models"){%>
+                  <% if(page == "ProjectModels"){%>
                     class="active"
                   <% } %>
                   class="nav-link px-0"> <span class="d-none d-sm-inline">Models</span></a>
@@ -56,25 +56,27 @@
                 <% if(user.level >= 4){%>
                 <li class="w-100">
                   <a href="./settings"
-                  <% if(page == "Settings"){%>
+                  <% if(page == "ProjectSettings"){%>
                     class="active"
                   <% } %>
                   class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
                 </li>
                 <%}%>
+                <!--
                 <% if(user.level >= 4){%>
                 <li class="w-100">
                   <a href="./sensors"
-                  <% if(page == "Sensors"){%>
+                  <% if(page == "ProjectSensors"){%>
                     class="active"
                   <% } %>
                   class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
                 </li>
                 <%}%>
+                -->
                 <% if(user.level >= 4){%>
                 <li class="w-100">
                   <a href="./access"
-                  <% if(page == "Access"){%>
+                  <% if(page == "ProjectAccess"){%>
                     class="active"
                   <% } %>
                   class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
@@ -91,51 +93,6 @@
               <% } %>
               class="nav-link px-0 align-middle">
               <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Models</span></a>
-              <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
-                <li class="w-100">
-                  <a href="./devices"
-                  <% if(page == "Devices"){%>
-                    class="active"
-                  <% } %>
-                class="nav-link px-0"> <span class="d-none d-sm-inline">Devices</span></a>
-                </li>
-                <% if(user.level >= 4){%>
-                <li class="w-100">
-                  <a href="./settings"
-                  <% if(page == "Settings"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
-                </li>
-                <%}%>
-                <% if(user.level >= 4){%>
-                <li class="w-100">
-                  <a href="./sensors"
-                  <% if(page == "Sensors"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
-                </li>
-                <%}%>
-                <% if(user.level >= 4){%>
-                <li class="w-100">
-                  <a href="./access"
-                  <% if(page == "Access"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
-                </li>
-                <%}%>
-                <% if(user.level >= 4 && model.fw_enabled){%>
-                <li class="w-100">
-                  <a href="./firmwares"
-                  <% if(page == "Firmwares"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Firmwares</span></a>
-                </li>
-                <%}%>
-              </ul>
             </li>
             <% } %>
             <li>

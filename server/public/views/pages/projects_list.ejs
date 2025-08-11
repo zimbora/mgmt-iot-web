@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../partials/head.ejs') %>
+
+  <style>
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;  /* Or whatever width you want */
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/scripts.ejs') %>
+  <%- include('../partials/navbar.ejs') %>
+
+  <%- include('../partials/modal/confirmation.ejs') %>
+  <%- include('../partials/modal/error.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js" crossorigin="anonymous"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../partials/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="content-header">
+              <h3>Projects</h3>
+            </div>
+            <div class="row">
+              <div class="col-sm-12 mb-3 mb-sm-0">
+                <div class="card py-3" style="width:100%" overflow-x:scroll>
+                  <table id="projects" class="display">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>project</th>
+                            <th>description</th>
+                        </tr>
+                    </thead>
+                  </table>
+                </div>
+              </div>
+              <!--
+              <div class="col-sm-4 mb-3 mb-sm-0">
+                <div class="card py-3">
+                  <div class="card-header">
+                    <h5 class="card-title">Add new project</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="mb-3">
+                      <div class="input-group py-2">
+                        <label class="input-group-text" for="inputGroupSelect11">name</label>
+                        <input type="text" id="_name_" class="form-control" placeholder="set your project name">
+                      </div>
+                      <div class="py-2">
+                        <label class="input-group-text" for="inputGroupSelect12">description</label>
+                        <textarea id="_description_" class="form-control" aria-label="With textarea"></textarea>
+                      </div>
+                      <div class="py-2">
+                        <button id="submit_project" type="button" class="btn btn-primary btn-sm">submit</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              -->
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+
+    var t;
+    var id;
+    let projects = <%- JSON.stringify(projects) %>;
+
+    $(document).ready(function () {
+
+      t = $('#projects').DataTable();
+
+      projects.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
+
+      projects.forEach((item, i) => {
+        addRow(item.id,item.name,item.description);
+      });
+      /*
+      api.getFWProjects((err,res)=>{
+        if(err) console.log("err:",err)
+        else{
+          res.forEach((item, i) => {
+            addRow(item.id,item.name,item.description);
+          });
+        }
+      });
+      */
+    });
+
+
+    function addRow(id,project,description){
+      t.row.add([`
+        <button id="`+id+`" onclick="deleteProject('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
+          <i class="bi bi-folder-x"></i>
+        </button>`,
+        `<a href="./project/`+id+`/models">`+project+`</a>`,
+        description]).draw(true);
+    }
+
+    $("#submit_project").click(()=>{
+      let project = $("#_name_").val();
+      let description = $("#_description_").val();
+      api.addFWProject(project,description,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    });
+
+    function deleteProject(project_id){
+      id = project_id
+      $('#modalConfirmation').modal('show');
+    };
+
+    $("#modalProceed").click(()=>{
+      
+      api.removeProject(id,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err.sqlMessage);
+          $('#modalError').modal('show');
+        }else location.reload();
+      });
+    })
+
+  </script>
+</body>
+</html>

@@ -19,6 +19,14 @@ var api = {
     return clientID;
   },
 
+  getProjectID : function(cb){
+    let path = "project/"
+    let indexB = location.pathname.indexOf(path);
+    let indexF = location.pathname.lastIndexOf("/");
+    let modelID = location.pathname.substring(indexB+path.length,indexF);
+    return modelID;
+  },
+
   getModelID : function(cb){
     let path = "model/"
     let indexB = location.pathname.indexOf(path);
@@ -27,6 +35,65 @@ var api = {
     return modelID;
   },
 
+  // --- projects ---
+  project : {
+    listPermissions : function(projectId,cb){
+      $.ajax({
+        url : Settings.api+"/project/"+projectId+"/permissions",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    grantPermission : function(projectId,clientId,level,cb){
+      fetch(Settings.api+"/project/"+projectId+"/permissions", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          clientId: clientId,
+          level: level,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    removePermission : function(projectId,clientId,cb){
+      fetch(Settings.api+"/project/"+projectId+"/permissions", {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          clientId: clientId,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+  },
 
   // --- models ---
   model : {
@@ -471,8 +538,24 @@ var api = {
       },
       dataType : "JSON"
     });
-
   },
+
+  // get all available mqtt clients with an email registered
+  getHumanClients : function(cb){
+
+    $.ajax({
+      url : Settings.api+'/clientsHuman',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
   // add mqtt client
   addClient : (client,user,password,cb)=>{
     fetch(Settings.api+"/clients", {
@@ -736,14 +819,15 @@ var api = {
   },
 
   // add FW Model Permission to client
-  grantFWModelPermission : (model,clientID,cb)=>{
+  grantFWModelPermission : (model,clientId,level,cb)=>{
     fetch(Settings.api+"/model/"+model+"/permissions", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        clientID: clientID
+        clientId: clientId,
+        level: level,
       })
     })
     .then(function (response) {

@@ -52,6 +52,16 @@
             <% } %>
             <% if(user.level >= 3){%>
             <li>
+                <a href="../projects"
+                <% if(page == "Projects"){%>
+                  class="active"
+                <% } %>
+                class="nav-link px-0 align-middle">
+                    <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Projects</span></a>
+            </li>
+            <% } %>
+            <% if(user.level >= 3){%>
+            <li>
                 <a href="../models"
                 <% if(page == "Models"){%>
                   class="active"

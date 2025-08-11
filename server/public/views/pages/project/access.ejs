@@ -6,9 +6,9 @@
 
 </head>
 <body>
-
-  <%- include('../../partials/model/scripts.ejs') %>
-  <%- include('../../partials/model/navbar.ejs') %>
+  
+  <%- include('../../partials/project/scripts.ejs') %>
+  <%- include('../../partials/project/navbar.ejs') %>
 
   <%- include('../../partials/modal/confirmation.ejs') %>
   <%- include('../../partials/modal/error.ejs') %>
@@ -19,16 +19,16 @@
 
   <div class="container-fluid">
       <div class="row flex-nowrap">
-          <%- include('../../partials/model/sidebar.ejs') %>
+          <%- include('../../partials/project/sidebar.ejs') %>
           <div class="col py-3">
             <div class="content-header">
-              <h3><%= model.name %></h3>
+              <h3><%= project.name %></h3>
             </div>
             <div class="row">
               <div class="col-sm-7 mb-3 mb-sm-0">
                 <div class="card py-3">
                   <h5 class="card-title">Model Access</h5>
-                  <table id="firmwares" class="display" style="width:100%" overflow-x:scroll>
+                  <table id="projects" class="display" style="width:100%" overflow-x:scroll>
                     <thead>
                         <tr>
                             <th></th>
@@ -75,17 +75,18 @@
   <script>
 
     var t;
-    var modelID = api.getModelID();
+    var projectID = api.getProjectID();
 
     $(document).ready(function () {
 
-      t = $('#firmwares').DataTable();
+      t = $('#projects').DataTable();
 
-      api.listFWModelPermission(modelID,(err,res)=>{
+      api.project.listPermissions(projectID,(err,res)=>{
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item?.client_id,item?.nick,item?.level);
+            console.log(item)
+            addRow(item.client_id,item.nick,item.level);
           });
         }
       });
@@ -110,9 +111,9 @@
 
     $("#submit_permission").click(()=>{
       let nick = $("#_clientID_").val();
-      var clientID = $("#datalistOptions option[value='" + nick + "']").attr("id");
       let level = $("#_levelID_").val();
-      api.grantFWModelPermission(modelID,clientID,level,(err,res)=>{
+      var clientID = $("#datalistOptions option[value='" + nick + "']").attr("id");
+      api.project.grantPermission(projectID,clientID,level,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);
@@ -121,10 +122,10 @@
       });
     });
 
-    function addOption(model){
+    function addOption(project){
 
-      $('#_fwmodel_').append(`<option value="${model}">
-                                 ${model}
+      $('#_fwproject_').append(`<option value="${project}">
+                                 ${project}
                             </option>`);
     }
 
@@ -140,7 +141,7 @@
     }
 
     function deletePermission(id){
-      api.removeFWModelPermission(modelID,id,(err,res)=>{
+      api.project.removePermission(projectID,id,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);
