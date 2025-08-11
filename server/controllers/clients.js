@@ -67,6 +67,13 @@ module.exports = {
     });
   },
 
+  listHuman : (req, res, next)=>{
+    Client.listHuman((err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
   // get devices associated to client
   getDevices : (req, res, next)=>{
     Client.getDevices(req.params.client_id,(err,rows)=>{
@@ -75,6 +82,7 @@ module.exports = {
     });
   },
 
+  // devices Permission
   addPermission : (req, res, next)=>{
 
     const val = Joi.object({

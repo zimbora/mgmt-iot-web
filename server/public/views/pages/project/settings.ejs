@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../../partials/project/scripts.ejs') %>
+  <%- include('../../partials/project/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/project/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="content-header">
+              <h3><%= project.name %></h3>
+            </div>
+            <div class="row">
+              <div class="col-sm-7 mb-3 mb-sm-0">
+                <div class="card py-3">
+                  <h5 class="card-title">Available Options</h5>
+                  <div class="card-body">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="fw_enabled">
+                      <label class="form-check-label" for="flexSwitchCheckChecked">Firmwares</label>
+                    </div>
+                    <br>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="ar_enabled">
+                      <label class="form-check-label" for="flexSwitchCheckChecked">Autorequests</label>
+                    </div>
+                    <br>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="alarms_enabled">
+                      <label class="form-check-label" for="flexSwitchCheckChecked">Alarms</label>
+                    </div>
+                    <br>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="js_code_enabled">
+                      <label class="form-check-label" for="flexSwitchCheckChecked">JS Code</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+
+    var t;
+    var projectID = api.getProjectID();
+    var project = <%- JSON.stringify(project) %>;
+    console.log(project);
+
+    $(document).ready(function () {
+
+      if(project?.fw_enabled){
+        $("#fw_enabled").prop('checked',true);
+      }
+
+      if(project?.ar_enabled){
+        $("#ar_enabled").prop('checked',true);
+      }
+
+      if(project?.alarms_enabled){
+        $("#alarms_enabled").prop('checked',true);
+      }
+
+      if(project?.js_code_enabled){
+        $("#js_code_enabled").prop('checked',true);
+      }
+    });
+
+    $('.form-check-input').on('change', function() {
+        var elementId = $(this).attr('id');      // Get the element ID
+        var isChecked = $(this).prop('checked'); // Get the current checked state
+
+        api.project.updateOption(projectID,elementId, isChecked,(err,res)=>{
+          if(err) console.log(err);
+        });
+    });
+
+  </script>
+</body>
+</html>

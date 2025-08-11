@@ -116,6 +116,21 @@ var self = module.exports =  {
     })
   },
 
+  listHuman : async (cb)=>{
+
+    let query = `select c.id,c.nick,c.createdAt,c.updatedAt,c.user_id,c.token,c.api_token,u.type from clients as c inner join users as u where c.gmail is NOT NULL and u.id = c.user_id`;
+    let table = [];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
   registerGoogleClient : async (userId,data,cb)=>{
 
     let index = data.email.indexOf("@");
@@ -185,7 +200,7 @@ var self = module.exports =  {
       return cb(error,null);
     })
   },
-
+  
   addPermission : async (clientId,deviceId,level,cb)=>{
 
     let obj = {

@@ -6,6 +6,7 @@ var config = require('../../config/env');
 var users = require('./users');
 var clients = require('./clients');
 var devices = require('./devices');
+var projects = require('./projects');
 var models = require('./models');
 //var firmwares = require('./firmwares');
 var authRoutes = require('./auth');
@@ -14,6 +15,7 @@ var Response = require('../controllers/response');
 var User = require('../controllers/users');
 var Client = require('../controllers/clients');
 var Device = require('../controllers/devices');
+var Project = require('../controllers/projects');
 var Model = require('../controllers/models');
 var Firmware = require('../controllers/firmwares');
 var Database = require('../controllers/db');
@@ -61,6 +63,9 @@ router.route('/clients')
   .delete(Client.delete)
   .put(Client.update)
 
+router.route('/clientsHuman')
+  .get(Client.listHuman)
+
 router.use('/device', devices);
 
 router.route('/devices/list')
@@ -69,12 +74,17 @@ router.route('/devices/list')
 router.route('/devices/permissions')
   .get(Device.permissions);
 
+router.use('/project', projects);
+
+router.route('/projects')
+  .get(Project.list)
+  .post(Project.add)
+
 router.use('/model', models);
 
 router.route('/models')
   .get(Model.list)
   .post(Model.add)
-
 
 //router.use('/firmware',firmwares)
 

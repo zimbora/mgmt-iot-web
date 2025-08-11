@@ -39,75 +39,109 @@
             <% } %>
             <% if(user.level >= 3){%>
             <li>
-                <a href="../../models"
-                <% if(page == "Models"){%>
-                  class="active"
-                <% } %>
-                class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Models</span></a>
+              <a href="../../projects"
+              <% if(page == "Projects"){%>
+                class="active"
+              <% } %>
+              class="nav-link px-0 align-middle">
+              <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Projects</span></a>
+              <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
+                <li class="w-100">
+                  <a href="./models"
+                  <% if(page == "Models"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Models</span></a>
+                </li>
+                <% if(user.level >= 4){%>
+                <li class="w-100">
+                  <a href="./settings"
+                  <% if(page == "Settings"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
+                </li>
+                <%}%>
+                <% if(user.level >= 4){%>
+                <li class="w-100">
+                  <a href="./sensors"
+                  <% if(page == "Sensors"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
+                </li>
+                <%}%>
+                <% if(user.level >= 4){%>
+                <li class="w-100">
+                  <a href="./access"
+                  <% if(page == "Access"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
+                </li>
+                <%}%>
+              </ul>
+            </li>
+            <% } %>
+            <% if(user.level >= 3){%>
+            <li>
+              <a href="../../models"
+              <% if(page == "Models"){%>
+                class="active"
+              <% } %>
+              class="nav-link px-0 align-middle">
+              <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Models</span></a>
+              <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
+                <li class="w-100">
+                  <a href="./devices"
+                  <% if(page == "Devices"){%>
+                    class="active"
+                  <% } %>
+                class="nav-link px-0"> <span class="d-none d-sm-inline">Devices</span></a>
+                </li>
+                <% if(user.level >= 4){%>
+                <li class="w-100">
+                  <a href="./settings"
+                  <% if(page == "Settings"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
+                </li>
+                <%}%>
+                <% if(user.level >= 4){%>
+                <li class="w-100">
+                  <a href="./sensors"
+                  <% if(page == "Sensors"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
+                </li>
+                <%}%>
+                <% if(user.level >= 4){%>
+                <li class="w-100">
+                  <a href="./access"
+                  <% if(page == "Access"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
+                </li>
+                <%}%>
+                <% if(user.level >= 4 && model.fw_enabled){%>
+                <li class="w-100">
+                  <a href="./firmwares"
+                  <% if(page == "Firmwares"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Firmwares</span></a>
+                </li>
+                <%}%>
+              </ul>
             </li>
             <% } %>
             <li>
                 <!--<a href="#submenu1" data-bs-toggle="collapse" class="nav-link px-0 align-middle">-->
                 <a href="../../devices" class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-phone"></i> <span class="ms-1 d-none d-sm-inline">Devices</span> </a>
-                <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
-                    <li class="w-100">
-                      <a href="./dashboard"
-                      <% if(page == "Dashboard"){%>
-                        class="active"
-                      <% } %>
-                      class="nav-link px-0"> <span class="d-none d-sm-inline">Dashboard</span></a>
-                    </li>
-                    <li class="w-100">
-                      <a href="./sensors"
-                      <% if(page == "Sensors"){%>
-                        class="active"
-                      <% } %>
-                      class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
-                    </li>
-                    <li class="w-100">
-                        <a href="./settings"
-                        <% if(page == "Settings"){%>
-                          class="active"
-                        <% } %>
-                        class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
-                    </li>
-                    <li>
-                        <a href="./access"
-                        <% if(page == "Access"){%>
-                          class="active"
-                        <% } %>
-                        class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
-                    </li>
-                    <% if(model?.ar_enabled){ %>
-                    <li>
-                        <a href="./autorequests"
-                        <% if(page == "Autorequests"){%>
-                          class="active"
-                        <% } %>
-                        class="nav-link px-0"> <span class="d-none d-sm-inline">Autorequests</span></a>
-                    </li>
-                    <%}%>
-                    <% if(model?.alarms_enabled){ %>
-                    <li>
-                      <a href="./alarms"
-                      <% if(page == "Alarms"){%>
-                        class="active"
-                      <% } %>
-                      class="nav-link px-0"> <span class="d-none d-sm-inline">Alarms</span></a>
-                    </li>
-                    <%}%>
-                    <% if(model?.js_code_enabled){ %>
-                    <li>
-                        <a href="./jscode"
-                        <% if(page == "JSCODE"){%>
-                          class="active"
-                        <% } %>
-                        class="nav-link px-0"> <span class="d-none d-sm-inline">JScode</span></a>
-                    </li>
-                    <%}%>
-                </ul>
+                <i class="fs-4 bi-phone"></i> <span class="ms-1 d-none d-sm-inline">Devices</span> </a>
             </li>
             <!--
             <li>
