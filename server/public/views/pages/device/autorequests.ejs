@@ -57,16 +57,6 @@
                 <%} else {%>
                   <option value="null">own</option>
                 <% } %>
-                <%devices.map((row)=>{%>
-                  <% if(row.id != device.device_id){ %>
-                    <% if(row.id == device.ar_ref){ %>
-                      <%console.log(row.id,"match")%>;
-                      <option selected value="<%= row.id%>"><%= row.name != null ? row.name : row.uid%></option>
-                    <% }else { %>
-                      <option value="<%= row.id%>"><%= row.name != null ? row.name : row.uid%></option>
-                    <% } %>
-                  <% } %>
-                <%})%>
               </select>
             </div>
           </div>
@@ -99,7 +89,7 @@
   <script src="./assets/js/ace.js"></script>
   <script>
       var editor = ace.edit("editor");
-      var project = "";
+      var project_name = "";
       var uid = "";
 
       editor.setValue(`
@@ -135,9 +125,6 @@
   }
 }
       `)
-
-      editor.setTheme("ace/theme/monokai");
-      editor.session.setMode("ace/mode/javascript");
 
       deviceID = api.getDeviceID();
 
@@ -187,12 +174,10 @@
 
         let device = <%- JSON.stringify(device) %>;
         let mqtt = <%- JSON.stringify(mqtt) %>;
-        project = device.project;
+        project_name = <%- JSON.stringify(project_name) %>;
         uid = device.uid;
 
-        project = device.project;
         // connect the client
-
         if(window.location.protocol == "https:"){
           Settings.mqtt.ssl = true;
           Settings.mqtt.port = 443;
@@ -227,8 +212,8 @@
         let button = document.querySelector('#mqtt_status');
         button.classList.toggle("btn-secondary",false);
         button.classList.toggle("btn-success",true);
-        client.subscribe(project+"/"+uid+"/status");
-        client.subscribe(project+"/"+uid+"/fw/ar/#");
+        client.subscribe(project_name+"/"+uid+"/status");
+        client.subscribe(project_name+"/"+uid+"/fw/ar/#");
       }
 
       function onConnectionLost(responseObject) {
@@ -261,7 +246,7 @@
 
       function sendARs(payload){
         message = new Paho.MQTT.Message(payload);
-        message.destinationName = project+"/"+uid+"/fw/ar/set";
+        message.destinationName = project_name+"/"+uid+"/fw/ar/set";
 
         var loading = $('#modalLoading');
         loading.modal('show');

@@ -367,6 +367,14 @@ var self = module.exports =  {
         data["model"] = res[0];
       }
 
+      query = `SELECT * FROM ?? where name = ?;`
+      table = ["models",model]
+      query = mysql.format(query,table);
+      res = await db.queryRow(query);
+      if(res != null && res.length > 0){
+        data["modelFeat"] = res[0];
+      }
+
       query = `SELECT * FROM ?? where device_id = ?;`
       table = ["fw",deviceId]
       query = mysql.format(query,table);
