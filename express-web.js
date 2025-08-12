@@ -386,6 +386,7 @@ app.get('/device/:device_id/sensors',(req,res)=>{
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -406,6 +407,7 @@ app.get('/device/:device_id/settings',(req,res)=>{
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -426,6 +428,7 @@ app.get('/device/:device_id/access',(req,res)=>{
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -439,13 +442,14 @@ app.get('/device/:device_id/access',(req,res)=>{
 app.get('/device/:device_id/autorequests',(req,res)=>{
 
   let data = req.user.data;
-  if(data.device != null && data.mqtt != null && data.model?.ar_enabled){
+  if(data.device != null && data.mqtt != null && data.modelFeat?.ar_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/autorequests'),{
       project_name:data.project_name,
       model_name:data.model_name,
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -459,13 +463,14 @@ app.get('/device/:device_id/autorequests',(req,res)=>{
 app.get('/device/:device_id/alarms',(req,res)=>{
 
   let data = req.user.data;
-  if(data.device != null && data.mqtt != null && data.model?.alarms_enabled){
+  if(data.device != null && data.mqtt != null && data.modelFeat?.alarms_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/alarms'),{
       project_name:data.project_name,
       model_name:data.model_name,
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -479,13 +484,14 @@ app.get('/device/:device_id/alarms',(req,res)=>{
 app.get('/device/:device_id/jscode',(req,res)=>{
 
   let data = req.user.data;
-  if(data.device != null && data.mqtt != null && data.model?.js_code_enabled){
+  if(data.device != null && data.mqtt != null && data.modelFeat?.js_code_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/device/jscode'),{
       project_name:data.project_name,
       model_name:data.model_name,
       device:data.device,
       project:data.project,
       model:data.model,
+      modelFeat:data.modelFeat,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -543,6 +549,7 @@ function collectData(req,callback){
         data.device = row?.device != null ? row.device : {};
         data.project = row?.project != null ? row.project : {};
         data.model = row?.model != null ? row.model : {};
+        data.modelFeat = row?.modelFeat != null ? row.modelFeat : {};
         data.fw = row?.fw != null ? row.fw : {};
         data.associated = row?.associated != null ? row.associated : {};
         next(err);
