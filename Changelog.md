@@ -1,5 +1,17 @@
 # Changelog
 
+## version 1.0.64
+  Projects (#8)
+  * Supports project Management, Adds models access management:
+    Project features:
+    - Adds project list
+    - Adds project Models
+    - Adds project settings (to be defined yet)
+    - Adds project Access
+    Models new features:
+    - Adds model Access
+  * enables AR, Alarms and JS code features (#7)
+
 ## version 1.0.63
   - shows firmware sidebar tab only for users with a privileged level >= 4
   - Add manual FOTA trigger button (settings)
