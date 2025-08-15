@@ -257,6 +257,23 @@ module.exports = {
     }
   },
 
+  // add device
+  add  : (req, res, next)=>{
+    const val = Joi.object({
+      projectName: Joi.string().required(),
+      modelName: Joi.string().required(),
+      uid: Joi.string().required(),
+      name: Joi.string(),
+      protocol: Joi.string().valid('mqtt', 'lwm2m').required(),
+      psk: Joi.string(),
+    }).validate(req.body);
+
+    device.add(req.body,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
   // delete device
   delete  : (req, res, next)=>{
     device.delete(req.params.device_id,(err,rows)=>{

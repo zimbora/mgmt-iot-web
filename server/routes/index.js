@@ -66,6 +66,11 @@ router.route('/clients')
 router.route('/clientsHuman')
   .get(Client.listHuman)
 
+
+router.route('/devices')
+  .get(Device.list)
+  .post(Device.add)
+
 router.use('/device', devices);
 
 router.route('/devices/list')

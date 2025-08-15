@@ -1,6 +1,8 @@
 var mysql = require('mysql2');
 var db = require('../controllers/db');
 var firmwares = require('./firmwares');
+var Project = require('./projects');
+var Model = require('./models');
 
 const semver = require('semver');
 const moment = require('moment');
@@ -300,7 +302,7 @@ var self = module.exports =  {
 
     return new Promise( (resolve,reject)=>{
 
-      return resolve("sensor_logs");
+      return resolve("logs_sensor");
       /*
       let query = `select logs_table from models where name = ?`;
       let table = [model]
@@ -789,6 +791,43 @@ var self = module.exports =  {
     })
   },
   */
+
+  add : async (device,cb)=>{
+
+    const projectId = await Project.getId(device.projectName);
+    const modelId = await Model.getId(device.modelName);
+
+    if(!projectId){
+      return cb('project not found');
+    }
+    if(!modelId){
+      return cb('model not found');
+    }
+
+    const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    obj = {
+      uid : device.uid,
+      name : device?.name,
+      project_id : projectId,
+      model_id : modelId,
+      protocol : device.protocol,
+      psk : device?.psk,
+      createdAt : timestamp,
+      updatedAt : timestamp
+    }
+    
+    const res = await db.insert('devices', obj);
+
+    // Assuming res is a result array or object indicating success
+    if (res) {
+      if(res?.length > 0)
+        return cb(null, res[0]);
+      else
+        return cb(null, res[0]);
+    } else {
+      return cb('Insertion failed', null);
+    }
+  },
 
   delete : async (deviceId,cb)=>{
 

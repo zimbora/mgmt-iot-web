@@ -35,6 +35,58 @@ var api = {
     return modelID;
   },
 
+  // get all registered projects
+  getProjects : function(cb){
+
+    $.ajax({
+      url : Settings.api+'/projects',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+
+  },
+
+  // get all registered models
+  getModels : function(cb){
+
+    $.ajax({
+      url : Settings.api+'/models',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+
+  },
+
+
+  // get all registered devices
+  getDevices : function(cb){
+
+    $.ajax({
+      url : Settings.api+'/devices/list',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+
+  },
+
   // --- projects ---
   project : {
     listPermissions : function(projectId,cb){
@@ -178,23 +230,6 @@ var api = {
         return parseError(error,cb);
       });
     },
-  },
-
-  // get all registered devices
-  getDevices : function(cb){
-
-    $.ajax({
-      url : Settings.api+'/devices/list',type: 'GET',
-      data : {},
-      success: function(data,status,xhr){
-        parseResponse(data,cb);
-      },
-      error: (data,status,xhr)=>{
-        parseError(data,cb);
-      },
-      dataType : "JSON"
-    });
-
   },
 
   // --- requests related to a device ---
@@ -401,6 +436,32 @@ var api = {
       body: JSON.stringify({
         field: field,
         data: data
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  addDevice: (deviceData, cb)=>{
+    fetch(Settings.api+"/devices", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        projectName: deviceData.projectName,
+        modelName: deviceData.modelName,
+        uid: deviceData.uid,
+        name: deviceData?.name,
+        protocol: deviceData.protocol,
+        psk: deviceData?.psk
       })
     })
     .then(function (response) {
@@ -988,10 +1049,12 @@ var api = {
 };
 
 function parseResponse(data,cb){
-  if(!data.Error) cb(null,data.Result);
-  else cb(data.Message,null);
+  if(!data?.Error && !data?.error) cb(null,data.Result);
+  else if(data?.Error) cb(data?.Message,null)
+  else cb(data?.error,null);
 }
 
 function parseError(error,cb){
   console.log(error)
+  cb(error.error)
 }
