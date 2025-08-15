@@ -87,6 +87,53 @@ var api = {
 
   },
 
+  // add fw project
+  addFWProject : (name, description, uid_prefix, uid_length, cb)=>{
+    fetch(Settings.api+"/projects", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: name,
+        description: description,
+        uid_prefix: uid_prefix,
+        uid_length: uid_length
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // remove project
+  removeProject : (projectId, cb)=>{
+    fetch(Settings.api+"/projects", {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: projectId
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   // --- projects ---
   project : {
     listPermissions : function(projectId,cb){

@@ -19,14 +19,28 @@ module.exports = {
 
     const val = Joi.object({
       name: Joi.string().required(),
+      description: Joi.string().allow('').optional(),
+      uid_prefix: Joi.string().required(),
+      uid_length: Joi.number().integer().min(1).required(),
     }).validate(req.body);
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      Project.add(req.body.name,(err,rows)=>{
-        if(!err) response.send(res,rows);
-        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      // Check if project already exists
+      Project.getId(req.body.name)
+      .then(existingId => {
+        if(existingId) {
+          response.error(res,httpStatus.BAD_REQUEST,"Project with this name already exists");
+        } else {
+          Project.add(req.body.name, req.body.description, req.body.uid_prefix, req.body.uid_length, (err,rows)=>{
+            if(!err) response.send(res,rows);
+            else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+          });
+        }
+      })
+      .catch(err => {
+        response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }
   },
