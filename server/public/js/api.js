@@ -821,14 +821,15 @@ var api = {
   },
 
   // add fw model
-  addFWModel : (model,description,cb)=>{
+  addFWModel : (name, project_id, description, cb)=>{
     fetch(Settings.api+"/models", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: model,
+        name: name,
+        project_id: project_id,
         description: description
       })
     })
