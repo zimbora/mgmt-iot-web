@@ -20,12 +20,14 @@ module.exports = {
 
     const val = Joi.object({
       name: Joi.string().required(),
+      project_id: Joi.number().required(),
+      description: Joi.string().optional()
     }).validate(req.body);
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      Model.add(req.body.name,(err,rows)=>{
+      Model.add(req.body.name, req.body.project_id, req.body.description,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });

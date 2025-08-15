@@ -30,7 +30,12 @@
           <%- include('../partials/sidebar.ejs') %>
           <div class="col py-3">
             <div class="content-header">
-              <h3>Models</h3>
+              <div class="d-flex align-items-center justify-content-between">
+                <h3>Models</h3>
+                <button id="openModelBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modelModal">
+                  + 
+                </button>
+              </div>
             </div>
             <div class="row">
               <div class="col-sm-12 mb-3 mb-sm-0">
@@ -75,6 +80,51 @@
       </div>
   </div>
 
+<!-- Modal for Model Creation -->
+<div class="modal fade" id="modelModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" id="modelForm" novalidate>
+      <div class="modal-header">
+        <h5 class="modal-title">Add Model</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Project -->
+        <div class="mb-3">
+          <label for="projectSelect" class="form-label">Project</label>
+          <select id="projectSelect" class="form-select" required>
+            <!-- populated by JS -->
+          </select>
+          <div class="invalid-feedback">Please select a project.</div>
+        </div>
+
+        <!-- Model Name -->
+        <div class="mb-3">
+          <label for="modelName" class="form-label">Model Name</label>
+          <input id="modelName" class="form-control" type="text" placeholder="e.g. SLIM_GW_WIFI" required />
+          <div class="invalid-feedback">Please enter a model name.</div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <label for="modelDescription" class="form-label">Description</label>
+          <textarea id="modelDescription" class="form-control" rows="3" placeholder="Model description..."></textarea>
+          <div class="invalid-feedback">You can add a description.</div>
+        </div>
+        
+      </div><!-- /.modal-body -->
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+  <%- include('../partials/modal/success.ejs') %>
+
   <script>
 
     var t;
@@ -90,6 +140,34 @@
       models.forEach((item, i) => {
         addRow(item.id,item.name,item.description);
       });
+
+      // Load projects for the project selection dropdown
+      api.getProjects((err, res) => {
+        if (err) {
+          console.error("Error fetching projects:", err);
+          return;
+        }
+
+        const projectSelect = document.getElementById('projectSelect');
+        
+        // Clear any existing options
+        projectSelect.innerHTML = '';
+
+        // Create a placeholder option
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = 'Select a project';
+        projectSelect.appendChild(placeholderOption);
+
+        // Populate the select element with projects
+        res.forEach(project => {
+          const option = document.createElement('option');
+          option.value = project.id;
+          option.textContent = project.name;
+          projectSelect.appendChild(option);
+        });
+      });
+
       /*
       api.getFWModels((err,res)=>{
         if(err) console.log("err:",err)
@@ -102,7 +180,6 @@
       */
     });
 
-
     function addRow(id,model,description){
       t.row.add([`
         <button id="`+id+`" onclick="deleteModel('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
@@ -112,10 +189,61 @@
         description]).draw(true);
     }
 
+    // Handle new model form submission
+    document.getElementById('modelForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent form from submitting the default way
+
+      // Get form values
+      const projectSelect = document.getElementById('projectSelect');
+      const modelName = document.getElementById('modelName').value.trim();
+      const modelDescription = document.getElementById('modelDescription').value.trim();
+
+      // Validate fields before calling API
+      if (projectSelect.value === '' || modelName === '') {
+        $('#error').text("Some required fields are empty");
+        $('#suggestion').text("Please select a project and enter a model name");
+        $('#modalError').modal('show');
+        return;
+      }
+
+      // Call API to add model
+      api.addFWModel(modelName, parseInt(projectSelect.value), modelDescription, (err, res) => {
+        if(err){
+          $('#error').text("Error adding model");
+          if(err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          // Show success message
+          console.log(res);
+          $("#successHeader").text("Model successfully added");
+          $('#successMsg').text("Model '" + modelName + "' has been created successfully");
+          $('#modalSuccess').modal('show');
+          
+          // Reload page to show the new model
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        }
+
+        // Close modal
+        var modalInstance = bootstrap.Modal.getInstance(document.getElementById('modelModal'));
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+
+        // Reset the form
+        document.getElementById('modelForm').reset();
+      });
+    });
+
     $("#submit_model").click(()=>{
+      // This is the old handler - keeping for compatibility but should use the new modal
       let model = $("#_name_").val();
       let description = $("#_description_").val();
-      api.addFWModel(model,description,(err,res)=>{
+      api.addFWModel(model,1,description,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);
