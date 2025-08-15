@@ -30,7 +30,12 @@
           <%- include('../partials/sidebar.ejs') %>
           <div class="col py-3">
             <div class="content-header">
-              <h3>Projects</h3>
+              <div class="d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">Projects</h5>
+                <button id="openBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#projectModal">
+                  + 
+                </button>
+              </div>
             </div>
             <div class="row">
               <div class="col-sm-12 mb-3 mb-sm-0">
@@ -46,34 +51,61 @@
                   </table>
                 </div>
               </div>
-              <!--
-              <div class="col-sm-4 mb-3 mb-sm-0">
-                <div class="card py-3">
-                  <div class="card-header">
-                    <h5 class="card-title">Add new project</h5>
-                  </div>
-                  <div class="card-body">
-                    <div class="mb-3">
-                      <div class="input-group py-2">
-                        <label class="input-group-text" for="inputGroupSelect11">name</label>
-                        <input type="text" id="_name_" class="form-control" placeholder="set your project name">
-                      </div>
-                      <div class="py-2">
-                        <label class="input-group-text" for="inputGroupSelect12">description</label>
-                        <textarea id="_description_" class="form-control" aria-label="With textarea"></textarea>
-                      </div>
-                      <div class="py-2">
-                        <button id="submit_project" type="button" class="btn btn-primary btn-sm">submit</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              -->
-            </div>
           </div>
       </div>
   </div>
+
+<!-- Modal -->
+<div class="modal fade" id="projectModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" id="projectForm" novalidate>
+      <div class="modal-header">
+        <h5 class="modal-title">Add Project</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Project Name -->
+        <div class="mb-3">
+          <label for="projectName" class="form-label">Project Name</label>
+          <input id="projectName" class="form-control" type="text" placeholder="e.g. IoT Sensors" required />
+          <div class="invalid-feedback">Please enter a project name.</div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <label for="projectDescription" class="form-label">Description</label>
+          <textarea id="projectDescription" class="form-control" placeholder="Optional description"></textarea>
+          <div class="invalid-feedback">You can add a description.</div>
+        </div>
+
+        <!-- UID Prefix -->
+        <div class="mb-3">
+          <label for="uidPrefix" class="form-label">UID Prefix</label>
+          <input id="uidPrefix" class="form-control" type="text" placeholder="e.g. SENSOR" required />
+          <div class="invalid-feedback">Please enter a UID prefix.</div>
+        </div>
+
+        <!-- UID Length -->
+        <div class="mb-3">
+          <label for="uidLength" class="form-label">UID Length</label>
+          <input id="uidLength" class="form-control" type="number" placeholder="e.g. 6" min="1" required />
+          <div class="invalid-feedback">Please enter a valid UID length (minimum 1).</div>
+        </div>
+        
+      </div><!-- /.modal-body -->
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+  <%- include('../partials/modal/confirmation.ejs') %>
+  <%- include('../partials/modal/success.ejs') %>
+  <%- include('../partials/modal/error.ejs') %>
 
   <script>
 
@@ -122,6 +154,51 @@
           $('#modalError').modal('show');
         }else location.reload();
       });
+    });
+
+    // Handle project form submission
+    document.getElementById('projectForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent form from submitting the default way
+
+      // Get form values
+      const projectName = document.getElementById('projectName').value.trim();
+      const projectDescription = document.getElementById('projectDescription').value.trim();
+      const uidPrefix = document.getElementById('uidPrefix').value.trim();
+      const uidLength = parseInt(document.getElementById('uidLength').value.trim());
+
+      // Validate fields before calling API
+      if (projectName === '' || uidPrefix === '' || !uidLength || uidLength < 1) {
+        $('#error').text("Some of required fields are empty or invalid");
+        $('#suggestion').text("Check project name, UID prefix and UID length");
+        $('#modalError').modal('show');
+        return;
+      }
+
+      // Call API to add project
+      api.addFWProject(projectName, projectDescription, uidPrefix, uidLength, (err, res) => {
+        if(err){
+          $('#error').text("Error adding project");
+          if(err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          // Show success message
+          console.log(res);
+          $("#successHeader").text("Project successfully added");
+          $('#successMsg').text("Project '" + projectName + "' was created successfully");
+          $('#modalSuccess').modal('show');
+        }
+
+        // Close modal
+        var modalInstance = bootstrap.Modal.getInstance(document.getElementById('projectModal'));
+        modalInstance.hide();
+
+        // Reset the form
+        document.getElementById('projectForm').reset();
+      });
+      
     });
 
     function deleteProject(project_id){

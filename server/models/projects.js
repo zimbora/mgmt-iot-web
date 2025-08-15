@@ -43,10 +43,13 @@ var self = module.exports = {
     });
   },
 
-  add : async(namecb)=>{
+  add : async(name,description,uid_prefix,uid_length,cb)=>{
 
     let obj = {
       name : name,
+      description : description,
+      uid_prefix : uid_prefix,
+      uid_length : uid_length,
       createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
