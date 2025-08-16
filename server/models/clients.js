@@ -51,7 +51,8 @@ var self = module.exports =  {
     let mqtt_message = nick+"_mqtt_"+password;
     let mqtt_key = String(Date.now()/3621 + 1000); // Slightly different key for MQTT
     var mqtt_password = CryptoJS.HmacSHA256(mqtt_message, mqtt_key).toString();
-
+    mqtt_password = mqtt_password.substring(0, 12);
+    
     let obj = {
       nick : nick,
       user_id : userId,
@@ -109,7 +110,7 @@ var self = module.exports =  {
 
   list : async (cb)=>{
 
-    let query = `select c.id,c.nick,c.createdAt,c.updatedAt,c.user_id,c.token,c.api_token,c.mqtt_password,u.type from clients as c inner join users as u where u.id = c.user_id`;
+    let query = `select c.id,c.nick,c.createdAt,c.updatedAt,c.user_id,u.type from clients as c inner join users as u where u.id = c.user_id`;
     let table = [];
     query = mysql.format(query,table);
 
@@ -124,7 +125,7 @@ var self = module.exports =  {
 
   listHuman : async (cb)=>{
 
-    let query = `select c.id,c.nick,c.createdAt,c.updatedAt,c.user_id,c.token,c.api_token,c.mqtt_password,u.type from clients as c inner join users as u where c.gmail is NOT NULL and u.id = c.user_id`;
+    let query = `select c.id,c.nick,c.createdAt,c.updatedAt,c.user_id,u.type from clients as c inner join users as u where c.gmail is NOT NULL and u.id = c.user_id`;
     let table = [];
     query = mysql.format(query,table);
 
