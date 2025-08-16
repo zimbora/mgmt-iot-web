@@ -147,7 +147,7 @@
     $("#submit_project").click(()=>{
       let project = $("#_name_").val();
       let description = $("#_description_").val();
-      api.addFWProject(project,description,(err,res)=>{
+      api.addProject(project,description,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);

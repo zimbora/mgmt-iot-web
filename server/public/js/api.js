@@ -88,7 +88,7 @@ var api = {
   },
 
   // add fw project
-  addFWProject : (name, description, uid_prefix, uid_length, cb)=>{
+  addProject : (name, description, uid_prefix, uid_length, cb)=>{
     fetch(Settings.api+"/projects", {
       method: 'POST',
       headers: {
