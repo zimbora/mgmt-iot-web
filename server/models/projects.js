@@ -71,6 +71,10 @@ var self = module.exports = {
 
     db.delete(tableName,filter)
     .then (rows => {
+      let filter = {
+        project_id : id,
+      }
+      db.delete(tablePermissions,filter)
       return cb(null,rows);
     })
     .catch(error => {

@@ -84,6 +84,7 @@ router.use('/project', projects);
 router.route('/projects')
   .get(Project.list)
   .post(Project.add)
+  .delete(Project.delete)
 
 router.use('/model', models);
 
