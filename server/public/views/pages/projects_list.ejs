@@ -45,6 +45,8 @@
                         <tr>
                             <th></th>
                             <th>project</th>
+                            <th>uid prefix</th>
+                            <th>uid length</th>
                             <th>description</th>
                         </tr>
                     </thead>
@@ -118,6 +120,7 @@
     var t;
     var id;
     let projects = <%- JSON.stringify(projects) %>;
+    let user = <%- JSON.stringify(user) %>;
     const projectNameInput = document.getElementById('projectName');
     const uidPrefixInput = document.getElementById('uidPrefix');
 
@@ -128,17 +131,28 @@
       projects.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
 
       projects.forEach((item, i) => {
-        addRow(item.id,item.name,item.description);
+        addRow(item.id,item.name,item.uidPrefix,item.uidLength,item.description);
       });
     });
 
 
-    function addRow(id,project,description){
-      t.row.add([`
-        <button id="`+id+`" onclick="deleteProject('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
+    function addRow(id,project,prefix,len,description){
+      const buttonHtml = `
+        <button 
+          id="${id}" 
+          onclick="deleteProject('${id}');" 
+          type="button" 
+          class="delete btn btn-secondary btn-sm"
+          ${user.level !== 5 ? 'disabled' : ''}
+        >
           <i class="bi bi-folder-x"></i>
-        </button>`,
+        </button>
+      `;
+      t.row.add([
+        buttonHtml,
         `<a href="./project/`+id+`/models">`+project+`</a>`,
+        `<a>`+prefix+`<a/>`,
+        `<a>`+len+`<a/>`,
         description]).draw(true);
     }
     /*
