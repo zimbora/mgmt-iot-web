@@ -43,10 +43,13 @@ var self = module.exports = {
     });
   },
 
-  add : async(namecb)=>{
+  add : async(name,description,uid_prefix,uid_length,cb)=>{
 
     let obj = {
       name : name,
+      description : description,
+      uidPrefix : uid_prefix,
+      uidLength : uid_length,
       createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
@@ -68,6 +71,10 @@ var self = module.exports = {
 
     db.delete(tableName,filter)
     .then (rows => {
+      let filter = {
+        project_id : id,
+      }
+      db.delete(tablePermissions,filter)
       return cb(null,rows);
     })
     .catch(error => {
