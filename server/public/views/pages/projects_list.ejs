@@ -67,10 +67,16 @@
       <div class="modal-body">
         <!-- Project Name -->
         <div class="mb-3">
-          <label for="projectName" class="form-label">Project Name</label>
-          <input id="projectName" class="form-control" type="text" placeholder="e.g. IoT Sensors" required />
-          <div class="invalid-feedback">Please enter a project name.</div>
-        </div>
+        <label for="projectName" class="form-label">Project Name</label>
+        <input
+          id="projectName"
+          class="form-control"
+          type="text"
+          placeholder="e.g. IoT Sensors"
+          required
+        />
+        <div class="invalid-feedback">Please enter a project name using only letters and numbers, with no spaces or symbols.</div>
+      </div>
 
         <!-- Description -->
         <div class="mb-3">
@@ -112,6 +118,8 @@
     var t;
     var id;
     let projects = <%- JSON.stringify(projects) %>;
+    const projectNameInput = document.getElementById('projectName');
+    const uidPrefixInput = document.getElementById('uidPrefix');
 
     $(document).ready(function () {
 
@@ -122,16 +130,6 @@
       projects.forEach((item, i) => {
         addRow(item.id,item.name,item.description);
       });
-      /*
-      api.getFWProjects((err,res)=>{
-        if(err) console.log("err:",err)
-        else{
-          res.forEach((item, i) => {
-            addRow(item.id,item.name,item.description);
-          });
-        }
-      });
-      */
     });
 
 
@@ -143,7 +141,7 @@
         `<a href="./project/`+id+`/models">`+project+`</a>`,
         description]).draw(true);
     }
-
+    /*
     $("#submit_project").click(()=>{
       let project = $("#_name_").val();
       let description = $("#_description_").val();
@@ -155,10 +153,12 @@
         }else location.reload();
       });
     });
-
+    */
     // Handle project form submission
     document.getElementById('projectForm').addEventListener('submit', function(event) {
       event.preventDefault(); // Prevent form from submitting the default way
+
+      var modalInstance = bootstrap.Modal.getInstance(document.getElementById('projectModal'));
 
       // Get form values
       const projectName = document.getElementById('projectName').value.trim();
@@ -174,8 +174,36 @@
         return;
       }
 
+      // Regular expression to test input
+      var regex = /^[A-Za-z0-9]*$/;
+
+      if (!regex.test(projectName)) {
+        modalInstance.hide();
+        $('#error').text("Error adding project");
+        $('#suggestion').text("Name: Only letters and numbers are allowed, no spaces or symbols. Please try again");
+        $('#modalError').modal('show');
+        modalInstance.show();
+        return;
+      }
+
+      regex = /^[A-Za-z0-9:]*$/
+      if (!regex.test(uidPrefix)) {
+        modalInstance.hide();
+        $('#error').text("Error adding project");
+        $('#suggestion').text("prefix: Only letters and numbers and colon are allowed, no spaces or symbols. Please try again");
+        $('#modalError').modal('show');
+        modalInstance.show();
+        return;
+      }
+
+      // Allows letters, numbers, and colon
+
       // Call API to add project
-      api.addFWProject(projectName, projectDescription, uidPrefix, uidLength, (err, res) => {
+      api.addProject(projectName, projectDescription, uidPrefix, uidLength, (err, res) => {
+
+        // Close modal
+        modalInstance.hide();
+
         if(err){
           $('#error').text("Error adding project");
           if(err.hasOwnProperty("sqlMessage"))
@@ -185,18 +213,16 @@
           $('#modalError').modal('show');
         }else{
           // Show success message
-          console.log(res);
           $("#successHeader").text("Project successfully added");
           $('#successMsg').text("Project '" + projectName + "' was created successfully");
           $('#modalSuccess').modal('show');
+          // Reset the form
+          //document.getElementById('projectForm').reset();  
+          location.reload();
         }
 
-        // Close modal
-        var modalInstance = bootstrap.Modal.getInstance(document.getElementById('projectModal'));
-        modalInstance.hide();
-
-        // Reset the form
-        document.getElementById('projectForm').reset();
+        modalInstance.show();
+        
       });
       
     });
@@ -216,6 +242,33 @@
         }else location.reload();
       });
     })
+
+    projectNameInput.addEventListener('input', () => {
+      const value = projectNameInput.value;
+      const isValid = /^[A-Za-z0-9]*$/.test(value); // Only letters and numbers
+
+      if (!isValid) {
+        // Set input border to red
+        projectNameInput.style.borderColor = 'red';
+      } else {
+        // Reset to default border color
+        projectNameInput.style.borderColor = 'green';
+      }
+    });
+
+    uidPrefixInput.addEventListener('input', () => {
+      const value = uidPrefixInput.value;
+      const isValid = /^[A-Za-z0-9:]*$/.test(value); // Allows letters, numbers, and colon
+
+      if (!isValid) {
+        // Set input border to red
+        uidPrefixInput.style.borderColor = 'red';
+      } else {
+        // Reset to default border color
+        uidPrefixInput.style.borderColor = 'green';
+      }
+    });
+
 
   </script>
 </body>

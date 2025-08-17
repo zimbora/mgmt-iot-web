@@ -48,8 +48,8 @@ var self = module.exports = {
     let obj = {
       name : name,
       description : description,
-      uid_prefix : uid_prefix,
-      uid_length : uid_length,
+      uidPrefix : uid_prefix,
+      uidLength : uid_length,
       createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
