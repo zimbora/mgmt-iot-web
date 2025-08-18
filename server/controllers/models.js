@@ -24,6 +24,10 @@ module.exports = {
       description: Joi.string().optional()
     }).validate(req.body);
 
+    if(user.level != 5){
+      return response.error(res,httpStatus.BAD_REQUEST,"You have no permission to add a new model");
+    }
+
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
@@ -39,6 +43,10 @@ module.exports = {
     const val = Joi.object({
       model_id: Joi.number().required()
     }).validate(req.params);
+
+    if(user.level != 5){
+      return response.error(res,httpStatus.BAD_REQUEST,"You have no permission to delete the model");
+    }
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)

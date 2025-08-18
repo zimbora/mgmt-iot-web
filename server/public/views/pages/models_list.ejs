@@ -32,9 +32,11 @@
             <div class="content-header">
               <div class="d-flex align-items-center justify-content-between">
                 <h3>Models</h3>
+                <% if(user.level == 5){ %>
                 <button id="openModelBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modelModal">
                   + 
                 </button>
+                <%}%>
               </div>
             </div>
             <div class="row">
@@ -130,6 +132,7 @@
     var t;
     var id;
     let models = <%- JSON.stringify(models) %>;
+    let user = <%- JSON.stringify(user) %>;
 
     $(document).ready(function () {
 
@@ -181,10 +184,19 @@
     });
 
     function addRow(id,model,description){
-      t.row.add([`
-        <button id="`+id+`" onclick="deleteModel('`+id+`');" type="button" class="delete btn btn-secondary btn-sm">
+      const buttonHtml = `
+        <button 
+          id="${id}" 
+          onclick="deleteModel('${id}');" 
+          type="button" 
+          class="delete btn btn-secondary btn-sm"
+          ${user.level !== 5 ? 'disabled' : ''}
+        >
           <i class="bi bi-folder-x"></i>
-        </button>`,
+        </button>`;
+
+      t.row.add([
+        buttonHtml,
         `<a href="./model/`+id+`/devices">`+model+`</a>`,
         description]).draw(true);
     }
@@ -207,7 +219,7 @@
       }
 
       // Call API to add model
-      api.addFWModel(modelName, parseInt(projectSelect.value), modelDescription, (err, res) => {
+      api.addModel(modelName, parseInt(projectSelect.value), modelDescription, (err, res) => {
         if(err){
           $('#error').text("Error adding model");
           if(err.hasOwnProperty("sqlMessage"))
@@ -239,19 +251,6 @@
       });
     });
 
-    $("#submit_model").click(()=>{
-      // This is the old handler - keeping for compatibility but should use the new modal
-      let model = $("#_name_").val();
-      let description = $("#_description_").val();
-      api.addFWModel(model,1,description,(err,res)=>{
-        if(err){
-          $('#error').text("Your request cannot be executed");
-          $('#suggestion').text(err);
-          $('#modalError').modal('show');
-        }else location.reload();
-      });
-    });
-
     function deleteModel(model_id){
       id = model_id
       $('#modalConfirmation').modal('show');
@@ -259,7 +258,7 @@
 
     $("#modalProceed").click(()=>{
       
-      api.removeFWModel(id,(err,res)=>{
+      api.removeModel(id,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err.sqlMessage);

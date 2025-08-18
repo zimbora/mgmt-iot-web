@@ -821,7 +821,7 @@ var api = {
   },
 
   // add fw model
-  addFWModel : (name, project_id, description, cb)=>{
+  addModel : (name, project_id, description, cb)=>{
     fetch(Settings.api+"/models", {
       method: 'POST',
       headers: {
@@ -845,7 +845,7 @@ var api = {
   },
 
   // remove fw model
-  removeFWModel : (modelId,cb)=>{
+  removeModel : (modelId,cb)=>{
     fetch(Settings.api+"/model/"+modelId, {
       method: 'DELETE',
       headers: {
