@@ -1,5 +1,10 @@
 # Changelog
 
+## version 1.0.65
+  - Add MQTT password generation on user creation (#10)
+  - Add project creation modal with UID prefix and length validation (#12)
+  - Add model creation functionality with project association (#14)
+  
 ## version 1.0.64
   Projects (#8)
   * Supports project Management, Adds models access management:
