@@ -264,11 +264,12 @@ app.use('/project/:project_id',(req,res,next)=>{
 })
 
 app.get('/project/:project_id/models',(req,res)=>{
-  if(req.user.level >= 4){
-    Project.getModels(req.params.project_id,(err,models)=>{
+  
+  project.checkAccess(req,res,()=>{
+    Project.getModels(req.params?.project_id,(err,models)=>{
       res.render(path.join(__dirname, config.public_path+'/views/pages/project/models'),{project:req.project,models:models,user:req.user,page:'ProjectModels'});
     })
-  }
+  });
 });
 
 app.get('/project/:project_id/access',project.checkOwnership,(req,res)=>{
