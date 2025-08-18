@@ -868,14 +868,15 @@ var api = {
   },
 
   // add fw model
-  addFWModel : (model,description,cb)=>{
+  addModel : (name, project_id, description, cb)=>{
     fetch(Settings.api+"/models", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: model,
+        name: name,
+        project_id: project_id,
         description: description
       })
     })
@@ -891,7 +892,7 @@ var api = {
   },
 
   // remove fw model
-  removeFWModel : (modelId,cb)=>{
+  removeModel : (modelId,cb)=>{
     fetch(Settings.api+"/model/"+modelId, {
       method: 'DELETE',
       headers: {

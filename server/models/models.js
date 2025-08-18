@@ -40,17 +40,34 @@ var self = module.exports = {
     });
   },
 
-  add : async(namecb)=>{
+  add : async(name,project_id,description,cb)=>{
 
-    let obj = {
-      name : name,
-      createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
-      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
-    }
+    // First check if model with same name already exists in this project
+    var query = `select * from models where name = ? and project_id = ?`;
+    var table = [name, project_id];
+    query = mysql.format(query,table);
 
-    db.insert("models",obj)
-    .then (rows => {
-      return cb(null,rows);
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length > 0){
+        return cb("Model with this name already exists in the selected project",null);
+      }else{
+        let obj = {
+          name : name,
+          project_id: project_id,
+          description: description || null,
+          createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+          updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+        }
+
+        db.insert("models",obj)
+        .then (rows => {
+          return cb(null,rows);
+        })
+        .catch(error => {
+          return cb(error,null);
+        });
+      }
     })
     .catch(error => {
       return cb(error,null);
