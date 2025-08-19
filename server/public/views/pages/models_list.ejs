@@ -229,7 +229,6 @@
           $('#modalError').modal('show');
         }else{
           // Show success message
-          console.log(res);
           $("#successHeader").text("Model successfully added");
           $('#successMsg').text("Model '" + modelName + "' has been created successfully");
           $('#modalSuccess').modal('show');
@@ -238,6 +237,7 @@
           setTimeout(() => {
             location.reload();
           }, 2000);
+          
         }
 
         // Close modal

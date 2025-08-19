@@ -24,6 +24,10 @@ module.exports = {
       uid_length: Joi.number().integer().min(1).required(),
     }).validate(req.body);
 
+    if(req.user.level != 5){
+      return response.error(res,httpStatus.BAD_REQUEST,"You have no permission to add a new project");
+    }
+
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{

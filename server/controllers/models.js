@@ -24,16 +24,26 @@ module.exports = {
       description: Joi.string().optional()
     }).validate(req.body);
 
-    if(user.level != 5){
+    if(req.user.level != 5){
       return response.error(res,httpStatus.BAD_REQUEST,"You have no permission to add a new model");
     }
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      Model.add(req.body.name, req.body.project_id, req.body.description,(err,rows)=>{
-        if(!err) response.send(res,rows);
-        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      Model.getId(req.body.name)
+      .then(existingId => {
+        if(existingId) {
+          response.error(res,httpStatus.BAD_REQUEST,"Model with this name already exists");
+        } else {
+          Model.add(req.body.name, req.body.project_id, req.body.description,(err,rows)=>{
+            if(!err) response.send(res,rows);
+            else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+          });
+        }
+      })
+      .catch(err => {
+        response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }
   },
