@@ -120,12 +120,13 @@
       const app = require('./app.mjs');
       t = $('#sensors').DataTable();
       ctx = echarts.init(document.getElementById('myChart'));
-      api.model.getSensors(modelId,(err,res)=>{
+
+      api.device.getSensors(deviceId,(err,res)=>{
         if(err) console.log(err)
         else{
           res.forEach((item, i) => {
             addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.updatedAt).format('YY/MM/DD LT'),"");
-
+            /*
             if(i==res.length-1){
               $('.form-check-input').on('change', function() {
                 let id = $(this).attr('id');
@@ -155,9 +156,19 @@
                   });
               });
             }
+            */
 
           });
 
+        }
+      })
+      
+      api.model.getSensors(modelId,(err,res)=>{
+        if(err) console.log(err)
+        else{
+          res.forEach((item, i) => {
+            addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.updatedAt).format('YY/MM/DD LT'),"");
+          });
         }
       })
 

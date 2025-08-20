@@ -283,7 +283,7 @@ var api = {
 
   device: {
     addSensor: (deviceId,ref,name,type,cb)=>{
-      fetch(Settings.api+"/device/"+deviceId+"/sensor", {
+      fetch(Settings.api+"/device/"+deviceId+"/sensors", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -304,6 +304,20 @@ var api = {
         return parseError(error,cb);
       });
     },
+
+    getSensors: (deviceId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/sensors",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    }
   },
   // get clients with access to the device
   getClientsWithAccessToDevice : function(deviceID,cb){

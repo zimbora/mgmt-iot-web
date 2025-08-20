@@ -44,7 +44,7 @@ module.exports = {
 
 
   list : (req, res, next)=>{
-    Sensor.list((err,rows)=>{
+    Sensor.list(req.params?.model_id,req.params?.device_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });

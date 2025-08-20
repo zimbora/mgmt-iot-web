@@ -64,6 +64,9 @@ router.route("/:device_id/fw/logs")
 router.route("/:device_id/sensor")
   .post(Sensor.add)
 
+router.route("/:device_id/sensors")
+  .get(Sensor.list)
+
 router.route("/:device_id/sensor/info")
 
   .get(Device.getSensorInfo)
