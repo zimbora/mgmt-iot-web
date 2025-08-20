@@ -3,6 +3,7 @@ var config = require('../../config/env');
 
 var Device = require('../controllers/devices')
 var Client = require('../controllers/clients')
+var Sensor = require('../controllers/sensors')
 
 const router = express.Router();
 
@@ -59,6 +60,9 @@ router.route("/:device_id/fw/info")
 router.route("/:device_id/fw/logs")
 
   .get(Device.getFwLogs)
+
+router.route("/:device_id/sensor")
+  .post(Sensor.add)
 
 router.route("/:device_id/sensor/info")
 

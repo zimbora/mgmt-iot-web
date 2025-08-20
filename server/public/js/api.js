@@ -281,6 +281,30 @@ var api = {
 
   // --- requests related to a device ---
 
+  device: {
+    addSensor: (deviceId,ref,name,type,cb)=>{
+      fetch(Settings.api+"/device/"+deviceId+"/sensor", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ref: ref,
+          name: name,
+          type: type
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+  },
   // get clients with access to the device
   getClientsWithAccessToDevice : function(deviceID,cb){
 

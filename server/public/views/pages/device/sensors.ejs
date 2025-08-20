@@ -20,6 +20,7 @@
 
   <%- include('../../partials/modal/confirmation.ejs') %>
   <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/success.ejs') %>
   <%- include('../../partials/modal/addSensor.ejs') %>
   <%- include('../../partials/modal/loading.ejs') %>
   <%- include('../../partials/modal/timeout.ejs') %>
@@ -69,7 +70,12 @@
                 <div class="card py-3">
                   <h5 class="card-title">
                     Available Sensors
+                    <button id="openModelBtn" class="btn btn-primary mb-2 float-right" data-bs-toggle="modal" data-bs-target="#modalAddSensor">
+                      + 
+                    </button>
+                    <!--
                     <button type="button" class="btn btn-primary mb-2 float-right" onclick="showAddSensorModal()"><i class="fa-solid fa-plus"></i></button>
+                    -->
                   </h5>
                   <div class="card-body">
                     <table id="sensors" class="display">
@@ -97,10 +103,10 @@
     var ctx;
     var t;
     var table_list;
-    var deviceID = api.getDeviceID();
+    var deviceId = api.getDeviceID();
     var device = <%- JSON.stringify(device) %>;
     var mqtt = <%- JSON.stringify(mqtt) %>;
-    let modelID = device.model_id;
+    let modelId = device.model_id;
     var timerInputChange = null;
 
     const project = device.project;
@@ -113,7 +119,7 @@
       const app = require('./app.mjs');
       t = $('#sensors').DataTable();
       ctx = echarts.init(document.getElementById('myChart'));
-      api.model.getSensors(modelID,(err,res)=>{
+      api.model.getSensors(modelId,(err,res)=>{
         if(err) console.log(err)
         else{
           res.forEach((item, i) => {
@@ -126,7 +132,7 @@
                 if ($(this).is(':checked'))
                   active = "1";
 
-                api.model.updateSensor(modelID,id,"active",active,(err,res)=>{
+                api.model.updateSensor(modelId,id,"active",active,(err,res)=>{
                   if(err){
                     $('#error').text("Your request cannot be executed");
                     $('#suggestion').text(err);
@@ -139,7 +145,7 @@
               $('.select_type').on('change', function() {
                   let id = $(this).attr('id');
                   let type = $(this).val();
-                  api.model.updateSensor(modelID,id,"type",type,(err,res)=>{
+                  api.model.updateSensor(modelId,id,"type",type,(err,res)=>{
                     if(err){
                       $('#error').text("Your request cannot be executed");
                       $('#suggestion').text(err);
@@ -246,6 +252,41 @@
         </button>`
       ]).draw(true);
 
+    }
+
+    function addSensor(){
+      let ref = $("#_modalRef_").val();
+      let name = $("#_modalName_").val();
+      let type = $("#type").val();
+
+      // Validation (optional)
+      if (!ref || !name || !type || !deviceId) {
+        $('#error').text("Invalid fields");
+        $('#suggestion').text("Check your fields and retry again");
+        $('#modalError').modal('show');
+        return;
+      }
+
+      api.device.addSensor(deviceId,ref,name,type,(err,res)=>{
+        if(err){
+          $('#error').text("Error adding sensor");
+          if(err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          // Show success message
+          $("#successHeader").text("Sensor successfully added");
+          $('#successMsg').text(`Sensor ${name} has been created and associated to device id: ${deviceId}`);
+          $('#modalSuccess').modal('show');
+          
+          // Reload page to show the new model
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        }
+      });
     }
 
   </script>

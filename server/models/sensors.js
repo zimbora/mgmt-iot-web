@@ -4,10 +4,11 @@ const moment = require('moment');
 
 var self = module.exports = {
 
-  add : async(model_id,ref,name,type,cb)=>{
+  add : async(model_id,device_id,ref,name,type,cb)=>{
 
     let obj = {
       model_id : model_id,
+      device_id : device_id,
       ref : ref,
       name : name,
       type: type,
