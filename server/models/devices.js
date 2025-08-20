@@ -360,7 +360,7 @@ var self = module.exports =  {
       if(res != null && res.length > 0){
         data["project"] = res[0];
       }
-
+      /*
       query = `SELECT * FROM ?? where device_id = ?;`
       table = [model,deviceId]
       query = mysql.format(query,table);
@@ -368,7 +368,7 @@ var self = module.exports =  {
       if(res != null && res.length > 0){
         data["model"] = res[0];
       }
-
+      */
       query = `SELECT * FROM ?? where name = ?;`
       table = ["models",model]
       query = mysql.format(query,table);
@@ -623,34 +623,15 @@ var self = module.exports =  {
     })
   },
 
-  getSensorLogs : async (deviceId,sensor,cb)=>{
-
-    return cb("Not implemented",null);
-
-    let project = await self.getProject(deviceId);
-    if(project == null)
-      return cb(`no project found for deviceId ${deviceId}`,null);
-
-    let model = await self.getModel(deviceId);
-    if(model == null)
-      return cb(null,null);
+  getSensorLogs : async (deviceId,sensorId,cb)=>{
 
     let table = [];
-    let query = "";
 
-    if (sensor != null) {
-      query = `SELECT ??,createdAt FROM ?? WHERE device_id = ? `;
-      table.push(sensor);
-    } else {
-      query = `SELECT * FROM ?? WHERE device_id = ? `;
-    }
-
+    let query = `SELECT value,createdAt,updatedAt FROM ?? WHERE sensor_id = ? and device_id = ? `;
     table.push("logs_sensor");
+    table.push(sensorId);
     table.push(deviceId);
-    if(sensor != null){
-      query += `and ?? IS NOT NULL `
-      table.push(sensor);
-    }
+
     query += `ORDER BY createdAt DESC LIMIT 20;`
 
     query = mysql.format(query,table);
