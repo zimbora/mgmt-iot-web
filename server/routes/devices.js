@@ -87,6 +87,14 @@ router.route("/:device_id/jscode")
 
   .get(Device.getJSCode)
 
+router.route("/:device_id/objects")
+
+  .get(Device.getLwm2mObjects)
+
+router.route("/:device_id/resources")
+
+  .get(Device.getLwm2mResources)
+
 router.use("/:device_id",Client.checkDeviceWriteAccess,(req,res,next)=>{next()})
 
 // protected zone to write access

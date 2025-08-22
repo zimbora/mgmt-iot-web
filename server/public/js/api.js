@@ -317,7 +317,37 @@ var api = {
         },
         dataType : "JSON"
       });
-    }
+    },
+
+    getLwm2mObjects: (deviceId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/objects",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    getLwm2mResources: (deviceId, objectId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/resources",type: 'GET',
+        data : {
+          objectId
+        },
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
   },
   // get clients with access to the device
   getClientsWithAccessToDevice : function(deviceID,cb){

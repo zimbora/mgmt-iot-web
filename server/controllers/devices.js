@@ -306,6 +306,27 @@ module.exports = {
     });
   },
 
+  getLwm2mObjects : (req, res, next)=>{
+
+    // check if project is 'lwm2m'
+    device.getLwm2mObjects(req.params.device_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
+  getLwm2mResources : (req, res, next)=>{
+
+    const val = Joi.object({
+      objectId: Joi.number(),
+    }).validate(req.query);
+
+    device.getLwm2mResources(req.params.device_id,req.query?.objectId,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
   // get clients with access to this device
   getClientsWithAccess : (req, res, next)=>{
     device.getClientsWithAccess(req.params.device_id,(err,rows)=>{

@@ -773,6 +773,50 @@ var self = module.exports =  {
   },
   */
 
+  getLwm2mObjects : async (deviceId,cb)=>{
+
+    let project_name = await self.getProject(deviceId)
+    if(project_name != 'lwm2m')
+      return cb('Device is not in lwm2m category');
+
+    let query = `SELECT * FROM lwm2mObjects where device_id = ?`
+    let table = [deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+
+  },
+
+  getLwm2mResources : async (deviceId,objectId,cb)=>{
+
+    let project_name = await self.getProject(deviceId)
+    if(project_name != 'lwm2m')
+      return cb('Device is not in lwm2m category');
+
+    let query = `SELECT * FROM lwm2m where device_id = ?`
+    let table = [deviceId]
+    if(objectId){
+      query += ` and objectId = ?`
+      table.push(objectId);
+    }
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+
+  },
+
   add : async (device,cb)=>{
 
     const projectId = await Project.getId(device.projectName);
