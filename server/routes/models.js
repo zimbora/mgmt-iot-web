@@ -95,6 +95,9 @@ router.route('/:model_id/firmware')
   .delete(Firmware.delete)
   .put(Firmware.updateRelease)
 
+router.route('/:model_id/firmware/latest')
+  .get(Model.getLatestFirmware)
+
 router.route('/:model_id/sensors')
   .get(Sensor.list)
 
