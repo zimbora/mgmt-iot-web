@@ -27,6 +27,48 @@ var self = module.exports =  {
     })
   },
 
+  getPreSharedKey : async (deviceId)=>{
+    return new Promise( (resolve,reject)=>{
+
+      let query = `select psk from devices where id = ?`;
+      let table = [deviceId]
+      query = mysql.format(query,table);
+      db.queryRow(query)
+      .then(rows => {
+        if(rows?.length > 0)
+          resolve(rows[0]);
+        else resolve(null);
+      })
+      .catch(error => {
+        reject(error);
+      })
+    })
+  },
+
+  updateObservationStatus : async (deviceId,data,cb)=>{
+
+    let obj = {
+      observing : data.observing,
+      observationTkn : data.token,
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    let filter = {
+      device_id: deviceId,
+      objectId: data.objectId,
+      objectInstanceId: data.objectInstanceId,
+      resourceId: data.resourceId,
+    };
+
+    db.update("permissions",obj,filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
   addClientPermission : async (deviceId,clientId,level,cb)=>{
 
     let obj = {

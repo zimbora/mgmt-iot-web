@@ -9,6 +9,48 @@ var response = require('./response');
 
 module.exports = {
 
+  getPreSharedKey : async (req, res, next)=>{
+
+    const projectName = await Device.getProject(req.params.device_id)
+
+    if(projectName != 'lwm2m'){
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"Device is not classified in lwm2m project");
+    }else{
+      Device.getPreSharedKey(req.params.device_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
+  updateObservationStatus : async (req, res, next)=>{
+
+    const projectName = await Device.getProject(req.params.device_id)
+
+    if(projectName != 'lwm2m'){
+      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"Device is not classified in lwm2m project");
+    }else{
+
+      const val = Joi.object({
+        objectId: Joi.number().required(),
+        objectInstanceId: Joi.number().required(),
+        resourceId: Joi.number().required(),
+        observing: Joi.boolean().truthy('true').falsy('false').required(),
+        token: Joi.string().max(16), // ensures max length of 16 characters
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        Device.updateObservationStatus(req.params.device_id,req.body,(err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }
+    }
+ },
+
+
   addClientPermission : (req, res, next)=>{
 
    const val = Joi.object({

@@ -24,6 +24,14 @@ router.route("/permission",Client.checkDevicePermissionsAccess)
 router.use('/:device_id',Client.checkDeviceReadAccess,(req,res,next)=>{next()});
 
 // protected zone to read access
+router.route("/:device_id/psk")
+
+  .get(Device.getPreSharedKey)
+
+// lwm2m
+router.route("/:device_id/observation")
+
+  .put(Device.updateObservationStatus)
 
 router.route("/:device_id/clients")
 
