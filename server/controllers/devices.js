@@ -9,18 +9,27 @@ var response = require('./response');
 
 module.exports = {
 
+  getId : async (req,res,next)=>{
+
+    const val = Joi.object({
+      uid: Joi.string().required(),
+      project: Joi.string(),
+    }).validate(req.query);
+
+    device.getId(req.query.uid,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+    
+  },
+
   getPreSharedKey : async (req, res, next)=>{
-
-    const projectName = await Device.getProject(req.params.device_id)
-
-    if(projectName != 'lwm2m'){
-      response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"Device is not classified in lwm2m project");
-    }else{
-      Device.getPreSharedKey(req.params.device_id,(err,rows)=>{
-        if(!err) response.send(res,rows);
-        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-      });
-    }
+    
+    device.getPreSharedKey(req.params.device_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+    
   },
 
   updateObservationStatus : async (req, res, next)=>{

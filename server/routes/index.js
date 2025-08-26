@@ -66,10 +66,12 @@ router.route('/clients')
 router.route('/clientsHuman')
   .get(Client.listHuman)
 
-
 router.route('/devices')
   .get(Device.list)
   .post(Device.add)
+
+router.route('/device/id')
+  .get(Device.getId);
 
 router.use('/device', devices);
 

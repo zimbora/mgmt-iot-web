@@ -9,6 +9,22 @@ const moment = require('moment');
 
 var self = module.exports =  {
 
+  getId : async(uid,cb)=>{
+
+    let query = `select id from devices where uid = ?`;
+    let table = [uid]
+    query = mysql.format(query,table);
+    db.queryRow(query)
+    .then(rows => {
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error);
+    })
+  },
+
   getById : async (deviceId)=>{
     return new Promise( (resolve,reject)=>{
 
@@ -27,21 +43,19 @@ var self = module.exports =  {
     })
   },
 
-  getPreSharedKey : async (deviceId)=>{
-    return new Promise( (resolve,reject)=>{
+  getPreSharedKey : async (deviceId,cb)=>{
 
-      let query = `select psk from devices where id = ?`;
-      let table = [deviceId]
-      query = mysql.format(query,table);
-      db.queryRow(query)
-      .then(rows => {
-        if(rows?.length > 0)
-          resolve(rows[0]);
-        else resolve(null);
-      })
-      .catch(error => {
-        reject(error);
-      })
+    let query = `select psk from devices where id = ?`;
+    let table = [deviceId]
+    query = mysql.format(query,table);
+    db.queryRow(query)
+    .then(rows => {
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error);
     })
   },
 
