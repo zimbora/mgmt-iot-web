@@ -1,5 +1,20 @@
 # Changelog
 
+## version 1.0.66
+  - fixes: Create new model (backend)
+    Only admin can create project or model
+  - fixes add sensor:
+    allows sensor creation by model and device
+  server/models/devices: implement getSensorLogs (1st version)
+  server/public/js/display: fixes showSensorsLogs (deviceId)
+  List sensors by modelId and deviceId
+  Supports 2 new routes for lwm2m: (#15):
+    - /:device_id/objects
+    - /:device_id/resources
+  Adds routes for preSharedKey and observationStatus (lwm2m)
+  Adds getId and fixes getPreSharedKey.
+  Fixes sendMqttMessage and return message success on api.status call
+
 ## version 1.0.65
   - Add MQTT password generation on user creation (#10)
   - Add project creation modal with UID prefix and length validation (#12)

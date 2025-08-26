@@ -9,7 +9,6 @@
 	- Add changes to Changelog.md file
 	- increase version of package.json file
 	- run npm update
-	- test locally
 
 ## 2nd step
 	
