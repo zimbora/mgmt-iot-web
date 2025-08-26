@@ -1210,7 +1210,7 @@ var self = module.exports =  {
         mqtt_prefix += `/app/sniffer`;
     }
     else{
-      mqtt_prefix = `${projectName}/${device.uid}`;
+      mqtt_prefix = `${projectName}/${uid}`;
     }
 
     let publishTopic = `${mqtt_prefix}/${topic}`;

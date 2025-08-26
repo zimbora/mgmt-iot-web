@@ -37,9 +37,9 @@ router.get('/api-status', (req, res) =>
   res.status(httpStatus.OK)
     .json({
       Error: false,
-      Message: "",
+      Message: "Success",
       Result:{
-        status: "ok"
+        status: "ok",
       }
     })
 );
