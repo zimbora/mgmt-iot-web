@@ -297,4 +297,19 @@ var self = module.exports = {
     })
   },
 
+  getTemplates : (projectId,cb)=>{
+
+    var query = `select * from ?? where ?? = ? order by createdAt desc`;
+    var table = ["templates","project_id",projectId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
 };
