@@ -29,8 +29,11 @@ router.route("/:device_id/psk")
   .get(Device.getPreSharedKey)
 
 // lwm2m
-router.route("/:device_id/observation")
+router.route("/:device_id/observations")
+  .get(Device.getObservations)
 
+router.route("/:device_id/observation")
+  .get(Device.getObservationStatus)
   .put(Device.updateObservationStatus)
 
 router.route("/:device_id/clients")
