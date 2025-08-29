@@ -8,6 +8,7 @@ var clients = require('./clients');
 var devices = require('./devices');
 var projects = require('./projects');
 var models = require('./models');
+var templates = require('./templates');
 //var firmwares = require('./firmwares');
 var authRoutes = require('./auth');
 
@@ -93,6 +94,8 @@ router.use('/model', models);
 router.route('/models')
   .get(Model.list)
   .post(Model.add)
+
+router.use('/template', templates);
 
 //router.use('/firmware',firmwares)
 

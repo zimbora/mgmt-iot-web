@@ -1161,6 +1161,86 @@ var api = {
     .catch(function (error) {
       return parseError(error,cb);
     });
+  },
+
+  // LWM2M Template Resources API
+
+  // Get template resources
+  getTemplateResources: (templateId, cb) => {
+    fetch(Settings.api + "/template/" + templateId + "/resources", {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data, cb);
+    })
+    .catch(function (error) {
+      return parseError(error, cb);
+    });
+  },
+
+  // Add new resource
+  addResource: (templateId, resourceData, cb) => {
+    fetch(Settings.api + "/template/" + templateId, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(resourceData)
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data, cb);
+    })
+    .catch(function (error) {
+      return parseError(error, cb);
+    });
+  },
+
+  // Update existing resource
+  updateResource: (templateId, resourceId, resourceData, cb) => {
+    fetch(Settings.api + "/template/" + templateId + "/" + resourceId, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(resourceData)
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data, cb);
+    })
+    .catch(function (error) {
+      return parseError(error, cb);
+    });
+  },
+
+  // Delete resource
+  deleteResource: (templateId, resourceId, cb) => {
+    fetch(Settings.api + "/template/" + templateId + "/" + resourceId, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data, cb);
+    })
+    .catch(function (error) {
+      return parseError(error, cb);
+    });
   }
 };
 
