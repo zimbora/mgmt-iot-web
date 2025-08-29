@@ -3,6 +3,7 @@ var express = require('express');
 
 var Project = require('../controllers/projects');
 var Sensor = require('../controllers/sensors');
+var Template = require('../controllers/templates');
 
 const router = express.Router();
 
@@ -36,5 +37,14 @@ router.route('/:project_id/sensor')
 
 router.route('/:project_id/option')
   .put(Project.updateOption)
+
+router.route('/:project_id/templates')
+  .get(Template.list)
+
+router.route('/:project_id/template')
+  .post(Template.add)
+
+router.route('/:project_id/template/:template_id')
+  .delete(Template.delete)
 
 module.exports =  router;
