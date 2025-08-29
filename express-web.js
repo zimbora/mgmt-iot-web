@@ -290,6 +290,23 @@ app.get('/project/:project_id/sensors',(req,res)=>{
   }
 });
 
+app.get('/project/:project_id/templates',(req,res)=>{
+  
+  project.checkAccess(req,res,()=>{
+    Project.getTemplates(req.params?.project_id,(err,templates)=>{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/project/templates'),{project:req.project,templates:templates,user:req.user,page:'ProjectTemplates'});
+    })
+  });
+});
+
+app.get('/project/:project_id/templates/:template_id/edit',(req,res)=>{
+  
+  project.checkAccess(req,res,()=>{
+    // For now, redirect back to templates list since edit functionality is not implemented
+    res.redirect('/project/' + req.params.project_id + '/templates');
+  });
+});
+
 // --- models ---
 app.get('/models',(req,res)=>{
   if(req.user.level >= 2){

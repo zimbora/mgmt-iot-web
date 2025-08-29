@@ -1147,6 +1147,49 @@ var api = {
     });
   },
   */
+  
+  // add template
+  addTemplate : (tag, name, project_id, cb)=>{
+    fetch(Settings.api+"/project/"+project_id+"/template", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tag: tag,
+        name: name
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // delete template
+  deleteTemplate : (templateId, project_id, cb)=>{
+    fetch(Settings.api+"/project/"+project_id+"/template/"+templateId, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   getDBLoad : (cb)=>{
     fetch(Settings.api+"/db/load", {
       method: 'GET',

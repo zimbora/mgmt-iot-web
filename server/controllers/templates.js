@@ -1,173 +1,66 @@
+var Template = require('../models/templates');
+
+var Joi = require('joi');
 var httpStatus = require('http-status-codes');
-var Response = require('./response');
-var LwM2MTemplate = require('../models/lwm2mTemplate');
-var ParamsValidator = require('./params_validator');
+var response = require('./response');
 
-var self = module.exports = {
+module.exports = {
 
-  // Get all resources for a template
-  getTemplateResources: async (req, res) => {
-    try {
-      const templateId = req.params.template_id;
-      
-      if (!templateId) {
-        return Response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
-      }
+  get : (req,res,next)=>{
 
-      LwM2MTemplate.getByTemplateId(templateId, (err, resources) => {
-        if (err) {
-          return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
-        }
-        
-        // Parse JSON fields
-        const parsedResources = resources.map(resource => {
-          try {
-            resource.description = typeof resource.description === 'string' ? 
-              JSON.parse(resource.description) : resource.description;
-          } catch (e) {
-            resource.description = {};
-          }
-          try {
-            resource.defaultData = resource.defaultData && typeof resource.defaultData === 'string' ? 
-              JSON.parse(resource.defaultData) : resource.defaultData;
-          } catch (e) {
-            resource.defaultData = null;
-          }
-          return resource;
-        });
+    Template.getById(req.params.template_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
 
-        return Response.success(res, parsedResources);
+  list : (req,res,next)=>{
+
+    Template.listByProject(req.params.project_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
+  add : (req, res, next)=>{
+
+    const val = Joi.object({
+      tag: Joi.string().required(),
+      name: Joi.string().required(),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Template.add(req.body.tag, req.body.name, req.user.client_id, req.params.project_id, (err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
-    } catch (error) {
-      return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   },
 
-  // Add a new resource
-  addResource: async (req, res) => {
-    try {
-      const templateId = req.params.template_id;
-      const { objectId, objectInstanceId, resourceId, description, defaultData, observe, readInterval } = req.body;
+  delete : (req,res,next)=>{
 
-      // Validate required fields
-      if (!templateId || !objectId || !description) {
-        return Response.error(res, httpStatus.BAD_REQUEST, "Template ID, Object ID, and description are required");
-      }
-
-      // Validate description structure
-      if (!description.attributes || !description.attributes.type || !description.attributes.title) {
-        return Response.error(res, httpStatus.BAD_REQUEST, "Description must contain attributes with type and title");
-      }
-
-      LwM2MTemplate.add(
-        templateId,
-        objectId,
-        objectInstanceId,
-        resourceId,
-        description,
-        defaultData,
-        observe,
-        readInterval,
-        (err, result) => {
-          if (err) {
-            return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
-          }
-          return Response.success(res, result);
-        }
-      );
-    } catch (error) {
-      return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
-    }
+    Template.delete(req.params.template_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
   },
 
-  // Update an existing resource
-  updateResource: async (req, res) => {
-    try {
-      const templateId = req.params.template_id;
-      const resourceId = req.params.resource_id;
-      const updateData = req.body;
+  update : (req, res, next)=>{
 
-      if (!templateId || !resourceId) {
-        return Response.error(res, httpStatus.BAD_REQUEST, "Template ID and Resource ID are required");
-      }
+    const val = Joi.object({
+      tag: Joi.string().required(),
+      name: Joi.string().required(),
+    }).validate(req.body);
 
-      // Validate description structure if provided
-      if (updateData.description && updateData.description.attributes) {
-        const attrs = updateData.description.attributes;
-        if (attrs.type && !['string', 'float', 'integer', 'boolean'].includes(attrs.type)) {
-          return Response.error(res, httpStatus.BAD_REQUEST, "Invalid description type. Must be string, float, integer, or boolean");
-        }
-      }
-
-      LwM2MTemplate.update(resourceId, updateData, (err, result) => {
-        if (err) {
-          return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
-        }
-        return Response.success(res, result);
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Template.update(req.params.template_id, req.body.tag, req.body.name, (err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
-    } catch (error) {
-      return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
-    }
-  },
-
-  // Delete a resource
-  deleteResource: async (req, res) => {
-    try {
-      const templateId = req.params.template_id;
-      const resourceId = req.params.resource_id;
-
-      if (!templateId || !resourceId) {
-        return Response.error(res, httpStatus.BAD_REQUEST, "Template ID and Resource ID are required");
-      }
-
-      LwM2MTemplate.delete(resourceId, (err, result) => {
-        if (err) {
-          return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
-        }
-        return Response.success(res, result);
-      });
-    } catch (error) {
-      return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
-    }
-  },
-
-  // Get a specific resource
-  getResource: async (req, res) => {
-    try {
-      const templateId = req.params.template_id;
-      const resourceId = req.params.resource_id;
-
-      if (!templateId || !resourceId) {
-        return Response.error(res, httpStatus.BAD_REQUEST, "Template ID and Resource ID are required");
-      }
-
-      LwM2MTemplate.getById(resourceId, (err, resource) => {
-        if (err) {
-          return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
-        }
-        
-        if (!resource) {
-          return Response.error(res, httpStatus.NOT_FOUND, "Resource not found");
-        }
-
-        return Response.success(res, resource);
-      });
-    } catch (error) {
-      return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
-    }
-  },
-
-  // List all resources (for admin/debugging)
-  list: async (req, res) => {
-    try {
-      LwM2MTemplate.list((err, resources) => {
-        if (err) {
-          return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
-        }
-        return Response.success(res, resources);
-      });
-    } catch (error) {
-      return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   }
 };

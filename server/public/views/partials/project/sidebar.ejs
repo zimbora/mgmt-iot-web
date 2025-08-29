@@ -53,6 +53,13 @@
                   <% } %>
                   class="nav-link px-0"> <span class="d-none d-sm-inline">Models</span></a>
                 </li>
+                <li class="w-100">
+                  <a href="./templates"
+                  <% if(page == "ProjectTemplates"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Templates</span></a>
+                </li>
                 <% if(user.level >= 4){%>
                 <li class="w-100">
                   <a href="./settings"
