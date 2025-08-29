@@ -233,4 +233,33 @@ function db_setup(){
       console.log("error registering user type:",user_type)
     }
   });
+
+  // Create lwm2mTemplate table if it doesn't exist
+  var db = require('./server/controllers/db');
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS lwm2mTemplate (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      template_id INT NOT NULL,
+      objectId INT NOT NULL,
+      objectInstanceId INT NULL,
+      resourceId INT NULL,
+      description JSON NOT NULL,
+      defaultData JSON NULL,
+      observe INT NULL,
+      readInterval INT NULL,
+      createdAt DATETIME NOT NULL,
+      updatedAt DATETIME NOT NULL,
+      INDEX idx_template_id (template_id),
+      INDEX idx_object_id (objectId),
+      INDEX idx_template_object (template_id, objectId)
+    )
+  `;
+  
+  db.queryRow(createTableQuery)
+    .then(() => {
+      console.log("lwm2mTemplate table created or verified successfully");
+    })
+    .catch(err => {
+      console.log("Error creating lwm2mTemplate table:", err);
+    });
 }

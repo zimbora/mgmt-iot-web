@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LWM2M Template Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container-fluid mt-3">
+        <h1>LWM2M Template API Test</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>API Test Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="templateId" class="form-label">Template ID:</label>
+                            <input type="number" class="form-control" id="templateId" value="1">
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="testGetResources()">Test Get Resources</button>
+                        <button class="btn btn-success" onclick="testAddResource()">Test Add Resource</button>
+                        <button class="btn btn-warning" onclick="testUpdateResource()">Test Update Resource</button>
+                        <button class="btn btn-danger" onclick="testDeleteResource()">Test Delete Resource</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="results" style="height: 400px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; font-family: monospace; font-size: 12px;">
+                            Ready to test API endpoints...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Template Editor Preview</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>To test the full template editor, visit: <code>/template/{template_id}/edit</code></p>
+                        <p>For example: <a href="/template/1/edit" target="_blank">/template/1/edit</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Settings object for testing
+        const Settings = {
+            api: '/api'
+        };
+        
+        function logResult(action, result, isError = false) {
+            const timestamp = new Date().toISOString();
+            const color = isError ? 'red' : 'green';
+            const status = isError ? 'ERROR' : 'SUCCESS';
+            
+            $('#results').append(`<div style="color: ${color}; margin-bottom: 5px;">
+                [${timestamp}] ${status} - ${action}: ${JSON.stringify(result, null, 2)}
+            </div>`);
+            $('#results').scrollTop($('#results')[0].scrollHeight);
+        }
+        
+        function testGetResources() {
+            const templateId = $('#templateId').val();
+            
+            fetch(`${Settings.api}/template/${templateId}/resources`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                logResult('GET Resources', data);
+            })
+            .catch(error => {
+                logResult('GET Resources', error.message || error, true);
+            });
+        }
+        
+        function testAddResource() {
+            const templateId = $('#templateId').val();
+            const resourceData = {
+                objectId: 3,
+                objectInstanceId: 0,
+                resourceId: 1,
+                description: {
+                    attributes: {
+                        type: "string",
+                        title: "Test Resource",
+                        readable: true,
+                        writable: false,
+                        observable: false
+                    }
+                },
+                defaultData: {
+                    value: "Test Value"
+                },
+                observe: 0,
+                readInterval: null
+            };
+            
+            fetch(`${Settings.api}/template/${templateId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(resourceData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                logResult('ADD Resource', data);
+            })
+            .catch(error => {
+                logResult('ADD Resource', error.message || error, true);
+            });
+        }
+        
+        function testUpdateResource() {
+            const templateId = $('#templateId').val();
+            const resourceId = 1; // Assuming we have a resource with ID 1
+            const updateData = {
+                description: {
+                    attributes: {
+                        type: "string",
+                        title: "Updated Test Resource",
+                        readable: true,
+                        writable: true,
+                        observable: true
+                    }
+                }
+            };
+            
+            fetch(`${Settings.api}/template/${templateId}/${resourceId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                logResult('UPDATE Resource', data);
+            })
+            .catch(error => {
+                logResult('UPDATE Resource', error.message || error, true);
+            });
+        }
+        
+        function testDeleteResource() {
+            const templateId = $('#templateId').val();
+            const resourceId = 1; // Assuming we have a resource with ID 1
+            
+            fetch(`${Settings.api}/template/${templateId}/${resourceId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                logResult('DELETE Resource', data);
+            })
+            .catch(error => {
+                logResult('DELETE Resource', error.message || error, true);
+            });
+        }
+    </script>
+</body>
+</html>

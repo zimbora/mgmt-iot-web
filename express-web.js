@@ -351,6 +351,19 @@ app.get('/model/:model_id/firmwares',(req,res)=>{
   }
 });
 
+// --- templates ---
+app.get('/template/:template_id/edit',(req,res)=>{
+  if(req.user.level >= 4){
+    const templateId = req.params.template_id;
+    res.render(path.join(__dirname, config.public_path+'/views/template/edit/templateLwm2mEdit'),{
+      user: req.user,
+      templateId: templateId,
+      page: 'Template Edit'
+    });
+  } else {
+    res.redirect('/home');
+  }
+});
 
 // --- devices ---
 
