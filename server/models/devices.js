@@ -111,9 +111,12 @@ var self = module.exports =  {
       resourceId: data.resourceId,
     };
 
-    db.update("permissions",obj,filter)
+    db.update("lwm2m",obj,filter)
     .then (rows => {
-      return cb(null,rows);
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else
+        return cb(null,null);
     })
     .catch(error => {
       return cb(error,null);
@@ -130,7 +133,16 @@ var self = module.exports =  {
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
 
-    return await db.insert("permissions",obj);
+    db.insert("permissions",obj)
+    .then (rows => {
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else
+        return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
 
   },
 

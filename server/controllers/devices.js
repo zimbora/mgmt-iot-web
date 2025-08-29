@@ -84,72 +84,72 @@ module.exports = {
         objectInstanceId: Joi.number().required(),
         resourceId: Joi.number().required(),
         observing: Joi.boolean().truthy('true').falsy('false').required(),
-        token: Joi.string().max(16), // ensures max length of 16 characters
+        token: Joi.string().max(16).allow('', null), // ensures max length of 16 characters
       }).validate(req.body);
 
       if(val.error){
         response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
       }else{
-        Device.updateObservationStatus(req.params.device_id,req.body,(err,rows)=>{
+        device.updateObservationStatus(req.params.device_id,req.body,(err,rows)=>{
           if(!err) response.send(res,rows);
           else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
         });
       }
     }
- },
+  },
 
 
   addClientPermission : (req, res, next)=>{
 
-   const val = Joi.object({
-     deviceID: Joi.string().required(),
-     clientID: Joi.string().required(),
-     level: Joi.number().required()
-   }).validate(req.body);
+    const val = Joi.object({
+      deviceID: Joi.string().required(),
+      clientID: Joi.string().required(),
+      level: Joi.number().required()
+    }).validate(req.body);
 
-   if(val.error){
-     response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
-   }else{
-     Device.addClientPermission(req.body.deviceID,req.body.clientID,req.body.level,(err,rows)=>{
-       if(!err) response.send(res,rows);
-       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-     });
-   }
- },
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.addClientPermission(req.body.deviceID,req.body.clientID,req.body.level,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
 
   deleteClientPermission : (req, res, next)=>{
 
-   const val = Joi.object({
-     deviceID: Joi.string().required(),
-     clientID: Joi.string().required()
-   }).validate(req.body);
+    const val = Joi.object({
+      deviceID: Joi.string().required(),
+      clientID: Joi.string().required()
+    }).validate(req.body);
 
-   if(val.error){
-     response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
-   }else{
-     Device.deleteClientPermission(req.body.deviceID,req.body.clientID,(err,rows)=>{
-       if(!err) response.send(res,rows);
-       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-     });
-   }
- },
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.deleteClientPermission(req.body.deviceID,req.body.clientID,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
 
   updateClientPermission : (req, res, next)=>{
 
-   const val = Joi.object({
-     deviceID: Joi.string().required(),
-     clientID: Joi.string().required(),
-     level: Joi.number().required()
-   }).validate(req.body);
+    const val = Joi.object({
+      deviceID: Joi.string().required(),
+      clientID: Joi.string().required(),
+      level: Joi.number().required()
+    }).validate(req.body);
 
-   if(val.error){
-     response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
-   }else{
-     Device.updateClientPermission(req.body.deviceID,req.body.clientID,req.body.level,(err,rows)=>{
-       if(!err) response.send(res,rows);
-       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-     });
-   }
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.updateClientPermission(req.body.deviceID,req.body.clientID,req.body.level,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
  },
 
   list : (req, res, next)=>{
