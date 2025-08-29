@@ -59,6 +59,43 @@ var self = module.exports =  {
     })
   },
 
+  getObservations : async (deviceId,cb)=>{
+
+    let query = `select id, device_id, objectId, objectInstanceId, resourceId, observing, observationTkn from lwm2m where device_id = ? and observing = true`;
+    let table = [deviceId]
+    
+    query = mysql.format(query,table);
+    
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+
+  },
+
+  getObservationStatus : async (deviceId,data,cb)=>{
+
+    let query = `select id, observing, observationTkn from lwm2m where device_id = ? and objectId = ? and objectInstanceId = ? and resourceId = ?`;
+    let table = [deviceId, data.objectId, data.objectInstanceId, data.resourceId]
+    
+    query = mysql.format(query,table);
+    
+    db.queryRow(query)
+    .then(rows => {
+      if(rows?.length > 0)
+        return cb(null,rows[0]);
+      else
+        return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+
+  },
+
   updateObservationStatus : async (deviceId,data,cb)=>{
 
     let obj = {
