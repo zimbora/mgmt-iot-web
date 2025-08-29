@@ -69,13 +69,14 @@
         </div>
 
         <!-- Loading indicator -->
+        <!--
         <div id="loadingIndicator" class="text-center">
           <div class="spinner-border" role="status">
             <span class="sr-only">Loading...</span>
           </div>
           <p>Loading resources...</p>
         </div>
-
+        -->
         <!-- Main content -->
         <div id="mainContent" style="display: none;">
           
@@ -201,16 +202,19 @@
 
   <script>
     let templateId = '<%= templateId %>';
-    let currentResources = [];
+    let currentResources = '<%= resources %>';
     let currentObjects = {};
 
     // Load resources on page load
     document.addEventListener('DOMContentLoaded', function() {
-      loadTemplateResources();
+      //loadTemplateResources();
     });
 
     function loadTemplateResources() {
+      console.log("loading resources for templateId: ", templateId)
       api.getTemplateResources(templateId, (err, resources) => {
+        console.log(error)
+        console.log(resources)
         if (err) {
           $('#loadingIndicator').hide();
           $('#error').text('Error loading template resources');
