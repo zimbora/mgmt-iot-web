@@ -1209,7 +1209,7 @@ var api = {
   // LWM2M Objects and Resources API
   
   // Get resources
-  getObjects: (objectId, cb) => {
+  getLwm2mObjects: (objectId, cb) => {
     fetch(Settings.api + "/lwm2m/objects", {
       method: 'GET',
       headers: {
@@ -1228,7 +1228,7 @@ var api = {
   },
 
   // Get resources
-  getResources: (objectId, cb) => {
+  getLwm2mResources: (objectId, cb) => {
     fetch(Settings.api + "/lwm2m/resources", {
       method: 'GET',
       headers: {
