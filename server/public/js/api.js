@@ -1206,6 +1206,49 @@ var api = {
     });
   },
 
+  // LWM2M Objects and Resources API
+  
+  // Get resources
+  getObjects: (objectId, cb) => {
+    fetch(Settings.api + "/lwm2m/objects", {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data, cb);
+    })
+    .catch(function (error) {
+      return parseError(error, cb);
+    });
+  },
+
+  // Get resources
+  getResources: (objectId, cb) => {
+    fetch(Settings.api + "/lwm2m/resources", {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data : {
+        objectId
+      },
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data, cb);
+    })
+    .catch(function (error) {
+      return parseError(error, cb);
+    });
+  },
+
   // LWM2M Template Resources API
 
   // Get template resources
@@ -1228,7 +1271,7 @@ var api = {
   },
 
   // Add new resource
-  addResource: (templateId, resourceData, cb) => {
+  addTemplateResource: (templateId, resourceData, cb) => {
     fetch(Settings.api + "/template/" + templateId, {
       method: 'POST',
       headers: {
@@ -1248,7 +1291,7 @@ var api = {
   },
 
   // Update existing resource
-  updateResource: (templateId, resourceId, resourceData, cb) => {
+  updateTemplateResource: (templateId, resourceId, resourceData, cb) => {
     fetch(Settings.api + "/template/" + templateId + "/" + resourceId, {
       method: 'PUT',
       headers: {
@@ -1268,7 +1311,7 @@ var api = {
   },
 
   // Delete resource
-  deleteResource: (templateId, resourceId, cb) => {
+  deleteTemplateResource: (templateId, resourceId, cb) => {
     fetch(Settings.api + "/template/" + templateId + "/" + resourceId, {
       method: 'DELETE',
       headers: {

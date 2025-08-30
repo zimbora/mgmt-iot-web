@@ -385,7 +385,7 @@
         return;
       }
 
-      api.addResource(templateId, resourceData, (err, res) => {
+      api.addTemplateResource(templateId, resourceData, (err, res) => {
         const modal = bootstrap.Modal.getInstance(document.getElementById('addResourceModal'));
         modal.hide();
         
@@ -400,7 +400,7 @@
       });
     });
 
-    function deleteResource(resourceId) {
+    function deleteTemplateResource(resourceId) {
       $('#modal_message').text(`Are you sure you want to delete this resource?`);
       $('#modalConfirmation').modal('show');
       
@@ -446,7 +446,7 @@
         }
       });
 
-      api.updateResource(templateId, resourceId, resourceData, (err, res) => {
+      api.updateTemplateResource(templateId, resourceId, resourceData, (err, res) => {
         if (err) {
           $('#error').text('Error updating resource');
           $('#suggestion').text(err.message || err);

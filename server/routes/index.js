@@ -20,7 +20,7 @@ var Project = require('../controllers/projects');
 var Model = require('../controllers/models');
 var Firmware = require('../controllers/firmwares');
 var Database = require('../controllers/db');
-
+var Lwm2m = require('../controllers/lwm2m')
 const router = express.Router();
 
 router.use((req,res,next) => {
@@ -96,6 +96,12 @@ router.route('/models')
   .post(Model.add)
 
 router.use('/template', templates);
+
+router.route('/lwm2m/objects')
+  .get(Lwm2m.getObjects)
+
+router.route('/lwm2m/resources')
+  .get(Lwm2m.getResources)
 
 //router.use('/firmware',firmwares)
 
