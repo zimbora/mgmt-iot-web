@@ -28,6 +28,7 @@ var Project = require('./server/models/projects');
 var Model = require('./server/models/models');
 var Firmware = require('./server/models/firmwares');
 var Sensor = require('./server/models/sensors');
+var Template = require('./server/models/templates');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -302,8 +303,18 @@ app.get('/project/:project_id/templates',(req,res)=>{
 app.get('/project/:project_id/templates/:template_id/edit',(req,res)=>{
   
   project.checkAccess(req,res,()=>{
-    // For now, redirect back to templates list since edit functionality is not implemented
-    res.redirect('/project/' + req.params.project_id + '/templates');
+    Template.getById(req.params.template_id,(err,template)=>{
+      if(err || !template){
+        res.redirect('/project/' + req.params.project_id + '/templates');
+        return;
+      }
+      res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
+        project:req.project,
+        template:template,
+        user:req.user,
+        page:'TemplateEdit'
+      });
+    });
   });
 });
 

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/head.ejs') %>
+  
+  <style>
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+    
+    .object-tabs .nav-link {
+      border-radius: 0;
+    }
+    
+    .object-tabs .nav-link.active {
+      background-color: #007bff;
+      color: white;
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('../../partials/scripts.ejs') %>
+  <%- include('../../partials/project/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/success.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet">
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js"></script>
+
+  <div class="container-fluid">
+    <div class="row flex-nowrap">
+      <%- include('../../partials/project/sidebar.ejs') %>
+      <div class="col py-3">
+        <div class="content-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h3><%= project?.name %> - Edit Template: <%= template?.tag || 'Unknown' %></h3>
+            <a href="../templates" class="btn btn-secondary">← Back to Templates</a>
+          </div>
+        </div>
+
+        <!-- LWM2M Objects and Resources Section -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="card-title">LWM2M Objects and Resources</h5>
+              </div>
+              <div class="card-body">
+                <div id="loading" class="text-center py-3">
+                  <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <p>Loading LWM2M objects...</p>
+                </div>
+                
+                <!-- Object Tabs -->
+                <ul class="nav nav-tabs object-tabs" id="objectTabs" role="tablist" style="display: none;">
+                  <!-- Tabs will be populated dynamically -->
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="objectTabContent" style="display: none;">
+                  <!-- Tab panels will be populated dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.mjs"></script>
+  
+  <script>
+    var templateId = '<%= template?.id || "" %>';
+    var projectId = '<%= project?.id || "" %>';
+    var objectTables = {}; // Store DataTable instances for each object
+
+    $(document).ready(function () {
+      loadLwm2mObjects();
+    });
+
+    function loadLwm2mObjects() {
+      api.getLwm2mObjects((err, objects) => {
+        if (err) {
+          console.error('Error loading LWM2M objects:', err);
+          $('#loading').html('<div class="alert alert-danger">Error loading LWM2M objects: ' + err + '</div>');
+          return;
+        }
+
+        if (!objects || objects.length === 0) {
+          $('#loading').html('<div class="alert alert-info">No LWM2M objects found.</div>');
+          return;
+        }
+
+        createObjectTabs(objects);
+        $('#loading').hide();
+        $('#objectTabs, #objectTabContent').show();
+      });
+    }
+
+    function createObjectTabs(objects) {
+      const tabsContainer = $('#objectTabs');
+      const contentContainer = $('#objectTabContent');
+      
+      tabsContainer.empty();
+      contentContainer.empty();
+
+      objects.forEach((object, index) => {
+        const isActive = index === 0;
+        const objectId = object.objectId || object.id;
+        
+        // Create tab
+        const tabId = `object-tab-${objectId}`;
+        const panelId = `object-panel-${objectId}`;
+        
+        tabsContainer.append(`
+          <li class="nav-item" role="presentation">
+            <button class="nav-link ${isActive ? 'active' : ''}" id="${tabId}" data-bs-toggle="tab" 
+                    data-bs-target="#${panelId}" type="button" role="tab">
+              Object ${objectId} - ${object.name || 'Unknown'}
+            </button>
+          </li>
+        `);
+
+        // Create tab panel
+        contentContainer.append(`
+          <div class="tab-pane fade ${isActive ? 'show active' : ''}" id="${panelId}" role="tabpanel">
+            <div class="mt-3">
+              <h6>Resources for Object ${objectId}</h6>
+              <div id="loading-${objectId}" class="text-center py-3">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+                <span>Loading resources...</span>
+              </div>
+              <table id="resources-table-${objectId}" class="display table" style="display: none;">
+                <thead>
+                  <tr>
+                    <th style="width: 80px;">Include</th>
+                    <th>Resource ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `);
+
+        // Load resources for this object
+        loadResourcesForObject(objectId, isActive);
+      });
+
+      // Handle tab switching
+      $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+        const target = $(e.target).data('bs-target');
+        const objectId = target.replace('#object-panel-', '');
+        
+        // Redraw the DataTable for the active tab to fix layout issues
+        if (objectTables[objectId]) {
+          objectTables[objectId].columns.adjust().draw();
+        }
+      });
+    }
+
+    function loadResourcesForObject(objectId, isActive) {
+      api.getLwm2mResources(objectId, (err, resources) => {
+        const loadingEl = $(`#loading-${objectId}`);
+        const tableEl = $(`#resources-table-${objectId}`);
+        
+        if (err) {
+          console.error(`Error loading resources for object ${objectId}:`, err);
+          loadingEl.html(`<div class="alert alert-danger">Error loading resources: ${err}</div>`);
+          return;
+        }
+
+        loadingEl.hide();
+        
+        if (!resources || resources.length === 0) {
+          loadingEl.html(`<div class="alert alert-info">No resources found for this object.</div>`).show();
+          return;
+        }
+
+        // Initialize DataTable
+        const table = tableEl.DataTable({
+          data: resources,
+          columns: [
+            {
+              data: null,
+              render: function(data, type, row) {
+                const resourceId = row.resourceId || row.id;
+                const isIncluded = row.included || false; // This would come from template_resources table
+                
+                return `
+                  <label class="switch">
+                    <input type="checkbox" ${isIncluded ? 'checked' : ''} 
+                           onchange="toggleResource('${objectId}', '${resourceId}', this.checked)">
+                    <span class="slider"></span>
+                  </label>
+                `;
+              }
+            },
+            { data: 'resourceId' },
+            { data: 'name' },
+            { data: 'type' },
+            { data: 'description' }
+          ],
+          pageLength: 10,
+          searching: true,
+          ordering: true
+        });
+
+        objectTables[objectId] = table;
+        tableEl.show();
+      });
+    }
+
+    function toggleResource(objectId, resourceId, isIncluded) {
+      if (isIncluded) {
+        // Add resource to template
+        api.addTemplateResource(templateId, objectId, resourceId, (err, res) => {
+          if (err) {
+            console.error('Error adding template resource:', err);
+            $('#error').text('Error adding resource to template');
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+            
+            // Revert the toggle
+            $(`input[onchange*="'${objectId}', '${resourceId}'"]`).prop('checked', false);
+          } else {
+            console.log('Resource added to template successfully');
+          }
+        });
+      } else {
+        // Remove resource from template
+        api.deleteTemplateResource(templateId, objectId, resourceId, (err, res) => {
+          if (err) {
+            console.error('Error removing template resource:', err);
+            $('#error').text('Error removing resource from template');
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+            
+            // Revert the toggle
+            $(`input[onchange*="'${objectId}', '${resourceId}'"]`).prop('checked', true);
+          } else {
+            console.log('Resource removed from template successfully');
+          }
+        });
+      }
+    }
+  </script>
+
+</body>
+</html>
