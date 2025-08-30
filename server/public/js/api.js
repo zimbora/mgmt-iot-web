@@ -1204,6 +1204,83 @@ var api = {
     .catch(function (error) {
       return parseError(error,cb);
     });
+  },
+
+  // LWM2M Objects and Resources for Templates
+  getLwm2mObjects : (cb)=>{
+    fetch(Settings.api+"/lwm2m/objects", {
+      method: 'GET',
+      headers: {},
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  getLwm2mResources : (objectId, cb)=>{
+    fetch(Settings.api+"/lwm2m/resources?objectId=" + objectId, {
+      method: 'GET',
+      headers: {},
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  addTemplateResource : (templateId, objectId, resourceId, cb)=>{
+    fetch(Settings.api+"/template/" + templateId + "/resource", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        objectId: objectId,
+        resourceId: resourceId
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  deleteTemplateResource : (templateId, objectId, resourceId, cb)=>{
+    fetch(Settings.api+"/template/" + templateId + "/resource", {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        objectId: objectId,
+        resourceId: resourceId
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
   }
 };
 
