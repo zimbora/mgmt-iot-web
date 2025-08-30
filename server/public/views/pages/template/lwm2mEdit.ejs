@@ -138,6 +138,12 @@
     var objectTables = {}; // Store DataTable instances for each object
 
     $(document).ready(function () {
+      // Validate that we have the required IDs
+      if (!templateId || !projectId) {
+        $('#loading').html('<div class="alert alert-danger">Error: Missing template or project information.</div>');
+        return;
+      }
+      
       loadLwm2mObjects();
     });
 
@@ -279,17 +285,19 @@
     }
 
     function toggleResource(objectId, resourceId, isIncluded) {
+      const toggleInput = $(`input[onchange*="'${objectId}', '${resourceId}'"]`);
+      
       if (isIncluded) {
         // Add resource to template
         api.addTemplateResource(templateId, objectId, resourceId, (err, res) => {
           if (err) {
             console.error('Error adding template resource:', err);
             $('#error').text('Error adding resource to template');
-            $('#suggestion').text(err);
+            $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
             $('#modalError').modal('show');
             
             // Revert the toggle
-            $(`input[onchange*="'${objectId}', '${resourceId}'"]`).prop('checked', false);
+            toggleInput.prop('checked', false);
           } else {
             console.log('Resource added to template successfully');
           }
@@ -300,11 +308,11 @@
           if (err) {
             console.error('Error removing template resource:', err);
             $('#error').text('Error removing resource from template');
-            $('#suggestion').text(err);
+            $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
             $('#modalError').modal('show');
             
             // Revert the toggle
-            $(`input[onchange*="'${objectId}', '${resourceId}'"]`).prop('checked', true);
+            toggleInput.prop('checked', true);
           } else {
             console.log('Resource removed from template successfully');
           }
