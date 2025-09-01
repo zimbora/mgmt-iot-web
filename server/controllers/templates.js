@@ -65,18 +65,47 @@ module.exports = {
     }
   },
 
-  // Get all resources for a template
-  getTemplateResources: async (req, res) => {
+  // Get all objects for a template
+  getObjects: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
       
       if (!templateId) {
-        return Response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
       }
 
-      LwM2MTemplate.getByTemplateId(templateId, (err, resources) => {
+      LwM2MTemplate.getObjects(templateId, (err, objects) => {
         if (err) {
-          return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+
+        return response.send(res, objects);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Get all resources for a template
+  getResources: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+      const objectId = null;
+
+      if (!templateId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
+      }
+
+      const val = Joi.object({
+        objectId: Joi.number(),
+      }).validate(req.query);
+
+      if(val.error)
+        return response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      
+      LwM2MTemplate.getResources(templateId, req.query?.objectId || null, (err, resources) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
         }
         
         // Parse JSON fields
@@ -96,15 +125,65 @@ module.exports = {
           return resource;
         });
 
-        return Response.success(res, parsedResources);
+        return response.send(res, parsedResources);
       });
     } catch (error) {
-      return Response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Add a new object
+  addObject: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+
+      const val = Joi.object({
+        objectId: Joi.number().required(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('json') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.object().optional()
+        }).required(),
+        observe: Joi.boolean().truthy('true').falsy('false').required(),
+        readInterval: Joi.number().required(),
+      }).validate(req.body);
+
+      const { objectId, description, defaultData, observe, readInterval } = req.body;
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        LwM2MTemplate.addObject(
+          templateId,
+          objectId,
+          description,
+          defaultData,
+          observe,
+          readInterval,
+          (err, result) => {
+            if (err) {
+              return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+            }
+            return response.send(res, result);
+          }
+        );
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   },
 
   // Add a new resource
-  addResource: async (req, res) => {
+  addResource: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
 
@@ -113,14 +192,16 @@ module.exports = {
         objectInstanceId: Joi.number().required(),
         resourceId: Joi.number().required(),
         description: Joi.object({
-          type: Joi.string()
-            .valid('string', 'integer', 'float', 'boolean') // Allowed values
-            .required(), // 'type' is required
-          title: Joi.string().required(), // 'title' is required and must be a string
-          readable: Joi.boolean().optional(), // 'readable' is optional and must be a boolean
-          writable: Joi.boolean().optional(), // 'writable' is optional and must be a boolean
-          observable: Joi.boolean().optional(), // 'observable' is optional and must be a boolean
-        }).required(), // The 'description' object itself is required
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'execute', 'time') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
         defaultData: Joi.object({
           value: Joi.optional()
         }).required(),
@@ -133,7 +214,7 @@ module.exports = {
       if(val.error){
         response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
       }else{
-        LwM2MTemplate.add(
+        LwM2MTemplate.addResource(
           templateId,
           objectId,
           objectInstanceId,
@@ -146,7 +227,7 @@ module.exports = {
             if (err) {
               return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
             }
-            return response.success(res, result);
+            return response.send(res, result);
           }
         );
       }
@@ -155,26 +236,28 @@ module.exports = {
     }
   },
 
-  // Update an existing resource
-  updateResource: async (req, res) => {
+  // Update an existing object
+  updateObject: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
-      const resourceId = req.params.resource_id;
+      const entryId = req.params.entry_id;
       const updateData = req.body;
 
-      if (!templateId || !resourceId) {
-        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Resource ID are required");
+      if (!templateId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
       }
 
       const val = Joi.object({
         description: Joi.object({
-          type: Joi.string()
-            .valid('string', 'integer', 'float', 'boolean') // Allowed values
-            .required(), // 'type' is required
-          title: Joi.string().required(), // 'title' is required and must be a string
-          readable: Joi.boolean().optional(), // 'readable' is optional and must be a boolean
-          writable: Joi.boolean().optional(), // 'writable' is optional and must be a boolean
-          observable: Joi.boolean().optional(), // 'observable' is optional and must be a boolean
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('json') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
         }).optional(), // The 'description' object itself is required
         defaultData: Joi.object({
           value: Joi.optional()
@@ -186,11 +269,11 @@ module.exports = {
       if(val.error){
         response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
       }else{
-        LwM2MTemplate.update(resourceId, updateData, (err, result) => {
+        LwM2MTemplate.updateEntry(entryId, updateData, (err, result) => {
           if (err) {
             return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
           }
-          return response.success(res, result);
+          return response.send(res, result);
         });
       }
     } catch (error) {
@@ -198,21 +281,91 @@ module.exports = {
     }
   },
 
-  // Delete a resource
-  deleteResource: async (req, res) => {
+  // Update an existing resource
+  updateResource: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
-      const resourceId = req.params.resource_id;
+      const entryId = req.params.entry_id;
+      const updateData = req.body;
 
-      if (!templateId || !resourceId) {
-        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Resource ID are required");
+      if (!templateId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
       }
 
-      LwM2MTemplate.delete(resourceId, (err, result) => {
+      const val = Joi.object({
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.optional()
+        }).optional(),
+        observe: Joi.boolean().truthy('true').falsy('false').optional(),
+        readInterval: Joi.number().optional(),
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        LwM2MTemplate.updateEntry(entryId, updateData, (err, result) => {
+          if (err) {
+            return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          }
+          return response.send(res, result);
+        });
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete a object
+  deleteObject: async (req, res, next) => {
+
+    // check access to templateId - req.params.template_id
+    try {
+      const templateId = req.params.template_id;
+      const entryId = req.params.entry_id;
+
+      if (!templateId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      LwM2MTemplate.deleteEntry(entryId, (err, result) => {
         if (err) {
           return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
         }
-        return response.success(res, result);
+        return response.send(res, result);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete a resource
+  deleteResource: async (req, res, next) => {
+
+    // check access to templateId - req.params.template_id
+    try {
+      const templateId = req.params.template_id;
+      const entryId = req.params.entry_id;
+
+      if (!templateId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      LwM2MTemplate.deleteEntry(entryId, (err, result) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        return response.send(res, result);
       });
     } catch (error) {
       return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
@@ -220,7 +373,7 @@ module.exports = {
   },
 
   // Get a specific resource
-  getResource: async (req, res) => {
+  getResource: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
       const resourceId = req.params.resource_id;
@@ -238,21 +391,21 @@ module.exports = {
           return response.error(res, httpStatus.NOT_FOUND, "Resource not found");
         }
 
-        return response.success(res, resource);
+        return response.send(res, resource);
       });
     } catch (error) {
       return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   },
-
+  
   // List all resources (for admin/debugging)
-  list: async (req, res) => {
+  list: async (req, res, next) => {
     try {
       LwM2MTemplate.list((err, resources) => {
         if (err) {
           return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
         }
-        return response.success(res, resources);
+        return response.send(res, resources);
       });
     } catch (error) {
       return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);

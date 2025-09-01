@@ -28,6 +28,7 @@ var Project = require('./server/models/projects');
 var Model = require('./server/models/models');
 var Firmware = require('./server/models/firmwares');
 var Sensor = require('./server/models/sensors');
+var Templates = require('./server/models/templates');
 var Lwm2mTemplate = require('./server/models/lwm2mTemplate');
 
 var serveIndex = require('serve-index'); // well known
@@ -303,11 +304,10 @@ app.get('/project/:project_id/templates',(req,res)=>{
 app.get('/project/:project_id/templates/:template_id/edit',(req,res)=>{
   
   if(req.project.name == 'lwm2m'){
-    Lwm2mTemplate.getByTemplateId(req.params?.project_id,(err,resources)=>{
+    Templates.getById(req.params?.template_id,(err,template)=>{   
       res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
         project:req.project,
-        templateId:req.params?.template_id,
-        resources:resources,
+        template,
         user:req.user,
         page:'Edit'
       });

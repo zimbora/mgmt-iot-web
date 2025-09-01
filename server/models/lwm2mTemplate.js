@@ -4,13 +4,89 @@ const moment = require('moment');
 
 var self = module.exports = {
 
-  // Get all resources for a specific template
-  getByTemplateId: async (templateId, cb) => {
-    var query = `SELECT * FROM lwm2mTemplate WHERE template_id = ? ORDER BY objectId, objectInstanceId, resourceId`;
+  // Get resources by ID
+  getById: async (resourceId, cb) => {
+    var query = `SELECT * FROM lwm2mTemplate WHERE template_id = ?`;
+    var table = [resourceId];
+    query = mysql.format(query, table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if (rows.length > 0) {
+        // Parse JSON fields
+        const resource = rows[0];
+        try {
+          resource.description = JSON.parse(resource.description);
+        } catch (e) {
+          resource.description = {};
+        }
+        try {
+          resource.defaultData = resource.defaultData ? JSON.parse(resource.defaultData) : null;
+        } catch (e) {
+          resource.defaultData = null;
+        }
+        return cb(null, resource);
+      }
+      return cb(null, null);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  // Get all objects for a specific template
+  getObjects: async (templateId, cb) => {
+    console.log("get template objects")
+    var query = `SELECT * FROM lwm2mTemplate WHERE template_id = ? and objectInstanceId IS NULL and resourceId IS NULL ORDER BY objectId`;
     var table = [templateId];
     query = mysql.format(query, table);
 
     db.queryRow(query)
+    .then(rows => {
+      console.log(rows)
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  getResources : async (templateId, objectId, cb)=>{
+
+    console.log(`templateId: ${templateId}`)
+    console.log(`objectId: ${objectId}`)
+    var query = `select * from ?? where template_id = ?`;
+    var table = ["lwm2mTemplate",templateId];
+    if(objectId != null){
+      query += " and objectId = ?";
+      table.push(objectId);
+    }
+    query += ` order by objectId`
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  // Add a new object
+  addObject: async (templateId, objectId, description, defaultData, observe, readInterval, cb) => {
+    let obj = {
+      template_id: templateId,
+      objectId: objectId,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      observe: observe,
+      readInterval: readInterval,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    db.insert("lwm2mTemplate", obj)
     .then(rows => {
       return cb(null, rows);
     })
@@ -20,7 +96,7 @@ var self = module.exports = {
   },
 
   // Add a new resource
-  add: async (templateId, objectId, objectInstanceId, resourceId, description, defaultData, observe, readInterval, cb) => {
+  addResource: async (templateId, objectId, objectInstanceId, resourceId, description, defaultData, observe, readInterval, cb) => {
     let obj = {
       template_id: templateId,
       objectId: objectId,
@@ -43,8 +119,8 @@ var self = module.exports = {
     });
   },
 
-  // Update an existing resource
-  update: async (resourceId, updateData, cb) => {
+  // Update an existing object
+  updateEntry: async (entryId, updateData, cb) => {
     let obj = {
       updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
@@ -64,7 +140,7 @@ var self = module.exports = {
     }
 
     let filter = {
-      id: resourceId
+      id: entryId
     };
 
     db.update("lwm2mTemplate", obj, filter)
@@ -77,44 +153,14 @@ var self = module.exports = {
   },
 
   // Delete a resource
-  delete: async (resourceId, cb) => {
+  deleteEntry: async (entryId, cb) => {
     let filter = {
-      id: resourceId
+      id: entryId
     };
 
     db.delete("lwm2mTemplate", filter)
     .then(rows => {
       return cb(null, rows);
-    })
-    .catch(error => {
-      return cb(error, null);
-    });
-  },
-
-  // Get a specific resource by ID
-  getById: async (resourceId, cb) => {
-    var query = `SELECT * FROM lwm2mTemplate WHERE id = ?`;
-    var table = [resourceId];
-    query = mysql.format(query, table);
-
-    db.queryRow(query)
-    .then(rows => {
-      if (rows.length > 0) {
-        // Parse JSON fields
-        const resource = rows[0];
-        try {
-          resource.description = JSON.parse(resource.description);
-        } catch (e) {
-          resource.description = {};
-        }
-        try {
-          resource.defaultData = resource.defaultData ? JSON.parse(resource.defaultData) : null;
-        } catch (e) {
-          resource.defaultData = null;
-        }
-        return cb(null, resource);
-      }
-      return cb(null, null);
     })
     .catch(error => {
       return cb(error, null);

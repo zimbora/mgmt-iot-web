@@ -6,16 +6,13 @@ var self = module.exports = {
   
   getObjects : async (cb)=>{
 
-    var query = `select * from ??`;
+    var query = `select * from ?? order by objectId`;
     var table = ["lwm2mObjects"];
     query = mysql.format(query,table);
 
     db.queryRow(query)
     .then(rows => {
-      if(rows.length > 0)
-        return cb(null,rows[0]);
-      else
-        return cb(null,null);
+      return cb(null,rows);
     })
     .catch(error => {
       return cb(error,null);
@@ -30,6 +27,7 @@ var self = module.exports = {
       query += " where objectId = ?";
       table.push(objectId);
     }
+    query += ` order by objectId, resourceId`
     query = mysql.format(query,table);
 
     db.queryRow(query)
