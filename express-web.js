@@ -301,20 +301,22 @@ app.get('/project/:project_id/templates',(req,res)=>{
   });
 });
 
-app.get('/project/:project_id/templates/:template_id/edit',(req,res)=>{
+app.get('/templates/:template_id/edit',(req,res)=>{
   
-  if(req.project.name == 'lwm2m'){
-    Templates.getById(req.params?.template_id,(err,template)=>{   
-      res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
-        project:req.project,
-        template,
-        user:req.user,
-        page:'Edit'
-      });
+  Templates.getById(req.params?.template_id,(err,template)=>{
+    Project.getById(template.project_id,(err,projectData) => {
+      if(projectData.name === "lwm2m"){
+        res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
+          project:projectData,
+          template,
+          user:req.user,
+          page:'Edit'
+        });
+      }else{
+        res.redirect('/project/' + req.params.project_id + '/templates');  
+      }
     })
-  }else{
-    res.redirect('/project/' + req.params.project_id + '/templates');  
-  }
+  })
 
 });
 

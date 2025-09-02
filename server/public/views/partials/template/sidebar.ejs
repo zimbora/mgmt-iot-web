@@ -45,90 +45,21 @@
               <% } %>
               class="nav-link px-0 align-middle">
               <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Projects</span></a>
-              <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
-                <li class="w-100">
-                  <a href="./models"
-                  <% if(page == "ProjectModels"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Models</span></a>
-                </li>
-                <li class="w-100">
-                  <a href="./templates"
-                  <% if(page == "ProjectTemplates"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Templates</span></a>
-                </li>
-                <% if(user.level >= 4){%>
-                <li class="w-100">
-                  <a href="./settings"
-                  <% if(page == "ProjectSettings"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
-                </li>
-                <%}%>
-                <!--
-                <% if(user.level >= 4){%>
-                <li class="w-100">
-                  <a href="./sensors"
-                  <% if(page == "ProjectSensors"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
-                </li>
-                <%}%>
-                -->
-                <% if(user.level >= 4){%>
-                <li class="w-100">
-                  <a href="./access"
-                  <% if(page == "ProjectAccess"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
-                </li>
-                <%}%>
-              </ul>
             </li>
             <% } %>
             <% if(user.level >= 3){%>
             <li>
               <a href="../../templates"
-              <% if(page == "Edit"){%>
-                class="active"
-              <% } %>
               class="nav-link px-0 align-middle">
-              <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Projects</span></a>
+              <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Templates</span></a>
               <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
                 <li class="w-100">
-                  <a href="."
+                  <a href="./"
                   <% if(page == "Edit"){%>
                     class="active"
                   <% } %>
                   class="nav-link px-0"> <span class="d-none d-sm-inline">Edit</span></a>
                 </li>
-                <%}%>
-                <!--
-                <% if(user.level >= 4){%>
-                <li class="w-100">
-                  <a href="./sensors"
-                  <% if(page == "ProjectSensors"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
-                </li>
-                <%}%>
-                -->
-                <% if(user.level >= 4){%>
-                <li class="w-100">
-                  <a href="./access"
-                  <% if(page == "ProjectAccess"){%>
-                    class="active"
-                  <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
-                </li>
-                <%}%>
               </ul>
             </li>
             <% } %>
