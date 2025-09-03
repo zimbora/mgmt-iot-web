@@ -348,9 +348,10 @@ module.exports = {
   },
 
   // add device
-  add  : (req, res, next)=>{
+  add : (req, res, next)=>{
     const val = Joi.object({
       projectName: Joi.string().required(),
+      templateId: Joi.number().optional(),
       modelName: Joi.string().required(),
       uid: Joi.string().required(),
       name: Joi.string(),
@@ -365,7 +366,7 @@ module.exports = {
   },
 
   // delete device
-  delete  : (req, res, next)=>{
+  delete : (req, res, next)=>{
     device.delete(req.params.device_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);

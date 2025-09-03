@@ -16,8 +16,12 @@ module.exports = {
   },
 
   list : (req,res,next)=>{
+    
+    const val = Joi.object({
+      projectId: Joi.number(),
+    }).validate(req.query);
 
-    Template.listByProject(req.params.project_id,(err,rows)=>{
+    Template.list(req.query?.projectId,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
@@ -398,8 +402,9 @@ module.exports = {
     }
   },
   
+  /*
   // List all resources (for admin/debugging)
-  list: async (req, res, next) => {
+  listLwm2m: async (req, res, next) => {
     try {
       LwM2MTemplate.list((err, resources) => {
         if (err) {
@@ -411,4 +416,5 @@ module.exports = {
       return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   }
+  */
 };

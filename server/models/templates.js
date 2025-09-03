@@ -24,10 +24,17 @@ var self = module.exports = {
     })
   },
 
-  listByProject : async (project_id,cb)=>{
+  list : async (projectId,cb)=>{
 
-    var query = `select * from ?? where project_id = ? order by createdAt desc`;
-    var table = [tableName,project_id];
+    var query = `select * from ??`
+    var table = [tableName];
+    
+    if(projectId){
+      query += ` where project_id = ? `
+      table.push(projectId)
+    }
+
+    query += `order by createdAt desc`;
     query = mysql.format(query,table);
 
     db.queryRow(query)

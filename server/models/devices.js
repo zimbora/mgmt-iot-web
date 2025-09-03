@@ -939,6 +939,7 @@ var self = module.exports =  {
       uid : device.uid,
       name : device?.name,
       project_id : projectId,
+      template_id: device?.templateId,
       model_id : modelId,
       protocol : device.protocol,
       psk : device?.psk,
@@ -948,15 +949,17 @@ var self = module.exports =  {
     
     const res = await db.insert('devices', obj);
 
-    // Assuming res is a result array or object indicating success
-    if (res) {
-      if(res?.length > 0)
-        return cb(null, res[0]);
-      else
-        return cb(null, res[0]);
-    } else {
-      return cb('Insertion failed', null);
+    if(res?.insertId){
+      if(device.projectName == "lwm2m" && device.templateId){
+        // copy template to lwm2m table
+        resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,device.templateId)
+        console.log(resLwm2m);
+      }
+      return cb(null, res[0]);
+    }else{
+      return cb('Error adding device', null);
     }
+        
   },
 
   delete : async (deviceId,cb)=>{
@@ -1326,4 +1329,42 @@ async function publishAndWaitForResponse(publishTopic, messagePayload, responseT
       }, timeout);
     });
   });
+}
+
+/**
+ * Copies all elements from lwm2mTemplate (where template_id = deviceTemplateId)
+ * to lwm2m, setting device_id = deviceId for each inserted row.
+ * 
+ * @param {number} deviceId - The target device's ID (res[0].insertId)
+ * @param {number} deviceTemplateId - The source template's ID (device.templateId)
+ * @returns {Promise}
+ */
+async function associateLwm2mTemplateToDevice(deviceId, deviceTemplateId) {
+  
+  // 1. Get all rows from lwm2mTemplate for the given templateId
+  let query = `SELECT * FROM ?? where template_id = ?;`
+  let table = ["lwm2mTemplate",deviceTemplateId];
+  query = mysql.format(query,table);
+  let templates = await db.queryRow(query);
+
+  if (!templates || !templates.length) return res; // nothing to copy, return empty array
+
+  const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+  let res = [];
+  
+  // 2. Insert each template into lwm2m with device_id
+  for (const tpl of templates) {
+    // Remove the primary key (if it exists), createdAt and updatedAt
+    const { id, createdAt, updatedAt, ...rest } = tpl;
+    const data = {
+      device_id: deviceId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ...rest
+    };
+    const insertRes = await db.insert('lwm2m', data);
+    res.push(insertRes);
+  }
+
+  return res;
 }

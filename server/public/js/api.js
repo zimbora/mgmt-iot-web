@@ -573,6 +573,7 @@ var api = {
       body: JSON.stringify({
         projectName: deviceData.projectName,
         modelName: deviceData.modelName,
+        templateId: deviceData.templateId,
         uid: deviceData.uid,
         name: deviceData?.name,
         protocol: deviceData.protocol,
@@ -1254,6 +1255,28 @@ var api = {
   },
 
   template: {
+
+    list: (projectId, cb) => {
+      const url = new URL(Settings.api + "/templates");
+      if(projectId)
+        url.searchParams.append('projectId', projectId); // Add projectId as a query parameter
+
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data, cb);
+      })
+      .catch(function (error) {
+        return parseError(error, cb);
+      });
+    },
 
     lwm2m: { // LWM2M Template Resources API
 
