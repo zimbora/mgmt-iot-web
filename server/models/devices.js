@@ -973,26 +973,36 @@ var self = module.exports =  {
       device_id : deviceId,
     }
 
+    try{
 
-    if(project_table != null)
-      if( await db.tableExists(model_table)){
-        await db.delete(project_table,filter);
+      if(project_table != null)
+        console.log(`deleting project_table ${project_table}`)
+        if( await db.tableExists(project_table)){
+          await db.delete(project_table,filter);
+        }
+      if(project_logs_table != null)
+        console.log(`deleting project_logs_table ${project_logs_table}`)
+        if( await db.tableExists(project_logs_table)){
+          await db.delete(project_logs_table,filter);
+        }
+      if(model_table != null){
+        console.log(`deleting model_table ${model_table}`)
+        if( await db.tableExists(model_table)){
+          await db.delete(model_table,filter);
+        }
       }
-    if(project_logs_table != null)
-      if( await db.tableExists(model_table)){
-        await db.delete(project_logs_table,filter);
+      if(model_logs_table != null){
+        console.log(`deleting model_logs_table ${model_logs_table}`)
+        if( await db.tableExists(model_logs_table)){
+          await db.delete(model_logs_table,filter);
+        }
       }
-    if(model_table != null){
-      if( await db.tableExists(model_table)){
-        await db.delete(model_table,filter);
-      }
+      await db.delete("permissions",filter);
+
+    }catch(err){
+      console.log(err)
+      return cb(err,null);
     }
-    if(model_logs_table != null){
-      if( await db.tableExists(model_table)){
-        await db.delete(model_logs_table,filter);
-      }
-    }
-    await db.delete("permissions",filter);
 
     // this must be executed only after all previous delete calls
     filter = {
