@@ -513,7 +513,247 @@ module.exports = {
         }
       );
     }
-  }
+  },
+
+    // Add a new object
+  addObject: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+
+      const val = Joi.object({
+        objectId: Joi.number().required(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('json') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.object().optional()
+        }).required(),
+        observe: Joi.boolean().truthy('true').falsy('false').required(),
+        readInterval: Joi.number().required(),
+      }).validate(req.body);
+
+      const { objectId, description, defaultData, observe, readInterval } = req.body;
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.addObject(
+          deviceId,
+          objectId,
+          description,
+          defaultData,
+          observe,
+          readInterval,
+          (err, result) => {
+            if (err) {
+              return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+            }
+            return response.send(res, result);
+          }
+        );
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Add a new resource
+  addResource: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+
+      const val = Joi.object({
+        objectId: Joi.number().required(),
+        objectInstanceId: Joi.number().required(),
+        resourceId: Joi.number().required(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'execute', 'time') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.optional()
+        }).required(),
+        observe: Joi.boolean().truthy('true').falsy('false').required(),
+        readInterval: Joi.number().required(),
+      }).validate(req.body);
+
+      const { objectId, objectInstanceId, resourceId, description, defaultData, observe, readInterval } = req.body;
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.addResource(
+          deviceId,
+          objectId,
+          objectInstanceId,
+          resourceId,
+          description,
+          defaultData,
+          observe,
+          readInterval,
+          (err, result) => {
+            if (err) {
+              return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+            }
+            return response.send(res, result);
+          }
+        );
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Update an existing object
+  updateObject: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+      const updateData = req.body;
+
+      if (!deviceId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      const val = Joi.object({
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('json') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.optional()
+        }).optional(),
+        observe: Joi.boolean().truthy('true').falsy('false').optional(),
+        readInterval: Joi.number().optional(),
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.updateEntry(entryId, updateData, (err, result) => {
+          if (err) {
+            return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          }
+          return response.send(res, result);
+        });
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Update an existing resource
+  updateResource: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+      const updateData = req.body;
+
+      if (!deviceId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      const val = Joi.object({
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'json', 'time') // Allowed values
+              .required(), // 'type' is required
+            title: Joi.string().required(), // 'title' is required and must be a string
+            readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
+            writable: Joi.boolean().required(), // 'writable' is required and must be a boolean
+            observable: Joi.boolean().required(), // 'observable' is required and must be a boolean
+          }).required(),
+        }).optional(), // The 'description' object itself is required
+        defaultData: Joi.object({
+          value: Joi.required()
+        }).optional(),
+        observe: Joi.boolean().truthy('true').falsy('false').optional(),
+        readInterval: Joi.number().optional(),
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.updateEntry(entryId, updateData, (err, result) => {
+          if (err) {
+            return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          }
+          return response.send(res, result);
+        });
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete a object
+  deleteObject: async (req, res, next) => {
+
+    // check access to deviceId - req.params.device_id
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+
+      if (!deviceId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      device.deleteEntry(entryId, (err, result) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        return response.send(res, result);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete a resource
+  deleteResource: async (req, res, next) => {
+
+    // check access to deviceId - req.params.device_id
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+
+      if (!deviceId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      device.deleteEntry(entryId, (err, result) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        return response.send(res, result);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
 };
 /*
 function update(req, res, next) {

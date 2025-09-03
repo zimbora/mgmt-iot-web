@@ -910,6 +910,7 @@ var self = module.exports =  {
       query += ` and objectId = ?`
       table.push(objectId);
     }
+    query += ` order by objectId, objectInstanceId, resourceId`
     query = mysql.format(query,table);
 
     db.queryRow(query)
@@ -920,6 +921,117 @@ var self = module.exports =  {
       return cb(error,null);
     })
 
+  },
+
+    // Add a new object
+  addObject: async (deviceId, objectId, description, defaultData, observe, readInterval, cb) => {
+    let obj = {
+      device_id: deviceId,
+      objectId: objectId,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      observe: observe,
+      readInterval: readInterval,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    db.insert("lwm2m", obj)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  // Add a new resource
+  addResource: async (deviceId, objectId, objectInstanceId, resourceId, description, defaultData, observe, readInterval, cb) => {
+    let obj = {
+      device_id: deviceId,
+      objectId: objectId,
+      objectInstanceId: objectInstanceId,
+      resourceId: resourceId,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      observe: observe,
+      readInterval: readInterval,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // check if objectId, objectInstanceId and resourceId already exists for device_id
+    let query = "Select * from lwm2m where device_id = ? and objectId = ? and objectInstanceId = ? and resourceId = ?";
+    let table = [deviceId,objectId,objectInstanceId,resourceId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows?.length > 0){
+        return cb("resource already exists",null); 
+      }else{
+        db.insert("lwm2m", obj)
+        .then(rows => {
+          console.log(rows)
+          return cb(null, rows);
+        })
+        .catch(error => {
+          return cb(error, null);
+        });
+      }
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  // Update an existing object
+  updateEntry: async (entryId, updateData, cb) => {
+    let obj = {
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // Add fields that are being updated
+    if (updateData.description !== undefined) {
+      obj.description = JSON.stringify(updateData.description);
+    }
+    if (updateData.defaultData !== undefined) {
+      obj.defaultData = updateData.defaultData ? JSON.stringify(updateData.defaultData) : null;
+    }
+    if (updateData.observe !== undefined) {
+      obj.observe = updateData.observe;
+    }
+    if (updateData.readInterval !== undefined) {
+      obj.readInterval = updateData.readInterval;
+    }
+
+    let filter = {
+      id: entryId
+    };
+
+    console.log(obj)
+    db.update("lwm2m", obj, filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  // Delete a resource
+  deleteEntry: async (entryId, cb) => {
+    let filter = {
+      id: entryId
+    };
+
+    db.delete("lwm2m", filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
   },
 
   add : async (device,cb)=>{
