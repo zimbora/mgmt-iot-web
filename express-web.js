@@ -520,6 +520,27 @@ app.get('/device/:device_id/jscode',(req,res)=>{
   }
 });
 
+app.get('/device/:device_id/lwm2mSettings',(req,res)=>{
+
+  let data = req.user.data;
+  if(data.device != null && data.mqtt != null && data.project_name == 'lwm2m'){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/device/lwm2mSettings'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
+      device:data.device,
+      project:data.project,
+      model:data.model,
+      modelFeat:data.modelFeat,
+      fw:data.fw,
+      sensors:data.sensors,
+      mqtt:data.mqtt,
+      user:req.user,
+      page:'LWM2MSettings'});
+  }else{
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
+  }
+});
+
 if(typeof middleware !== 'undefined')
   app.use(middleware);
 else{

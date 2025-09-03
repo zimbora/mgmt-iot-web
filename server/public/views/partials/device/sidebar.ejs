@@ -117,6 +117,15 @@
                       class="nav-link px-0"> <span class="d-none d-sm-inline">JScode</span></a>
                   </li>
                   <%}%>
+                  <% if(project_name == 'lwm2m'){ %>
+                  <li>
+                      <a href="./lwm2mSettings"
+                      <% if(page == "LWM2MSettings"){%>
+                        class="active"
+                      <% } %>
+                      class="nav-link px-0"> <span class="d-none d-sm-inline">LWM2M Settings</span></a>
+                  </li>
+                  <%}%>
                 </ul>
             </li>
             <!--
