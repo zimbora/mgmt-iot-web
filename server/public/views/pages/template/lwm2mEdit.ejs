@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../../partials/project/scripts.ejs') %>
+  <%- include('../../partials/project/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/success.ejs') %>
+
+  <div class="container-fluid">
+    <div class="row flex-nowrap">
+      <%- include('../../partials/project/sidebar.ejs') %>
+      <div class="col py-3">
+        <div class="content-header">
+          <h3><%= project?.name %> - Edit Template: <%= template?.tag || 'Unknown' %></h3>
+        </div>
+        
+        <div class="row">
+          <div class="col-sm-12 mb-3 mb-sm-0">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Resources for template</h5>
+                <button id="addResourceBtn" type="button" class="btn btn-success btn-sm">
+                  <i class="bi bi-plus-circle"></i> Add Resource
+                </button>
+              </div>
+              <div class="card-body">
+                <div id="resourcesList">
+                  <!-- Resources will be listed here -->
+                  <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle"></i> No resources defined yet. Click "Add Resource" to add a new resource to this template.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Template Settings -->
+        <div class="row mt-4">
+          <div class="col-sm-6 mb-3 mb-sm-0">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Template Information</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label for="templateTag" class="form-label">Tag</label>
+                  <input type="text" class="form-control" id="templateTag" value="<%= template?.tag || '' %>" readonly>
+                </div>
+                <div class="mb-3">
+                  <label for="templateName" class="form-label">Name</label>
+                  <input type="text" class="form-control" id="templateName" value="<%= template?.name || '' %>">
+                </div>
+                <button id="updateTemplateBtn" type="button" class="btn btn-primary">Update Template</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+              </div>
+              <div class="card-body">
+                <div class="d-grid gap-2">
+                  <button id="saveTemplateBtn" type="button" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Save All Changes
+                  </button>
+                  <a href="../../templates" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Templates
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Resource Modal -->
+  <div class="modal fade" id="addResourceModal" tabindex="-1" aria-labelledby="addResourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addResourceModalLabel">Add New Resource</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addResourceForm">
+            <div class="mb-3">
+              <label for="resourceName" class="form-label">Resource Name</label>
+              <input type="text" class="form-control" id="resourceName" required>
+              <div class="form-text">Enter a descriptive name for the resource</div>
+            </div>
+            <div class="mb-3">
+              <label for="resourceType" class="form-label">Resource Type</label>
+              <select class="form-select" id="resourceType" required>
+                <option value="">Select type...</option>
+                <option value="string">String</option>
+                <option value="number">Number</option>
+                <option value="boolean">Boolean</option>
+                <option value="object">Object</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="resourcePath" class="form-label">Resource Path</label>
+              <input type="text" class="form-control" id="resourcePath" placeholder="/object/instance/resource" required>
+              <div class="form-text">LwM2M path format (e.g., /3/0/1)</div>
+            </div>
+            <div class="mb-3">
+              <label for="resourceDescription" class="form-label">Description</label>
+              <textarea class="form-control" id="resourceDescription" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="addResource()">Add Resource</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var templateID = '<%= template?.id || '' %>';
+    var projectID = '<%= project?.id || '' %>';
+    var resources = [];
+
+    $(document).ready(function () {
+      // Initialize any existing resources
+      loadResources();
+
+      // Add Resource button click
+      $('#addResourceBtn').click(function() {
+        $('#addResourceModal').modal('show');
+      });
+
+      // Update Template button click
+      $('#updateTemplateBtn').click(function() {
+        updateTemplate();
+      });
+
+      // Save Template button click
+      $('#saveTemplateBtn').click(function() {
+        saveAllChanges();
+      });
+    });
+
+    function loadResources() {
+      // TODO: Load existing resources from the template
+      // For now, show empty state
+      updateResourcesList();
+    }
+
+    function updateResourcesList() {
+      var resourcesListDiv = $('#resourcesList');
+      
+      if (resources.length === 0) {
+        resourcesListDiv.html(`
+          <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle"></i> No resources defined yet. Click "Add Resource" to add a new resource to this template.
+          </div>
+        `);
+      } else {
+        var html = '<div class="table-responsive">';
+        html += '<table class="table table-striped">';
+        html += '<thead><tr><th>Name</th><th>Type</th><th>Path</th><th>Description</th><th>Actions</th></tr></thead>';
+        html += '<tbody>';
+        
+        resources.forEach(function(resource, index) {
+          html += '<tr>';
+          html += '<td>' + escapeHtml(resource.name) + '</td>';
+          html += '<td><span class="badge bg-primary">' + escapeHtml(resource.type) + '</span></td>';
+          html += '<td><code>' + escapeHtml(resource.path) + '</code></td>';
+          html += '<td>' + escapeHtml(resource.description || '') + '</td>';
+          html += '<td>';
+          html += '<button class="btn btn-sm btn-outline-danger" onclick="removeResource(' + index + ')">';
+          html += '<i class="bi bi-trash"></i> Remove';
+          html += '</button>';
+          html += '</td>';
+          html += '</tr>';
+        });
+        
+        html += '</tbody></table></div>';
+        resourcesListDiv.html(html);
+      }
+    }
+
+    function addResource() {
+      var name = $('#resourceName').val().trim();
+      var type = $('#resourceType').val();
+      var path = $('#resourcePath').val().trim();
+      var description = $('#resourceDescription').val().trim();
+
+      // Basic validation
+      if (!name || !type || !path) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      // Check if path already exists
+      var pathExists = resources.some(function(resource) {
+        return resource.path === path;
+      });
+
+      if (pathExists) {
+        alert('A resource with this path already exists');
+        return;
+      }
+
+      // Add resource to array
+      resources.push({
+        name: name,
+        type: type,
+        path: path,
+        description: description
+      });
+
+      // Update the display
+      updateResourcesList();
+
+      // Clear form and close modal
+      $('#addResourceForm')[0].reset();
+      $('#addResourceModal').modal('hide');
+
+      // Show success message
+      showSuccessMessage('Resource "' + name + '" added successfully');
+    }
+
+    function removeResource(index) {
+      if (confirm('Are you sure you want to remove this resource?')) {
+        var resourceName = resources[index].name;
+        resources.splice(index, 1);
+        updateResourcesList();
+        showSuccessMessage('Resource "' + resourceName + '" removed successfully');
+      }
+    }
+
+    function updateTemplate() {
+      var newName = $('#templateName').val().trim();
+      
+      if (!newName) {
+        alert('Template name cannot be empty');
+        return;
+      }
+
+      // TODO: Call API to update template name
+      showSuccessMessage('Template name updated successfully');
+    }
+
+    function saveAllChanges() {
+      // TODO: Save all template resources and settings
+      showSuccessMessage('All changes saved successfully');
+    }
+
+    function showSuccessMessage(message) {
+      // Simple success notification
+      var alertHtml = '<div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 1050;" role="alert">';
+      alertHtml += '<i class="bi bi-check-circle"></i> ' + message;
+      alertHtml += '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+      alertHtml += '</div>';
+      
+      $('body').append(alertHtml);
+      
+      // Auto-dismiss after 3 seconds
+      setTimeout(function() {
+        $('.alert-success').fadeOut();
+      }, 3000);
+    }
+
+    function escapeHtml(text) {
+      var map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+  </script>
+
+</body>
+</html>

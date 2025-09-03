@@ -45,6 +45,8 @@ router.route('/:project_id/template')
   .post(Template.add)
 
 router.route('/:project_id/template/:template_id')
+  .get(Template.get)
+  .put(Template.update)
   .delete(Template.delete)
 
 module.exports =  router;

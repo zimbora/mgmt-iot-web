@@ -302,8 +302,20 @@ app.get('/project/:project_id/templates',(req,res)=>{
 app.get('/project/:project_id/templates/:template_id/edit',(req,res)=>{
   
   project.checkAccess(req,res,()=>{
-    // For now, redirect back to templates list since edit functionality is not implemented
-    res.redirect('/project/' + req.params.project_id + '/templates');
+    // Get template details for editing
+    const Template = require('./server/models/templates');
+    Template.getById(req.params.template_id,(err,template)=>{
+      if(err || !template) {
+        res.redirect('/project/' + req.params.project_id + '/templates');
+      } else {
+        res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
+          project: req.project, 
+          template: template, 
+          user: req.user, 
+          page: 'TemplateEdit'
+        });
+      }
+    });
   });
 });
 

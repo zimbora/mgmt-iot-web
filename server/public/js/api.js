@@ -1204,6 +1204,48 @@ var api = {
     .catch(function (error) {
       return parseError(error,cb);
     });
+  },
+
+  // get template by id
+  getTemplate : (templateId, project_id, cb)=>{
+    fetch(Settings.api+"/project/"+project_id+"/template/"+templateId, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // update template
+  updateTemplate : (templateId, project_id, tag, name, cb)=>{
+    fetch(Settings.api+"/project/"+project_id+"/template/"+templateId, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tag: tag,
+        name: name
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
   }
 };
 
