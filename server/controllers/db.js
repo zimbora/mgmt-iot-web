@@ -90,29 +90,31 @@ var self = module.exports = {
       });
   },
 
-  insert : async(table,data)=>{
+  insert : async(table, data) => {
 
-    return new Promise((resolve,reject) => {
-      self.getConnection((err,conn)=>{
-        if(err) return reject(err);
+    return new Promise((resolve, reject) => {
+      self.getConnection((err, conn) => {
+        if (err) return reject(err);
 
         let query = "";
         let values = [];
 
-        if(typeof data === "object"){
+        if (typeof data === "object") {
           const keys = Object.keys(data);
-          values = Object.values(data);
+          values = Object.values(data).map(v =>
+            (v !== null && typeof v === "object") ? JSON.stringify(v) : v
+          );
           const placeholders = values.map(() => '?').join(', ');
           query = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-        }else{
+        } else {
           return reject("data passed is not an object");
         }
 
-        query = mysql.format(query,values);
+        query = mysql.format(query, values);
 
-        conn.query(query,function(err,rows){
+        conn.query(query, function (err, rows) {
           self.close_db_connection(conn);
-          if(err) return reject(err)
+          if (err) return reject(err)
           else return resolve(rows);
         });
       });
@@ -187,19 +189,22 @@ var self = module.exports = {
     });
   },
 
-  tableExists : async(table)=>{
+  tableExists : async(tableName)=>{
 
     return new Promise((resolve,reject) => {
+
+      if(!tableName)
+        return reject('Table name not specified');
 
       self.getConnection((err,conn)=>{
         if(err) return reject(err);
 
-         let query = `
+        let query = `
           SELECT COUNT(*) as count 
           FROM information_schema.tables 
           WHERE table_name = ?
         `;
-
+        const table = [tableName];
         query = mysql.format(query,table);
 
         conn.query(query,function(err,rows){
