@@ -36,7 +36,7 @@ var self = module.exports = {
 
   // Get all objects for a specific template
   getObjects: async (templateId, cb) => {
-    console.log("get template objects")
+
     var query = `SELECT * FROM lwm2mTemplate WHERE template_id = ? and objectInstanceId IS NULL and resourceId IS NULL ORDER BY objectId`;
     var table = [templateId];
     query = mysql.format(query, table);
@@ -53,15 +53,13 @@ var self = module.exports = {
 
   getResources : async (templateId, objectId, cb)=>{
 
-    console.log(`templateId: ${templateId}`)
-    console.log(`objectId: ${objectId}`)
     var query = `select * from ?? where template_id = ?`;
     var table = ["lwm2mTemplate",templateId];
     if(objectId != null){
       query += " and objectId = ?";
       table.push(objectId);
     }
-    query += ` order by objectId`
+    query += ` order by objectId, objectInstanceId, resourceId`
     query = mysql.format(query,table);
 
     db.queryRow(query)

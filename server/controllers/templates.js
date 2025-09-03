@@ -155,8 +155,8 @@ module.exports = {
           }).required(),
         }).optional(), // The 'description' object itself is required
         defaultData: Joi.object({
-          value: Joi.object().optional()
-        }).required(),
+          value: Joi.object().required()
+        }).optional(),
         observe: Joi.boolean().truthy('true').falsy('false').required(),
         readInterval: Joi.number().required(),
       }).validate(req.body);
@@ -207,8 +207,8 @@ module.exports = {
           }).required(),
         }).optional(), // The 'description' object itself is required
         defaultData: Joi.object({
-          value: Joi.optional()
-        }).required(),
+          value: Joi.required()
+        }).optional(),
         observe: Joi.boolean().truthy('true').falsy('false').required(),
         readInterval: Joi.number().required(),
       }).validate(req.body);
@@ -264,7 +264,7 @@ module.exports = {
           }).required(),
         }).optional(), // The 'description' object itself is required
         defaultData: Joi.object({
-          value: Joi.optional()
+          value: Joi.required()
         }).optional(),
         observe: Joi.boolean().truthy('true').falsy('false').optional(),
         readInterval: Joi.number().optional(),
@@ -309,7 +309,7 @@ module.exports = {
           }).required(),
         }).optional(), // The 'description' object itself is required
         defaultData: Joi.object({
-          value: Joi.optional()
+          value: Joi.required()
         }).optional(),
         observe: Joi.boolean().truthy('true').falsy('false').optional(),
         readInterval: Joi.number().optional(),

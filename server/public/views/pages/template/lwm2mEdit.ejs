@@ -736,6 +736,33 @@
       const entryId = document.getElementById('resourceEntryId').value // Include the non-editable ID
       const path = document.getElementById('resourcePath').value // Include the non-editable ID
       
+      let defaultData = document.getElementById('defaultData').value;
+      if(defaultData){
+        try{
+          defaultData = JSON.parse(defaultData)
+          if( document.getElementById('type').value === "json" && typeof defaultData?.value !== 'object'){
+            alert(
+              'Error updating device resource\n' +
+              'default data value property is not an object as selected previously'
+            );
+            return;
+          }else if(document.getElementById('type').value !== "json" && typeof defaultData?.value === 'object'){
+            alert(
+              'Error updating device resource\n' +
+              'default data value property is an object and different property was selected'
+            );
+            return;
+          }
+        }catch(err){
+          console.log(err)
+          alert(
+            'Error updating device resource\n' +
+            'default data is not a JSON string'
+          );
+          return;
+        }
+      }
+      
       const updatedResource = {
         description: {
           attributes: {
@@ -748,9 +775,7 @@
         },
         observe: document.getElementById('observe').checked,
         readInterval: document.getElementById('readInterval').value != "" ? document.getElementById('readInterval').value : 0,
-        defaultData: {
-          value: document.getElementById('defaultData').value,
-        }
+        defaultData,
       };
 
       const [objectId, objectInstanceId, resourceId] = path.split('/')
