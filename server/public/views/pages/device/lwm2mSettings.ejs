@@ -443,7 +443,7 @@
     }
 
     function createObjectDropdown(objects, objectId) {
-      console.log("objectId:",objectId)
+      
       objectId = objectId != null ? objectId : 0;
       const dropdownContainer = $('#objectDropdown');
       const contentContainer = $('#objectContent');
@@ -612,8 +612,8 @@
         // Check if object is already associated to the device
         const objectExists = deviceResources.find(deviceResource => 
           deviceResource.objectId == resource.objectId && 
-          deviceResource.objectInstanceId === undefined && 
-          deviceResource.resourceId === undefined
+          deviceResource.objectInstanceId === null && 
+          deviceResource.resourceId === null
         );
         
         if (!objectExists) {
@@ -836,7 +836,6 @@
 
       const [objectId, objectInstanceId, resourceId] = path.split('/')
 
-      console.log("entryId:",entryId);
       if(entryId !== ""){
         api.device.lwm2m.updateResource(deviceId, entryId, updatedResource,(err,res)=>{
           if(!err){
@@ -854,15 +853,12 @@
         const parts = path.replace(/^\/+/, '').split('/');
         const [objectId, objectInstanceId, resourceId] = parts;
 
-        console.log("objectId:",objectId);
-        console.log("objectInstanceId:",objectInstanceId);
-        console.log("resourceId:",resourceId);
         if(objectId !== undefined && objectInstanceId !== undefined && resourceId !== undefined){
           // Check if object x is already associated to the device
           const objectExists = deviceResources.find(resource => 
             resource.objectId == objectId && 
-            resource.objectInstanceId === undefined && 
-            resource.resourceId === undefined
+            resource.objectInstanceId === null && 
+            resource.resourceId === null
           );
           
           if (!objectExists) {
