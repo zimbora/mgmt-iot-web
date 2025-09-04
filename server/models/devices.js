@@ -884,7 +884,9 @@ var self = module.exports =  {
     if(project_name != 'lwm2m')
       return cb('Device is not in lwm2m category');
 
-    let query = `SELECT * FROM lwm2mObjects where device_id = ?`
+    let query = `SELECT * FROM lwm2m where device_id = ? 
+      and objectInstanceId IS NULL and resourceId IS NULL 
+      order BY objectId`;
     let table = [deviceId]
     query = mysql.format(query,table);
 
