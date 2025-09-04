@@ -276,6 +276,7 @@
                     <th style="width: 60px;">Edit</th>
                     <th style="width: 40px;">Path</th>
                     <th style="width: 120px;">Name</th>
+                    <th style="width: 80px;">Template</th>
                     <th style="width: 20px;" title="Readable" >R</th>
                     <th style="width: 20px;" title="Writable" >W</th>
                     <th style="width: 20px;" title="Observable" >O</th>
@@ -362,6 +363,17 @@
               render: function(data, type, row) {
                 // Safely access row.description.attributes.title
                 return row.description?.attributes?.title || 'No Title';
+              }
+            },
+            {
+              data: null,
+              render: function(data, type, row) {
+                // Render template tag as green badge if it exists
+                if (row.template_tag) {
+                  return `<span class="badge bg-success">${row.template_tag}</span>`;
+                } else {
+                  return '';
+                }
               }
             },
             {
