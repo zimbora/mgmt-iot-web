@@ -102,7 +102,6 @@
         <div class="content-header">
           <div class="d-flex justify-content-between align-items-center">
             <h3><%= project?.name %> - Edit Template: <%= template?.tag || 'Unknown' %></h3>
-            <a href="../../templates" class="btn btn-secondary">← Back to Templates</a>
           </div>
         </div>
 
@@ -181,10 +180,12 @@
               <div class="mb-3">
                 <label for="type" class="form-label">Type</label>
                 <select class="form-select" id="type" name="type">
-                  <option value="int">Integer</option>
+                  <option value="integer">Integer</option>
                   <option value="float">Float</option>
                   <option value="string">String</option>
                   <option value="json">JSON</option>
+                  <option value="time">TIME</option>
+                  <option value="execute">EXECUTE</option>
                 </select>
               </div>
             </fieldset>
@@ -430,7 +431,7 @@
     }
 
     function createObjectDropdown(objects, objectId) {
-      console.log("objectId:",objectId)
+      
       objectId = objectId != null ? objectId : 0;
       const dropdownContainer = $('#objectDropdown');
       const contentContainer = $('#objectContent');
@@ -810,7 +811,6 @@
 
       const [objectId, objectInstanceId, resourceId] = path.split('/')
 
-      console.log("entryId:",entryId);
       if(entryId !== ""){
         // Updating existing resource or object
         if(resourceId !== undefined){
@@ -843,9 +843,6 @@
         const parts = path.replace(/^\/+/, '').split('/');
         const [objectId, objectInstanceId, resourceId] = parts;
 
-        console.log("objectId:",objectId);
-        console.log("objectInstanceId:",objectInstanceId);
-        console.log("resourceId:",resourceId);
         if(objectId !== undefined && objectInstanceId !== undefined && resourceId !== undefined){
           updatedResource.objectId = objectId;
           updatedResource.objectInstanceId = objectInstanceId;
