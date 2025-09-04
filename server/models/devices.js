@@ -906,13 +906,16 @@ var self = module.exports =  {
     if(project_name != 'lwm2m')
       return cb('Device is not in lwm2m category');
 
-    let query = `SELECT * FROM lwm2m where device_id = ?`
+    let query = `SELECT lwm2m.*, templates.tag as template_tag 
+                 FROM lwm2m 
+                 LEFT JOIN templates ON lwm2m.template_id = templates.id 
+                 WHERE lwm2m.device_id = ?`
     let table = [deviceId]
     if(objectId){
-      query += ` and objectId = ?`
+      query += ` AND lwm2m.objectId = ?`
       table.push(objectId);
     }
-    query += ` order by objectId, objectInstanceId, resourceId`
+    query += ` ORDER BY lwm2m.objectId, lwm2m.objectInstanceId, lwm2m.resourceId`
     query = mysql.format(query,table);
 
     db.queryRow(query)
