@@ -8,6 +8,7 @@ var clients = require('./clients');
 var devices = require('./devices');
 var projects = require('./projects');
 var models = require('./models');
+var templates = require('./templates');
 //var firmwares = require('./firmwares');
 var authRoutes = require('./auth');
 
@@ -19,7 +20,8 @@ var Project = require('../controllers/projects');
 var Model = require('../controllers/models');
 var Firmware = require('../controllers/firmwares');
 var Database = require('../controllers/db');
-
+var Template = require('../controllers/templates');
+var Lwm2m = require('../controllers/lwm2m')
 const router = express.Router();
 
 router.use((req,res,next) => {
@@ -93,6 +95,17 @@ router.use('/model', models);
 router.route('/models')
   .get(Model.list)
   .post(Model.add)
+
+router.route('/templates')
+  .get(Template.list)
+
+router.use('/template', templates);
+
+router.route('/lwm2m/objects')
+  .get(Lwm2m.getObjects)
+
+router.route('/lwm2m/resources')
+  .get(Lwm2m.getResources)
 
 //router.use('/firmware',firmwares)
 

@@ -282,6 +282,7 @@ var api = {
   // --- requests related to a device ---
 
   device: {
+
     addSensor: (deviceId,ref,name,type,cb)=>{
       fetch(Settings.api+"/device/"+deviceId+"/sensors", {
         method: 'POST',
@@ -348,6 +349,129 @@ var api = {
         dataType : "JSON"
       });
     },
+
+    lwm2m: {
+
+      // Add new object
+      addObject: (deviceId, object, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/object`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(object)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing object
+      updateObject: (deviceId, entryId, object, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/object/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(object)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete object
+      deleteObject: (deviceId, entryId, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/object/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Add new resource
+      addResource: (deviceId, resourceData, cb) => {
+        console.log(Settings.api + `/device/${deviceId}/lwm2m/resource`);
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/resource`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(resourceData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing resource
+      updateResource: (deviceId, entryId, resourceData, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/resource/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(resourceData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete resource
+      deleteResource: (deviceId, entryId, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/lwm2m/resource/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      }
+    },
+    
   },
   // get clients with access to the device
   getClientsWithAccessToDevice : function(deviceID,cb){
@@ -573,6 +697,7 @@ var api = {
       body: JSON.stringify({
         projectName: deviceData.projectName,
         modelName: deviceData.modelName,
+        templateId: deviceData.templateId,
         uid: deviceData.uid,
         name: deviceData?.name,
         protocol: deviceData.protocol,
@@ -1204,7 +1329,248 @@ var api = {
     .catch(function (error) {
       return parseError(error,cb);
     });
-  }
+  },
+
+  // LWM2M Objects and Resources API
+  
+  lwm2m: {
+
+    // Get objects
+    getObjects: (cb) => {
+      fetch(Settings.api + "/lwm2m/objects", {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data, cb);
+      })
+      .catch(function (error) {
+        return parseError(error, cb);
+      });
+    },
+
+    // Get resources
+    getResources: (objectId, cb) => {
+      const url = new URL(Settings.api + "/lwm2m/resources");
+      url.searchParams.append('objectId', objectId); // Add objectId as a query parameter
+
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data, cb);
+      })
+      .catch(function (error) {
+        return parseError(error, cb);
+      });
+    },
+
+  },
+
+  template: {
+
+    list: (projectId, cb) => {
+      const url = new URL(Settings.api + "/templates");
+      if(projectId)
+        url.searchParams.append('projectId', projectId); // Add projectId as a query parameter
+
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data, cb);
+      })
+      .catch(function (error) {
+        return parseError(error, cb);
+      });
+    },
+
+    lwm2m: { // LWM2M Template Resources API
+
+      // Get template objects
+      getObjects: (templateId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/objects`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Get template resources
+      getResources: (templateId, objectId, cb) => {
+        const url = new URL(`${Settings.api}/template/${templateId}/lwm2m/resources`);
+        if (objectId) {
+          url.searchParams.append('objectId', objectId);
+        }
+        fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          query: {
+            objectId
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Add new object
+      addObject: (templateId, object, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/object`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(object)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing object
+      updateObject: (templateId, entryId, object, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/object/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(object)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete object
+      deleteObject: (templateId, entryId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/object/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Add new resource
+      addResource: (templateId, resourceData, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/resource`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(resourceData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing resource
+      updateResource: (templateId, entryId, resourceData, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/resource/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(resourceData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete resource
+      deleteResource: (templateId, entryId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/lwm2m/resource/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      }
+    },
+  },
+  
+
+
 };
 
 function parseResponse(data,cb){

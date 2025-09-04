@@ -28,6 +28,8 @@ var Project = require('./server/models/projects');
 var Model = require('./server/models/models');
 var Firmware = require('./server/models/firmwares');
 var Sensor = require('./server/models/sensors');
+var Templates = require('./server/models/templates');
+var Lwm2mTemplate = require('./server/models/lwm2mTemplate');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -299,12 +301,23 @@ app.get('/project/:project_id/templates',(req,res)=>{
   });
 });
 
-app.get('/project/:project_id/templates/:template_id/edit',(req,res)=>{
+app.get('/templates/:template_id/edit',(req,res)=>{
   
-  project.checkAccess(req,res,()=>{
-    // For now, redirect back to templates list since edit functionality is not implemented
-    res.redirect('/project/' + req.params.project_id + '/templates');
-  });
+  Templates.getById(req.params?.template_id,(err,template)=>{
+    Project.getById(template.project_id,(err,projectData) => {
+      if(projectData.name === "lwm2m"){
+        res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
+          project:projectData,
+          template,
+          user:req.user,
+          page:'Edit'
+        });
+      }else{
+        res.redirect('/project/' + req.params.project_id + '/templates');  
+      }
+    })
+  })
+
 });
 
 // --- models ---
@@ -368,6 +381,19 @@ app.get('/model/:model_id/firmwares',(req,res)=>{
   }
 });
 
+// --- templates ---
+app.get('/template/:template_id/edit',(req,res)=>{
+  if(req.user.level >= 4){
+    const templateId = req.params.template_id;
+    res.render(path.join(__dirname, config.public_path+'/views/template/edit/templateLwm2mEdit'),{
+      user: req.user,
+      templateId: templateId,
+      page: 'Template Edit'
+    });
+  } else {
+    res.redirect('/home');
+  }
+});
 
 // --- devices ---
 
@@ -419,18 +445,36 @@ app.get('/device/:device_id/settings',(req,res)=>{
 
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model){
-    res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{
-      project_name:data.project_name,
-      model_name:data.model_name,
-      device:data.device,
-      project:data.project,
-      model:data.model,
-      modelFeat:data.modelFeat,
-      fw:data.fw,
-      sensors:data.sensors,
-      mqtt:data.mqtt,
-      user:req.user,
-      page:'Settings'});
+
+    if(data.project_name === "lwm2m"){
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/lwm2mSettings'),{
+        project_name:data.project_name,
+        model_name:data.model_name,
+        device:data.device,
+        project:data.project,
+        model:data.model,
+        modelFeat:data.modelFeat,
+        fw:data.fw,
+        sensors:data.sensors,
+        mqtt:data.mqtt,
+        user:req.user,
+        page:'Settings'
+      });
+    }else{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{
+        project_name:data.project_name,
+        model_name:data.model_name,
+        device:data.device,
+        project:data.project,
+        model:data.model,
+        modelFeat:data.modelFeat,
+        fw:data.fw,
+        sensors:data.sensors,
+        mqtt:data.mqtt,
+        user:req.user,
+        page:'Settings'
+      });
+    }
   }else{
     res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }

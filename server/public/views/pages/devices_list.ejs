@@ -87,6 +87,15 @@
           <div class="invalid-feedback">Please select a project.</div>
         </div>
 
+        <!-- Template -->
+        <div class="mb-3">
+          <label for="templateSelect" class="form-label">Template</label>
+          <select id="templateSelect" class="form-select" required>
+            <!-- populated by JS -->
+          </select>
+          <div class="invalid-feedback">Please select a template.</div>
+        </div>
+
         <!-- Model -->
         <div class="mb-3">
           <label for="modelSelect" class="form-label">Model</label>
@@ -214,6 +223,7 @@
           });
         }
       });
+
     });
 
     function addRow(id,uid,project,model,model_id,created,status,version,appVersion,updated){
@@ -274,6 +284,7 @@
       // Prepare device data object
       const deviceData = {
         projectName: projectSelect.options[projectSelect.selectedIndex].text,
+        templateId: templateSelect.options[templateSelect.selectedIndex].value,
         modelName: modelSelect.options[modelSelect.selectedIndex].text,
         uid: deviceUID,
         name: deviceName,
@@ -293,10 +304,10 @@
           $('#modalError').modal('show');
         }else{
           // Show success message - you could add a success modal or notification here
-          console.log(res);
           $("#successHeader").text("Device successfully added");
           $('#successMsg').text(res);
           $('#modalSuccess').modal('show');
+          setTimeout(()=>{location.reload()},2000);
         }
 
         // Handle success (e.g., close modal, refresh list)
@@ -318,12 +329,45 @@
     $("#modalProceed").click(()=>{
       api.deleteDevice(id,(err,res)=>{
         if(err){
-          $('#error').text("Your request cannot be executed");
+          $('#error').text("Error deleting device");
           $('#suggestion').text(err);
           $('#modalError').modal('show');
-        }else location.reload();
+        }else{
+          // Show success message - you could add a success modal or notification here
+          $("#successHeader").text("Device successfully deleted");
+          $('#successMsg').text(res);
+          $('#modalSuccess').modal('show');
+          setTimeout(()=>{location.reload()},2000);
+        } 
       });
     })
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const projectSelect = document.getElementById('projectSelect');
+
+      projectSelect.addEventListener('change', function() {
+        const projectId = this.value;
+        if (projectId) {
+          api.template.list(projectId, function(err, templates) {
+            if (err) {
+              // handle error
+              console.error('Error fetching templates:', err);
+            } else {
+              console.log(templates)
+              const select = document.getElementById('templateSelect');
+              select.innerHTML = '<option value="">Select a template...</option>'; // default
+
+              templates.forEach(template => {
+                const opt = document.createElement('option');
+                opt.value = template.id;
+                opt.textContent = template.tag;
+                select.appendChild(opt);
+              });
+            }
+          });
+        }
+      });
+    });
 
   </script>
 </body>

@@ -884,7 +884,9 @@ var self = module.exports =  {
     if(project_name != 'lwm2m')
       return cb('Device is not in lwm2m category');
 
-    let query = `SELECT * FROM lwm2mObjects where device_id = ?`
+    let query = `SELECT * FROM lwm2m where device_id = ? 
+      and objectInstanceId IS NULL and resourceId IS NULL 
+      order BY objectId`;
     let table = [deviceId]
     query = mysql.format(query,table);
 
@@ -910,6 +912,7 @@ var self = module.exports =  {
       query += ` and objectId = ?`
       table.push(objectId);
     }
+    query += ` order by objectId, objectInstanceId, resourceId`
     query = mysql.format(query,table);
 
     db.queryRow(query)
@@ -920,6 +923,117 @@ var self = module.exports =  {
       return cb(error,null);
     })
 
+  },
+
+    // Add a new object
+  addObject: async (deviceId, objectId, description, defaultData, observe, readInterval, cb) => {
+    let obj = {
+      device_id: deviceId,
+      objectId: objectId,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      observe: observe,
+      readInterval: readInterval,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    db.insert("lwm2m", obj)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  // Add a new resource
+  addResource: async (deviceId, objectId, objectInstanceId, resourceId, description, defaultData, observe, readInterval, cb) => {
+    let obj = {
+      device_id: deviceId,
+      objectId: objectId,
+      objectInstanceId: objectInstanceId,
+      resourceId: resourceId,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      observe: observe,
+      readInterval: readInterval,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // check if objectId, objectInstanceId and resourceId already exists for device_id
+    let query = "Select * from lwm2m where device_id = ? and objectId = ? and objectInstanceId = ? and resourceId = ?";
+    let table = [deviceId,objectId,objectInstanceId,resourceId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows?.length > 0){
+        return cb("resource already exists",null); 
+      }else{
+        db.insert("lwm2m", obj)
+        .then(rows => {
+          console.log(rows)
+          return cb(null, rows);
+        })
+        .catch(error => {
+          return cb(error, null);
+        });
+      }
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  // Update an existing object
+  updateEntry: async (entryId, updateData, cb) => {
+    let obj = {
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // Add fields that are being updated
+    if (updateData.description !== undefined) {
+      obj.description = JSON.stringify(updateData.description);
+    }
+    if (updateData.defaultData !== undefined) {
+      obj.defaultData = updateData.defaultData ? JSON.stringify(updateData.defaultData) : null;
+    }
+    if (updateData.observe !== undefined) {
+      obj.observe = updateData.observe;
+    }
+    if (updateData.readInterval !== undefined) {
+      obj.readInterval = updateData.readInterval;
+    }
+
+    let filter = {
+      id: entryId
+    };
+
+    console.log(obj)
+    db.update("lwm2m", obj, filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  // Delete a resource
+  deleteEntry: async (entryId, cb) => {
+    let filter = {
+      id: entryId
+    };
+
+    db.delete("lwm2m", filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
   },
 
   add : async (device,cb)=>{
@@ -939,6 +1053,7 @@ var self = module.exports =  {
       uid : device.uid,
       name : device?.name,
       project_id : projectId,
+      template_id: device?.templateId,
       model_id : modelId,
       protocol : device.protocol,
       psk : device?.psk,
@@ -948,15 +1063,17 @@ var self = module.exports =  {
     
     const res = await db.insert('devices', obj);
 
-    // Assuming res is a result array or object indicating success
-    if (res) {
-      if(res?.length > 0)
-        return cb(null, res[0]);
-      else
-        return cb(null, res[0]);
-    } else {
-      return cb('Insertion failed', null);
+    if(res?.insertId){
+      if(device.projectName == "lwm2m" && device.templateId){
+        // copy template to lwm2m table
+        resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,device.templateId)
+        console.log(resLwm2m);
+      }
+      return cb(null, res[0]);
+    }else{
+      return cb('Error adding device', null);
     }
+        
   },
 
   delete : async (deviceId,cb)=>{
@@ -973,26 +1090,36 @@ var self = module.exports =  {
       device_id : deviceId,
     }
 
+    try{
 
-    if(project_table != null)
-      if( await db.tableExists(model_table)){
-        await db.delete(project_table,filter);
+      if(project_table != null)
+        console.log(`deleting project_table ${project_table}`)
+        if( await db.tableExists(project_table)){
+          await db.delete(project_table,filter);
+        }
+      if(project_logs_table != null)
+        console.log(`deleting project_logs_table ${project_logs_table}`)
+        if( await db.tableExists(project_logs_table)){
+          await db.delete(project_logs_table,filter);
+        }
+      if(model_table != null){
+        console.log(`deleting model_table ${model_table}`)
+        if( await db.tableExists(model_table)){
+          await db.delete(model_table,filter);
+        }
       }
-    if(project_logs_table != null)
-      if( await db.tableExists(model_table)){
-        await db.delete(project_logs_table,filter);
+      if(model_logs_table != null){
+        console.log(`deleting model_logs_table ${model_logs_table}`)
+        if( await db.tableExists(model_logs_table)){
+          await db.delete(model_logs_table,filter);
+        }
       }
-    if(model_table != null){
-      if( await db.tableExists(model_table)){
-        await db.delete(model_table,filter);
-      }
+      await db.delete("permissions",filter);
+
+    }catch(err){
+      console.log(err)
+      return cb(err,null);
     }
-    if(model_logs_table != null){
-      if( await db.tableExists(model_table)){
-        await db.delete(model_logs_table,filter);
-      }
-    }
-    await db.delete("permissions",filter);
 
     // this must be executed only after all previous delete calls
     filter = {
@@ -1316,4 +1443,42 @@ async function publishAndWaitForResponse(publishTopic, messagePayload, responseT
       }, timeout);
     });
   });
+}
+
+/**
+ * Copies all elements from lwm2mTemplate (where template_id = deviceTemplateId)
+ * to lwm2m, setting device_id = deviceId for each inserted row.
+ * 
+ * @param {number} deviceId - The target device's ID (res[0].insertId)
+ * @param {number} deviceTemplateId - The source template's ID (device.templateId)
+ * @returns {Promise}
+ */
+async function associateLwm2mTemplateToDevice(deviceId, deviceTemplateId) {
+  
+  // 1. Get all rows from lwm2mTemplate for the given templateId
+  let query = `SELECT * FROM ?? where template_id = ?;`
+  let table = ["lwm2mTemplate",deviceTemplateId];
+  query = mysql.format(query,table);
+  let templates = await db.queryRow(query);
+
+  if (!templates || !templates.length) return res; // nothing to copy, return empty array
+
+  const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+  let res = [];
+  
+  // 2. Insert each template into lwm2m with device_id
+  for (const tpl of templates) {
+    // Remove the primary key (if it exists), createdAt and updatedAt
+    const { id, createdAt, updatedAt, ...rest } = tpl;
+    const data = {
+      device_id: deviceId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ...rest
+    };
+    const insertRes = await db.insert('lwm2m', data);
+    res.push(insertRes);
+  }
+
+  return res;
 }
