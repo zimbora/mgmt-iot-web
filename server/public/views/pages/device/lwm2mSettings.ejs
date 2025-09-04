@@ -609,6 +609,23 @@
       resource.readInterval = 0;
       
       if (isIncluded) {
+        // Check if object is already associated to the device
+        const objectExists = deviceResources.find(deviceResource => 
+          deviceResource.objectId == resource.objectId && 
+          deviceResource.objectInstanceId === undefined && 
+          deviceResource.resourceId === undefined
+        );
+        
+        if (!objectExists) {
+          $('#error').text('Error adding resource to device');
+          $('#suggestion').text(`Object ${resource.objectId} is not associated with this device. Please add the object first before adding resources to it.`);
+          $('#modalError').modal('show');
+          
+          // Revert the toggle
+          $(element).prop('checked', false);
+          return;
+        }
+        
         // Add resource to device
         api.device.lwm2m.addResource(deviceId, resource, (err, res) => {
           if (err) {
@@ -618,7 +635,7 @@
             $('#modalError').modal('show');
             
             // Revert the toggle
-            toggleInput.prop('checked', false);
+            $(element).prop('checked', false);
           } else {
             loadLwm2mDeviceResources();
             loadLwm2mObjects(resource.objectId);
@@ -633,7 +650,7 @@
             $('#modalError').modal('show');
             
             // Revert the toggle
-            toggleInput.prop('checked', true);
+            $(element).prop('checked', true);
           } else {
             loadLwm2mDeviceResources();
             loadLwm2mObjects(resource.objectId);
@@ -841,6 +858,22 @@
         console.log("objectInstanceId:",objectInstanceId);
         console.log("resourceId:",resourceId);
         if(objectId !== undefined && objectInstanceId !== undefined && resourceId !== undefined){
+          // Check if object x is already associated to the device
+          const objectExists = deviceResources.find(resource => 
+            resource.objectId == objectId && 
+            resource.objectInstanceId === undefined && 
+            resource.resourceId === undefined
+          );
+          
+          if (!objectExists) {
+            alert(
+              'Error adding resource\n' +
+              `Object ${objectId} is not associated with this device.\n` +
+              'Please add the object first before adding resources to it.'
+            );
+            return;
+          }
+          
           updatedResource.objectId = objectId;
           updatedResource.objectInstanceId = objectInstanceId;
           updatedResource.resourceId = resourceId;
