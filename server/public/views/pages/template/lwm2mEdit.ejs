@@ -102,7 +102,6 @@
         <div class="content-header">
           <div class="d-flex justify-content-between align-items-center">
             <h3><%= project?.name %> - Edit Template: <%= template?.tag || 'Unknown' %></h3>
-            <a href="../../templates" class="btn btn-secondary">← Back to Templates</a>
           </div>
         </div>
 
@@ -181,10 +180,12 @@
               <div class="mb-3">
                 <label for="type" class="form-label">Type</label>
                 <select class="form-select" id="type" name="type">
-                  <option value="int">Integer</option>
+                  <option value="integer">Integer</option>
                   <option value="float">Float</option>
                   <option value="string">String</option>
                   <option value="json">JSON</option>
+                  <option value="time">TIME</option>
+                  <option value="execute">EXECUTE</option>
                 </select>
               </div>
             </fieldset>
@@ -257,7 +258,13 @@
 
       contentContainer.html(`
           <div class="mt-3">
-            <h6>Resources for template</h6>
+            <h6>Resources for template
+            <button class="btn btn-primary ms-2 small-btn" 
+              data-resource='' 
+              onclick="newResource(this)">
+              <i class="fas fa-plus small-icon"></i> <!-- Font Awesome plus icon -->
+            </button>
+            </h6>
             <div id="loading-template" class="text-center py-3">
               <div class="spinner-border spinner-border-sm" role="status"></div>
               <span>Loading resources...</span>
@@ -424,7 +431,7 @@
     }
 
     function createObjectDropdown(objects, objectId) {
-      console.log("objectId:",objectId)
+      
       objectId = objectId != null ? objectId : 0;
       const dropdownContainer = $('#objectDropdown');
       const contentContainer = $('#objectContent');
@@ -689,9 +696,33 @@
     }
 
     // objects and resources
+    function newResource(element) {
+      //const resourceData = JSON.parse(element.getAttribute('data-resource'));
+      openAddResourceModal();
+    }
+
+    // objects and resources
     function editResource(entryId, element) {
       const resourceData = JSON.parse(element.getAttribute('data-resource'));
       openResourceEditModal(resourceData);
+    }
+
+    // objects and resources
+    function openAddResourceModal(resource) {
+      // Show the modal
+      let resourcePath = document.getElementById('resourcePath');
+      // Make it editable
+      resourcePath.readOnly = false;
+      // Set the placeholder
+      resourcePath.placeholder = "/0/0/0";
+
+      document.getElementById('defaultData').value = '{"value":""}';
+
+      // Clear the entry ID to indicate this is a new resource
+      document.getElementById('resourceEntryId').value = '';
+      
+      const modal = new bootstrap.Modal(document.getElementById('editResourceModal'));
+      modal.show();
     }
 
     // objects and resources
@@ -780,30 +811,79 @@
 
       const [objectId, objectInstanceId, resourceId] = path.split('/')
 
-      if(resourceId !== undefined){
-        api.template.lwm2m.updateResource(templateId, entryId, updatedResource,(err,res)=>{
-          if(!err){
-            loadLwm2mTemplateResources();
-          }else{
-            console.log(err)  
-            $('#error').text('Error updating template resource');
-            $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
-            $('#modalError').modal('show');
-            return;
-          }
-        })
+      if(entryId !== ""){
+        // Updating existing resource or object
+        if(resourceId !== undefined){
+          api.template.lwm2m.updateResource(templateId, entryId, updatedResource,(err,res)=>{
+            if(!err){
+              loadLwm2mTemplateResources();
+            }else{
+              console.log(err)  
+              $('#error').text('Error updating template resource');
+              $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+              $('#modalError').modal('show');
+              return;
+            }
+          })
+        }else{
+          api.template.lwm2m.updateObject(templateId, entryId, updatedResource,(err,res)=>{
+            if(!err){
+              loadLwm2mTemplateResources();
+            }else{
+              console.log(err)  
+              $('#error').text('Error updating template object');
+              $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+              $('#modalError').modal('show');
+              return;
+            }
+          })
+        }
       }else{
-        api.template.lwm2m.updateObject(templateId, entryId, updatedResource,(err,res)=>{
-          if(!err){
-            loadLwm2mTemplateResources();
-          }else{
-            console.log(err)  
-            $('#error').text('Error updating template object');
-            $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
-            $('#modalError').modal('show');
-            return;
-          }
-        })
+        // Adding new resource or object
+        const parts = path.replace(/^\/+/, '').split('/');
+        const [objectId, objectInstanceId, resourceId] = parts;
+
+        if(objectId !== undefined && objectInstanceId !== undefined && resourceId !== undefined){
+          updatedResource.objectId = objectId;
+          updatedResource.objectInstanceId = objectInstanceId;
+          updatedResource.resourceId = resourceId;
+          api.template.lwm2m.addResource(templateId, updatedResource,(err,res)=>{
+            if(!err){
+              loadLwm2mTemplateResources();
+            }else{
+              console.log(err)  
+              $('#error').text('Error adding new resource');
+              $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+              $('#modalError').modal('show');
+              return;
+            }
+          })
+        }else if(objectId && objectInstanceId && resourceId === undefined){
+          alert(
+            'Error creating new path\n' +
+            'adding instances without resource specified is not supported at the moment'
+          );
+          return;
+        }else if(objectId && objectInstanceId == undefined && resourceId == undefined){
+          updatedResource.objectId = objectId;
+          api.template.lwm2m.addObject(templateId, updatedResource,(err,res)=>{
+            if(!err){
+              loadLwm2mTemplateResources();
+            }else{
+              console.log(err)  
+              $('#error').text('Error adding new object');
+              $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+              $('#modalError').modal('show');
+              return;
+            }
+          })
+        }else{
+          alert(
+            'Error creating new path\n' +
+            'Something is wrong with the new path'
+          );
+          return;
+        }
       }
 
       // Close the modal
