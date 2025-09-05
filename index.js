@@ -25,6 +25,33 @@ module.exports = {
   init : (settings)=>{
 
     $.config = settings;
+    
+    // Setup global exception handlers to prevent application exit except in dev mode
+    const isDev = settings?.environment === 'dev';
+    
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught Exception:', error);
+      
+      if (isDev) {
+        // In dev mode, let the application exit as normal
+        process.exit(1);
+      } else {
+        // In production, prevent exit and continue running
+        console.error('Application continuing despite uncaught exception...');
+      }
+    });
+    
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Promise Rejection at:', promise, 'reason:', reason);
+      
+      if (isDev) {
+        // In dev mode, let the application exit as normal
+        process.exit(1);
+      } else {
+        // In production, prevent exit and continue running
+        console.error('Application continuing despite unhandled promise rejection...');
+      }
+    });
     var db = require('./server/controllers/db');
     db.connect(settings,() => {
       db_setup();
