@@ -597,6 +597,23 @@
       resource.readInterval = 0;
       
       if (isIncluded) {
+        // Check if object is already associated to the template
+        const objectExists = templateResources.find(templateResource => 
+          templateResource.objectId == resource.objectId && 
+          templateResource.objectInstanceId === null && 
+          templateResource.resourceId === null
+        );
+        
+        if (!objectExists) {
+          $('#error').text('Error adding resource to template');
+          $('#suggestion').text(`Object ${resource.objectId} is not associated with this template. Please add the object first before adding resources to it.`);
+          $('#modalError').modal('show');
+          
+          // Revert the toggle
+          $(element).prop('checked', false);
+          return;
+        }
+        
         // Add resource to template
         api.template.lwm2m.addResource(templateId, resource, (err, res) => {
           if (err) {
@@ -606,7 +623,7 @@
             $('#modalError').modal('show');
             
             // Revert the toggle
-            toggleInput.prop('checked', false);
+            $(element).prop('checked', false);
           } else {
             loadLwm2mTemplateResources();
             loadLwm2mObjects(resource.objectId);
@@ -844,6 +861,22 @@
         const [objectId, objectInstanceId, resourceId] = parts;
 
         if(objectId !== undefined && objectInstanceId !== undefined && resourceId !== undefined){
+          // Check if object x is already associated to the template
+          const objectExists = templateResources.find(resource => 
+            resource.objectId == objectId && 
+            resource.objectInstanceId === null && 
+            resource.resourceId === null
+          );
+          
+          if (!objectExists) {
+            alert(
+              'Error adding resource\n' +
+              `Object ${objectId} is not associated with this template.\n` +
+              'Please add the object first before adding resources to it.'
+            );
+            return;
+          }
+          
           updatedResource.objectId = objectId;
           updatedResource.objectInstanceId = objectInstanceId;
           updatedResource.resourceId = resourceId;
