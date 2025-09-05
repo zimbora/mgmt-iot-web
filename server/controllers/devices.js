@@ -355,7 +355,7 @@ module.exports = {
       modelName: Joi.string().required(),
       uid: Joi.string().required(),
       name: Joi.string(),
-      protocol: Joi.string().valid('mqtt', 'lwm2m').required(),
+      protocol: Joi.string().valid('MQTT', 'LwM2M', 'mqtt', 'lwm2m').required(),
       psk: Joi.string(),
     }).validate(req.body);
 
