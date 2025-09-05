@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.68
+  template/lwm2mEdit: fixes error defaultData.value not defined
+  
 ## version 1.0.67
   - Supports LWM2M
   - Supports templates for LWM2M
