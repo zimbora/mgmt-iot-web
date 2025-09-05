@@ -585,14 +585,16 @@
 
     function toggleResource(entryId, element, isIncluded) {
       const resourceData = JSON.parse(element.getAttribute('data-resource'));
-      
+
       let resource = {};
       resource.objectId = resourceData.objectId;
       resource.objectInstanceId = 0;
       resource.resourceId = resourceData.resourceId;
       resource.description = {}
       resource.description.attributes = resourceData.description?.attributes;
-      resource.defaultData = {};
+      resource.defaultData = {
+        value: "",
+      };
       resource.observe = false;
       resource.readInterval = 0;
       
@@ -671,7 +673,9 @@
             observable: false,
           }
         },
-        defaultData: {},
+        defaultData: {
+          value : {}
+        },
         observe: false,
         readInterval: 0,
       };
