@@ -27,7 +27,7 @@ module.exports = {
     $.config = settings;
     
     // Setup global exception handlers to prevent application exit except in dev mode
-    const isDev = settings?.environment === 'dev';
+    const isDev = settings?.environment === 'development';
     
     process.on('uncaughtException', (error) => {
       console.error('Uncaught Exception:', error);
@@ -52,6 +52,7 @@ module.exports = {
         console.error('Application continuing despite unhandled promise rejection...');
       }
     });
+    
     var db = require('./server/controllers/db');
     db.connect(settings,() => {
       db_setup();
