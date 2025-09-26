@@ -104,6 +104,22 @@ app.use(auth.check_authentication,(req,res,next)=>{
   }
 });
 
+// server.js (express example)
+app.get('*/settings.js', (req, res) => {
+  const mqttHost = $.config.mqtt.host || req.hostname;
+  res.type('application/javascript').send(`
+    var Settings = {
+      url : window.location.protocol+"//"+window.location.hostname+":"+window.location.port,
+      api : window.location.protocol+"//"+window.location.hostname+":"+window.location.port+"/api",
+      mqtt : {
+        host : "${mqttHost}",
+        port : 8888,
+        ssl : false
+      }
+    };
+  `);
+});
+
 app.use('*/js',express.static(path.join(__dirname, config.public_path+'/js')))
 app.use('*/lib',express.static(path.join(__dirname, config.public_path+'/lib')))
 app.use('*/files',express.static(path.join(__dirname, config.public_path+'/files')))
