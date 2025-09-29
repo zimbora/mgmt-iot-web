@@ -30,6 +30,7 @@ var Firmware = require('./server/models/firmwares');
 var Sensor = require('./server/models/sensors');
 var Templates = require('./server/models/templates');
 var Lwm2mTemplate = require('./server/models/lwm2mTemplate');
+var FreeRTOSTemplate = require('./server/models/freeRTOSTemplate');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -323,6 +324,13 @@ app.get('/templates/:template_id/edit',(req,res)=>{
     Project.getById(template.project_id,(err,projectData) => {
       if(projectData.name === "lwm2m"){
         res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
+          project:projectData,
+          template,
+          user:req.user,
+          page:'Edit'
+        });
+      }else if(projectData.name === "freeRTOS2"){
+        res.render(path.join(__dirname, config.public_path+'/views/pages/template/freeRTOSEdit'),{
           project:projectData,
           template,
           user:req.user,

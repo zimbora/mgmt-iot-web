@@ -1,5 +1,6 @@
 var Template = require('../models/templates');
 var LwM2MTemplate = require('../models/lwm2mTemplate');
+var FreeRTOSTemplate = require('../models/freeRTOSTemplate');
 
 var Joi = require('joi');
 var httpStatus = require('http-status-codes');
@@ -417,4 +418,164 @@ module.exports = {
     }
   }
   */
+
+  // ===== FreeRTOS Template Methods =====
+
+  // Get all topics for a freeRTOS template
+  getFreeRTOSTopics: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+      
+      if (!templateId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
+      }
+
+      FreeRTOSTemplate.getTopics(templateId, (err, topics) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+
+        return response.send(res, topics);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Add a new freeRTOS topic
+  addFreeRTOSTopic: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+
+      const val = Joi.object({
+        topic: Joi.string().required(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'json') // Allowed data types
+              .required(),
+            title: Joi.string().required(),
+            readable: Joi.boolean().required(),
+            writable: Joi.boolean().required(),
+          }).required(),
+        }).optional(),
+        defaultData: Joi.object({
+          value: Joi.required()
+        }).optional(),
+        publishInterval: Joi.number().min(0).required(), // Publishing interval in seconds
+      }).validate(req.body);
+
+      const { topic, description, defaultData, publishInterval } = req.body;
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        FreeRTOSTemplate.addTopic(
+          templateId,
+          topic,
+          description,
+          defaultData,
+          publishInterval,
+          (err, result) => {
+            if (err) {
+              return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+            }
+            return response.send(res, result);
+          }
+        );
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Update an existing freeRTOS topic
+  updateFreeRTOSTopic: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+      const entryId = req.params.entry_id;
+      const updateData = req.body;
+
+      if (!templateId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      const val = Joi.object({
+        topic: Joi.string().optional(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'json')
+              .required(),
+            title: Joi.string().required(),
+            readable: Joi.boolean().required(),
+            writable: Joi.boolean().required(),
+          }).required(),
+        }).optional(),
+        defaultData: Joi.object({
+          value: Joi.required()
+        }).optional(),
+        publishInterval: Joi.number().min(0).optional(),
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        FreeRTOSTemplate.updateEntry(entryId, updateData, (err, result) => {
+          if (err) {
+            return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          }
+          return response.send(res, result);
+        });
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete a freeRTOS topic
+  deleteFreeRTOSTopic: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+      const entryId = req.params.entry_id;
+
+      if (!templateId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      FreeRTOSTemplate.deleteEntry(entryId, (err, result) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        return response.send(res, result);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Get a specific freeRTOS topic
+  getFreeRTOSTopic: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+
+      if (!templateId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
+      }
+
+      FreeRTOSTemplate.getById(templateId, (err, topics) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        
+        if (!topics || topics.length === 0) {
+          return response.error(res, httpStatus.NOT_FOUND, "No topics found for this template");
+        }
+
+        return response.send(res, topics);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  }
 };
