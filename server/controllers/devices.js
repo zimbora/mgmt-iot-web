@@ -754,6 +754,99 @@ module.exports = {
       return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   },
+
+  // MQTT Topics methods
+  getMqttTopics : (req, res, next)=>{
+    device.getMqttTopics(req.params.device_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
+  // Add a new MQTT topic
+  addMqttTopic: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+
+      const val = Joi.object({
+        name: Joi.string().required(),
+        topic: Joi.string().required(),
+        description: Joi.string().optional(),
+        qos: Joi.number().integer().min(0).max(2).default(0),
+        retain: Joi.boolean().default(false),
+        type: Joi.string().valid('publish', 'subscribe', 'both').default('both'),
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        const { name, topic, description, qos, retain, type } = req.body;
+        device.addMqttTopic(
+          deviceId,
+          name,
+          topic,
+          description,
+          qos,
+          retain,
+          type,
+          (err, result) => {
+            if (err) {
+              return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+            }
+            return response.send(res, result);
+          }
+        );
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Update MQTT topic
+  updateMqttTopic: async (req, res, next) => {
+    try {
+      const deviceId = req.params.device_id;
+      const entryId = req.params.entry_id;
+
+      const val = Joi.object({
+        name: Joi.string().required(),
+        topic: Joi.string().required(),
+        description: Joi.string().optional(),
+        qos: Joi.number().integer().min(0).max(2).default(0),
+        retain: Joi.boolean().default(false),
+        type: Joi.string().valid('publish', 'subscribe', 'both').default('both'),
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.updateMqttTopic(entryId, req.body, (err, result) => {
+          if (err) {
+            return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          }
+          return response.send(res, result);
+        });
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete MQTT topic
+  deleteMqttTopic: async (req, res, next) => {
+    try {
+      const entryId = req.params.entry_id;
+
+      device.deleteMqttTopic(entryId, (err, result) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        return response.send(res, result);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
 };
 /*
 function update(req, res, next) {

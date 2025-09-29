@@ -1410,7 +1410,94 @@ var self = module.exports =  {
       return cb(error,null);
     }
 
-  }
+  },
+
+  // MQTT Topics methods
+  getMqttTopics : async (deviceId,cb)=>{
+    let query = `SELECT * FROM mqtt_topics WHERE device_id = ? ORDER BY name`
+    let table = [deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  addMqttTopic: async (deviceId, name, topic, description, qos, retain, type, cb) => {
+    let obj = {
+      device_id: deviceId,
+      name: name,
+      topic: topic,
+      description: description || null,
+      qos: qos || 0,
+      retain: retain || false,
+      type: type || 'both',
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // check if name already exists for device_id
+    let query = "SELECT * FROM mqtt_topics WHERE device_id = ? AND name = ?";
+    let table = [deviceId, name];
+    query = mysql.format(query, table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if (rows.length > 0) {
+        return cb("MQTT topic name already exists for this device", null);
+      } else {
+        return db.insert("mqtt_topics", obj);
+      }
+    })
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  updateMqttTopic: async (entryId, topicData, cb) => {
+    let obj = {
+      name: topicData.name,
+      topic: topicData.topic,
+      description: topicData.description || null,
+      qos: topicData.qos || 0,
+      retain: topicData.retain || false,
+      type: topicData.type || 'both',
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    let filter = {
+      id: entryId
+    };
+
+    db.update("mqtt_topics", obj, filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  deleteMqttTopic: async (entryId, cb) => {
+    let filter = {
+      id: entryId
+    };
+
+    db.delete("mqtt_topics", filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
 
 };
 

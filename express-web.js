@@ -496,6 +496,28 @@ app.get('/device/:device_id/settings',(req,res)=>{
   }
 });
 
+app.get('/device/:device_id/mqttSettings',(req,res)=>{
+
+  let data = req.user.data;
+  if(data.device != null && data.mqtt != null && data.model){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqttSettings'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
+      device:data.device,
+      project:data.project,
+      model:data.model,
+      modelFeat:data.modelFeat,
+      fw:data.fw,
+      sensors:data.sensors,
+      mqtt:data.mqtt,
+      user:req.user,
+      page:'MqttSettings'
+    });
+  }else{
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
+  }
+});
+
 app.get('/device/:device_id/access',(req,res)=>{
 
   let data = req.user.data;

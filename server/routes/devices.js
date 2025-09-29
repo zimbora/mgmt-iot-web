@@ -124,6 +124,17 @@ router.route("/:device_id/project/field")
 router.route("/:device_id/mqtt/message")
   .post(Device.sendMqttMessage)
 
+// MQTT topics routes
+router.route("/:device_id/mqtt/topics")
+  .get(Device.getMqttTopics)
+
+router.route('/:device_id/mqtt/topic')
+  .post(Device.addMqttTopic);
+
+router.route('/:device_id/mqtt/topic/:entry_id')
+  .put(Device.updateMqttTopic)
+  .delete(Device.deleteMqttTopic);
+
 // POST /api/template/:device_id - Add a new object
 router.route('/:device_id/lwm2m/object')
   .post(Device.addObject);
