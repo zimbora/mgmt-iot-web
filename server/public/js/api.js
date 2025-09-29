@@ -1567,6 +1567,87 @@ var api = {
         });
       }
     },
+
+    mqtt: { // mqtt Template Topics API
+
+      // Get template topics
+      getTopics: (templateId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topics`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Add new topic
+      addTopic: (templateId, topicData, cb) => {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topic`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(topicData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing topic
+      updateTopic: (templateId, entryId, topicData, cb) => {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topic/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(topicData)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete topic
+      deleteTopic: (templateId, entryId, cb) => {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topic/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      }
+    },
   },
   
 
