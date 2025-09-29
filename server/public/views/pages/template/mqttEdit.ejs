@@ -97,15 +97,15 @@
   <div class="container-fluid">
     <div class="row flex-nowrap">
       <%- include('../../partials/template/sidebar.ejs') %>
-      <div id="loading"></div>
+      <!--<div id="loading"></div>-->
       <div class="col py-3">
         <div class="content-header">
           <div class="d-flex justify-content-between align-items-center">
-            <h3><%= project?.name %> - Edit freeRTOS2 Template: <%= template?.tag || 'Unknown' %></h3>
+            <h3><%= project?.name %> - Edit MQTT Template: <%= template?.tag || 'Unknown' %></h3>
           </div>
         </div>
 
-        <!-- FreeRTOS Template Topics Section -->
+        <!-- MQTT Template Topics Section -->
         <div class="row mt-4">
           <div class="col-12">
             <div class="card">
@@ -173,12 +173,12 @@
                 </div>
               </div>
             </div>
-
-            <!-- Publish Interval -->
+            
+            <!-- Reading Interval -->
             <div class="mb-3">
-              <label for="publishInterval" class="form-label">Publish Interval (seconds)</label>
-              <select class="form-select" id="publishInterval" name="publishInterval">
-                <option value="0">No automatic publishing</option>
+              <label for="readInterval" class="form-label">Reading Interval (seconds)</label>
+              <select class="form-select" id="readInterval" name="readInterval">
+                <option value="0">No automatic reading</option>
                 <option value="5">5 Seconds</option>
                 <option value="10">10 Seconds</option>
                 <option value="30">30 Seconds</option>
@@ -220,16 +220,17 @@
     var topicsTable = null;
 
     $(document).ready(function () {
+      console.log("document ready")
       // Validate that we have the required IDs
       if (!templateId || !projectId) {
-        $('#loading').html('<div class="alert alert-danger">Error: Missing template or project information.</div>');
+        //$('#loading').html('<div class="alert alert-danger">Error: Missing template or project information.</div>');
         return;
       }
       
-      loadFreeRTOSTemplateTopics();
+      loadMqttTemplateTopics();
     });
 
-    function loadFreeRTOSTemplateTopics() {
+    function loadMqttTemplateTopics() {
       const contentContainer = $('#topicsTemplate');
       contentContainer.empty();
 
@@ -251,7 +252,7 @@
                     <th>Type</th>
                     <th>Readable</th>
                     <th>Writable</th>
-                    <th>Publish Interval</th>
+                    <th>Read Interval</th>
                     <th>Default Data</th>
                   </tr>
                 </thead>
@@ -272,10 +273,10 @@
       });
 
       // Load topics from API
-      api.template.freertos.getTopics(templateId, (err, topics) => {
+      api.template.mqtt.getTopics(templateId, (err, topics) => {
         if (err) {
           console.error('Error loading template topics:', err);
-          $('#loading').html('<div class="alert alert-danger">Error loading template topics</div>');
+          //$('#loading').html('<div class="alert alert-danger">Error loading template topics</div>');
           return;
         }
 
@@ -289,6 +290,7 @@
     }
 
     function addTopicToTable(topic) {
+
       const actions = `
         <button class="btn btn-sm btn-outline-primary me-1" 
                 onclick="editTopic(${topic.id})" 
@@ -309,10 +311,10 @@
       const writableIcon = topic.description?.attributes?.writable ? 
         '<i class="bi bi-check-circle text-success"></i>' : 
         '<i class="bi bi-x-circle text-muted"></i>';
-
-      const intervalText = topic.publishInterval > 0 ? 
-        `${topic.publishInterval}s` : 'Manual';
-
+        
+      const intervalText = topic.readInterval > 0 ? 
+        `${topic.readInterval}s` : 'Manual';
+    
       const defaultDataText = topic.defaultData?.value ? 
         JSON.stringify(topic.defaultData.value) : '-';
 
@@ -337,7 +339,7 @@
       // Set defaults
       document.getElementById('readable').checked = true;
       document.getElementById('writable').checked = false;
-      document.getElementById('publishInterval').value = '0';
+      document.getElementById('readInterval').value = '0';
       
       // Update modal title
       document.getElementById('editTopicModalLabel').textContent = 'Add New Topic';
@@ -361,7 +363,7 @@
       document.getElementById('type').value = topic.description?.attributes?.type || 'string';
       document.getElementById('readable').checked = topic.description?.attributes?.readable || false;
       document.getElementById('writable').checked = topic.description?.attributes?.writable || false;
-      document.getElementById('publishInterval').value = topic.publishInterval || 0;
+      document.getElementById('readInterval').value = topic.readInterval || 0;
       
       // Handle default data
       if (topic.defaultData?.value !== undefined) {
@@ -388,7 +390,7 @@
       const type = document.getElementById('type').value;
       const readable = document.getElementById('readable').checked;
       const writable = document.getElementById('writable').checked;
-      const publishInterval = parseInt(document.getElementById('publishInterval').value);
+      const readInterval = parseInt(document.getElementById('readInterval').value);
       const defaultDataValue = document.getElementById('defaultData').value.trim();
 
       // Validation
@@ -429,17 +431,17 @@
           }
         },
         defaultData: defaultData,
-        publishInterval: publishInterval,
+        readInterval: readInterval,
       };
 
       if (entryId) {
         // Update existing topic
-        api.template.freertos.updateTopic(templateId, entryId, topicData, (err, response) => {
+        api.template.mqtt.updateTopic(templateId, entryId, topicData, (err, response) => {
           handleSaveResponse(err, response, 'Topic updated successfully');
         });
       } else {
         // Add new topic
-        api.template.freertos.addTopic(templateId, topicData, (err, response) => {
+        api.template.mqtt.addTopic(templateId, topicData, (err, response) => {
           handleSaveResponse(err, response, 'Topic added successfully');
         });
       }
@@ -465,7 +467,7 @@
         
         // Reload topics
         setTimeout(() => {
-          loadFreeRTOSTemplateTopics();
+          loadMqttTemplateTopics();
         }, 1000);
       }
     }
@@ -475,7 +477,7 @@
         return;
       }
 
-      api.template.freertos.deleteTopic(templateId, topicId, (err, response) => {
+      api.template.mqtt.deleteTopic(templateId, topicId, (err, response) => {
         if (err) {
           console.error('Error deleting topic:', err);
           $('#error').text('Error deleting topic');
@@ -488,7 +490,7 @@
           
           // Reload topics
           setTimeout(() => {
-            loadFreeRTOSTemplateTopics();
+            loadMqttTemplateTopics();
           }, 1000);
         }
       });

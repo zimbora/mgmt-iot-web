@@ -30,7 +30,7 @@ var Firmware = require('./server/models/firmwares');
 var Sensor = require('./server/models/sensors');
 var Templates = require('./server/models/templates');
 var Lwm2mTemplate = require('./server/models/lwm2mTemplate');
-var FreeRTOSTemplate = require('./server/models/freeRTOSTemplate');
+var mqttTemplate = require('./server/models/mqttTemplate');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -321,7 +321,9 @@ app.get('/project/:project_id/templates',(req,res)=>{
 app.get('/templates/:template_id/edit',(req,res)=>{
   
   Templates.getById(req.params?.template_id,(err,template)=>{
+    console.log(template);
     Project.getById(template.project_id,(err,projectData) => {
+      console.log(projectData)
       if(projectData.name === "lwm2m"){
         res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
           project:projectData,
@@ -329,15 +331,13 @@ app.get('/templates/:template_id/edit',(req,res)=>{
           user:req.user,
           page:'Edit'
         });
-      }else if(projectData.name === "freeRTOS2"){
-        res.render(path.join(__dirname, config.public_path+'/views/pages/template/freeRTOSEdit'),{
+      }else{
+        res.render(path.join(__dirname, config.public_path+'/views/pages/template/mqttEdit'),{
           project:projectData,
           template,
           user:req.user,
           page:'Edit'
         });
-      }else{
-        res.redirect('/project/' + req.params.project_id + '/templates');  
       }
     })
   })

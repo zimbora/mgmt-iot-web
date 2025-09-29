@@ -1,6 +1,6 @@
 var Template = require('../models/templates');
 var LwM2MTemplate = require('../models/lwm2mTemplate');
-var FreeRTOSTemplate = require('../models/freeRTOSTemplate');
+var mqttTemplate = require('../models/mqttTemplate');
 
 var Joi = require('joi');
 var httpStatus = require('http-status-codes');
@@ -419,10 +419,10 @@ module.exports = {
   }
   */
 
-  // ===== FreeRTOS Template Methods =====
+  // ===== Mqtt Template Methods =====
 
-  // Get all topics for a freeRTOS template
-  getFreeRTOSTopics: async (req, res, next) => {
+  // Get all topics for a mqtt template
+  getMqttTopics: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
       
@@ -430,7 +430,7 @@ module.exports = {
         return response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
       }
 
-      FreeRTOSTemplate.getTopics(templateId, (err, topics) => {
+      mqttTemplate.getTopics(templateId, (err, topics) => {
         if (err) {
           return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
         }
@@ -442,8 +442,8 @@ module.exports = {
     }
   },
 
-  // Add a new freeRTOS topic
-  addFreeRTOSTopic: async (req, res, next) => {
+  // Add a new mqtt topic
+  addMqttTopic: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
 
@@ -462,20 +462,20 @@ module.exports = {
         defaultData: Joi.object({
           value: Joi.required()
         }).optional(),
-        publishInterval: Joi.number().min(0).required(), // Publishing interval in seconds
+        readInterval: Joi.number().min(0).optional(), // Publishing interval in seconds
       }).validate(req.body);
 
-      const { topic, description, defaultData, publishInterval } = req.body;
+      const { topic, description, defaultData, readInterval } = req.body;
 
       if(val.error){
         response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
       }else{
-        FreeRTOSTemplate.addTopic(
+        mqttTemplate.addTopic(
           templateId,
           topic,
           description,
           defaultData,
-          publishInterval,
+          readInterval,
           (err, result) => {
             if (err) {
               return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
@@ -489,8 +489,8 @@ module.exports = {
     }
   },
 
-  // Update an existing freeRTOS topic
-  updateFreeRTOSTopic: async (req, res, next) => {
+  // Update an existing mqtt topic
+  updateMqttTopic: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
       const entryId = req.params.entry_id;
@@ -515,13 +515,13 @@ module.exports = {
         defaultData: Joi.object({
           value: Joi.required()
         }).optional(),
-        publishInterval: Joi.number().min(0).optional(),
+        readInterval: Joi.number().min(0).optional(),
       }).validate(req.body);
 
       if(val.error){
         response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
       }else{
-        FreeRTOSTemplate.updateEntry(entryId, updateData, (err, result) => {
+        mqttTemplate.updateEntry(entryId, updateData, (err, result) => {
           if (err) {
             return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
           }
@@ -533,8 +533,8 @@ module.exports = {
     }
   },
 
-  // Delete a freeRTOS topic
-  deleteFreeRTOSTopic: async (req, res, next) => {
+  // Delete a mqtt topic
+  deleteMqttTopic: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
       const entryId = req.params.entry_id;
@@ -543,7 +543,7 @@ module.exports = {
         return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
       }
 
-      FreeRTOSTemplate.deleteEntry(entryId, (err, result) => {
+      mqttTemplate.deleteEntry(entryId, (err, result) => {
         if (err) {
           return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
         }
@@ -554,8 +554,8 @@ module.exports = {
     }
   },
 
-  // Get a specific freeRTOS topic
-  getFreeRTOSTopic: async (req, res, next) => {
+  // Get a specific mqtt topic
+  getMqttTopic: async (req, res, next) => {
     try {
       const templateId = req.params.template_id;
 
@@ -563,7 +563,7 @@ module.exports = {
         return response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
       }
 
-      FreeRTOSTemplate.getById(templateId, (err, topics) => {
+      mqttTemplate.getById(templateId, (err, topics) => {
         if (err) {
           return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
         }

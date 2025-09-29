@@ -1070,7 +1070,10 @@ var self = module.exports =  {
       if(device.projectName == "lwm2m" && device.templateId){
         // copy template to lwm2m table
         resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,device.templateId)
-        console.log(resLwm2m);
+      }else{
+        // copy template to lwm2m table
+        resMqtt = await associateMqttTemplateToDevice(res?.insertId,device.templateId)
+        console.log(resMqtt);
       }
       return cb(null, res[0]);
     }else{
@@ -1480,6 +1483,44 @@ async function associateLwm2mTemplateToDevice(deviceId, deviceTemplateId) {
       ...rest
     };
     const insertRes = await db.insert('lwm2m', data);
+    res.push(insertRes);
+  }
+
+  return res;
+}
+
+/**
+ * Copies all elements from mqttTemplate (where template_id = deviceTemplateId)
+ * to mqtt, setting device_id = deviceId for each inserted row.
+ * 
+ * @param {number} deviceId - The target device's ID (res[0].insertId)
+ * @param {number} deviceTemplateId - The source template's ID (device.templateId)
+ * @returns {Promise}
+ */
+async function associateMqttTemplateToDevice(deviceId, deviceTemplateId) {
+  
+  // 1. Get all rows from mqttTemplate for the given templateId
+  let query = `SELECT * FROM ?? where template_id = ?;`
+  let table = ["mqttTemplate",deviceTemplateId];
+  query = mysql.format(query,table);
+  let templates = await db.queryRow(query);
+
+  if (!templates || !templates.length) return res; // nothing to copy, return empty array
+
+  const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+  let res = [];
+  
+  // 2. Insert each template into lwm2m with device_id
+  for (const tpl of templates) {
+    // Remove the primary key (if it exists), createdAt and updatedAt
+    const { id, createdAt, updatedAt, ...rest } = tpl;
+    const data = {
+      device_id: deviceId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ...rest
+    };
+    const insertRes = await db.insert('mqtt', data);
     res.push(insertRes);
   }
 

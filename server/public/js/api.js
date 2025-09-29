@@ -1568,11 +1568,11 @@ var api = {
       }
     },
 
-    freertos: { // FreeRTOS Template Topics API
+    mqtt: { // mqtt Template Topics API
 
       // Get template topics
       getTopics: (templateId, cb) => {
-        fetch(Settings.api + `/template/${templateId}/freertos/topics`, {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topics`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -1591,7 +1591,7 @@ var api = {
 
       // Add new topic
       addTopic: (templateId, topicData, cb) => {
-        fetch(Settings.api + `/template/${templateId}/freertos/topic`, {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topic`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -1611,7 +1611,7 @@ var api = {
 
       // Update existing topic
       updateTopic: (templateId, entryId, topicData, cb) => {
-        fetch(Settings.api + `/template/${templateId}/freertos/topic/${entryId}`, {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topic/${entryId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -1631,7 +1631,7 @@ var api = {
 
       // Delete topic
       deleteTopic: (templateId, entryId, cb) => {
-        fetch(Settings.api + `/template/${templateId}/freertos/topic/${entryId}`, {
+        fetch(Settings.api + `/template/${templateId}/mqtt/topic/${entryId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'
