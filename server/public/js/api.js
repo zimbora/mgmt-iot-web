@@ -350,6 +350,20 @@ var api = {
       });
     },
 
+    getMqttTopics: (deviceId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/mqtt/topics",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
     lwm2m: {
 
       // Add new object
@@ -455,6 +469,68 @@ var api = {
       // Delete resource
       deleteResource: (deviceId, entryId, cb) => {
         fetch(Settings.api + `/device/${deviceId}/lwm2m/resource/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      }
+    },
+    
+    mqtt: {
+
+      // Add new topic
+      addTopic: (deviceId, topic, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/mqtt/topic`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(topic)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Update existing topic
+      updateTopic: (deviceId, entryId, topic, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/mqtt/topic/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(topic)
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          return parseResponse(data, cb);
+        })
+        .catch(function (error) {
+          return parseError(error, cb);
+        });
+      },
+
+      // Delete topic
+      deleteTopic: (deviceId, entryId, cb) => {
+        fetch(Settings.api + `/device/${deviceId}/mqtt/topic/${entryId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'

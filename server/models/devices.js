@@ -1039,6 +1039,99 @@ var self = module.exports =  {
     });
   },
 
+  // MQTT Topics methods
+  getMqttTopics : async (deviceId,cb)=>{
+    let query = `SELECT * FROM mqtt WHERE device_id = ? ORDER BY topic`
+    let table = [deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  addMqttTopic: async (deviceId, topic, description, defaultData, readInterval, cb) => {
+    let obj = {
+      device_id: deviceId,
+      topic: topic,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      readInterval: readInterval,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // check if name already exists for device_id
+    let query = "SELECT * FROM mqtt WHERE device_id = ? AND topic = ?";
+    let table = [deviceId, topic];
+    query = mysql.format(query, table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if (rows.length > 0) {
+        return cb("MQTT topic name already exists for this device", null);
+      } else {
+        return db.insert("mqtt", obj);
+      }
+    })
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  updateMqttTopic: async (entryId, updateData, cb) => {
+    let obj = {
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // Add fields that are being updated
+    if (updateData.topic !== undefined) {
+      obj.topic = updateData.topic;
+    }
+    if (updateData.description !== undefined) {
+      obj.description = JSON.stringify(updateData.description);
+    }
+    if (updateData.defaultData !== undefined) {
+      obj.defaultData = updateData.defaultData ? JSON.stringify(updateData.defaultData) : null;
+    }
+    if (updateData.readInterval !== undefined) {
+      obj.readInterval = updateData.readInterval;
+    }
+
+    let filter = {
+      id: entryId
+    };
+
+    db.update("mqtt", obj, filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  deleteMqttTopic: async (entryId, cb) => {
+    let filter = {
+      id: entryId
+    };
+
+    db.delete("mqtt", filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
   add : async (device,cb)=>{
 
     const projectId = await Project.getId(device.projectName);
