@@ -276,6 +276,7 @@
                     <th style="width: 60px;">Edit</th>
                     <th style="width: 40px;">Path</th>
                     <th style="width: 120px;">Name</th>
+                    <th style="width: 40px;">Template</th>
                     <th style="width: 20px;" title="Readable" >R</th>
                     <th style="width: 20px;" title="Writable" >W</th>
                     <th style="width: 20px;" title="Observable" >O</th>
@@ -366,6 +367,17 @@
             },
             {
               data: null,
+              render: function(data, type, row) {
+                // Render template tag as green badge if it exists
+                if (row.template_tag) {
+                  return `<span class="badge bg-success">${row.template_tag}</span>`;
+                } else {
+                  return '';
+                }
+              }
+            },
+            {
+              data: null,
               render: function (data, type, row) {
                 // Render readable attribute
                 return row.description?.attributes?.readable ? 'Yes' : 'No';
@@ -431,7 +443,7 @@
     }
 
     function createObjectDropdown(objects, objectId) {
-      console.log("objectId:",objectId)
+
       objectId = objectId != null ? objectId : 0;
       const dropdownContainer = $('#objectDropdown');
       const contentContainer = $('#objectContent');
@@ -597,6 +609,24 @@
       resource.readInterval = 0;
       
       if (isIncluded) {
+
+        // Check if object is already associated to the device
+        const objectExists = deviceResources.find(deviceResource => 
+          deviceResource.objectId == resource.objectId && 
+          deviceResource.objectInstanceId === null && 
+          deviceResource.resourceId === null
+        );
+        
+        if (!objectExists) {
+          $('#error').text('Error adding resource to device');
+          $('#suggestion').text(`Object ${resource.objectId} is not associated with this device. Please add the object first before adding resources to it.`);
+          $('#modalError').modal('show');
+          
+          // Revert the toggle
+          $(element).prop('checked', false);
+          return;
+        }
+        
         // Add resource to device
         api.device.lwm2m.addResource(deviceId, resource, (err, res) => {
           if (err) {
@@ -606,7 +636,7 @@
             $('#modalError').modal('show');
             
             // Revert the toggle
-            toggleInput.prop('checked', false);
+            $(element).prop('checked', false);
           } else {
             loadLwm2mDeviceResources();
             loadLwm2mObjects(resource.objectId);
@@ -621,7 +651,7 @@
             $('#modalError').modal('show');
             
             // Revert the toggle
-            toggleInput.prop('checked', true);
+            $(element).prop('checked', true);
           } else {
             loadLwm2mDeviceResources();
             loadLwm2mObjects(resource.objectId);
@@ -807,7 +837,6 @@
 
       const [objectId, objectInstanceId, resourceId] = path.split('/')
 
-      console.log("entryId:",entryId);
       if(entryId !== ""){
         api.device.lwm2m.updateResource(deviceId, entryId, updatedResource,(err,res)=>{
           if(!err){
@@ -825,10 +854,23 @@
         const parts = path.replace(/^\/+/, '').split('/');
         const [objectId, objectInstanceId, resourceId] = parts;
 
-        console.log("objectId:",objectId);
-        console.log("objectInstanceId:",objectInstanceId);
-        console.log("resourceId:",resourceId);
         if(objectId !== undefined && objectInstanceId !== undefined && resourceId !== undefined){
+          // Check if object x is already associated to the device
+          const objectExists = deviceResources.find(resource => 
+            resource.objectId == objectId && 
+            resource.objectInstanceId === null && 
+            resource.resourceId === null
+          );
+          
+          if (!objectExists) {
+            alert(
+              'Error adding resource\n' +
+              `Object ${objectId} is not associated with this device.\n` +
+              'Please add the object first before adding resources to it.'
+            );
+            return;
+          }
+          
           updatedResource.objectId = objectId;
           updatedResource.objectInstanceId = objectInstanceId;
           updatedResource.resourceId = resourceId;

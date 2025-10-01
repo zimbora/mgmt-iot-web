@@ -1,5 +1,14 @@
 # Changelog
 
+## version 1.0.68
+  template/lwm2mEdit: fixes error defaultData.value not defined
+  
+## version 1.0.67
+  - Supports LWM2M
+  - Supports templates for LWM2M
+  - Adds methods: getObservations and getObservationsStatus
+  - Fixes addClientPermission, deleteClientPermission, updateClientPermission
+
 ## version 1.0.66
   - fixes: Create new model (backend)
     Only admin can create project or model

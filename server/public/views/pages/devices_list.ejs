@@ -90,10 +90,12 @@
         <!-- Template -->
         <div class="mb-3">
           <label for="templateSelect" class="form-label">Template</label>
-          <select id="templateSelect" class="form-select" required>
+
+          <select id="templateSelect" class="form-select">
             <!-- populated by JS -->
           </select>
-          <div class="invalid-feedback">Please select a template.</div>
+          <div class="invalid-feedback">Template selection is optional.</div>
+
         </div>
 
         <!-- Model -->
@@ -252,6 +254,7 @@
 
       // Get form values
       const projectSelect = document.getElementById('projectSelect');
+      const templateSelect = document.getElementById('templateSelect');
       const modelSelect = document.getElementById('modelSelect');
       const deviceUID = document.getElementById('deviceUID').value.trim();
       const deviceName = document.getElementById('deviceName').value.trim();
@@ -281,6 +284,12 @@
         return;
       }
 
+      // Safely get template ID (optional field)
+      let templateId = null;
+      if (templateSelect.selectedIndex >= 0 && templateSelect.options[templateSelect.selectedIndex] && templateSelect.options[templateSelect.selectedIndex].value) {
+        templateId = parseInt(templateSelect.options[templateSelect.selectedIndex].value) || null;
+      }
+
       // Prepare device data object
       const deviceData = {
         projectName: projectSelect.options[projectSelect.selectedIndex].text,
@@ -291,6 +300,11 @@
         protocol: selectedProtocol,
         psk: psk
       };
+
+      // Only include templateId if a valid template is selected
+      if (templateId) {
+        deviceData.templateId = templateId;
+      }
 
       
       // Call API to add device
