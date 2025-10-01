@@ -30,6 +30,7 @@ var Firmware = require('./server/models/firmwares');
 var Sensor = require('./server/models/sensors');
 var Templates = require('./server/models/templates');
 var Lwm2mTemplate = require('./server/models/lwm2mTemplate');
+var mqttTemplate = require('./server/models/mqttTemplate');
 
 var serveIndex = require('serve-index'); // well known
 
@@ -320,7 +321,9 @@ app.get('/project/:project_id/templates',(req,res)=>{
 app.get('/templates/:template_id/edit',(req,res)=>{
   
   Templates.getById(req.params?.template_id,(err,template)=>{
+    console.log(template);
     Project.getById(template.project_id,(err,projectData) => {
+      console.log(projectData)
       if(projectData.name === "lwm2m"){
         res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
           project:projectData,
@@ -329,7 +332,12 @@ app.get('/templates/:template_id/edit',(req,res)=>{
           page:'Edit'
         });
       }else{
-        res.redirect('/project/' + req.params.project_id + '/templates');  
+        res.render(path.join(__dirname, config.public_path+'/views/pages/template/mqttEdit'),{
+          project:projectData,
+          template,
+          user:req.user,
+          page:'Edit'
+        });
       }
     })
   })
@@ -491,6 +499,28 @@ app.get('/device/:device_id/settings',(req,res)=>{
         page:'Settings'
       });
     }
+  }else{
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
+  }
+});
+
+app.get('/device/:device_id/mqttSettings',(req,res)=>{
+
+  let data = req.user.data;
+  if(data.device != null && data.mqtt != null && data.model){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqttSettings'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
+      device:data.device,
+      project:data.project,
+      model:data.model,
+      modelFeat:data.modelFeat,
+      fw:data.fw,
+      sensors:data.sensors,
+      mqtt:data.mqtt,
+      user:req.user,
+      page:'MqttSettings'
+    });
   }else{
     res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }

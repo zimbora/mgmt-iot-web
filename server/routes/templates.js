@@ -50,6 +50,28 @@ router.route('/:template_id/lwm2m/object/:entry_id')
 router.route('/:template_id/lwm2m/resource/:entry_id')
   .delete(Template.deleteResource);
 
+// ===== FreeRTOS Template Routes =====
+
+// GET /api/template/:template_id/mqtt/topics - Get all topics for a freeRTOS template
+router.route('/:template_id/mqtt/topics')
+  .get(Template.getMqttTopics);
+
+// GET /api/template/:template_id/mqtt/topic - Get topic by template ID
+router.route('/:template_id/mqtt/topic')
+  .get(Template.getMqttTopic);
+
+// POST /api/template/:template_id/mqtt/topic - Add a new topic
+router.route('/:template_id/mqtt/topic')
+  .post(Template.addMqttTopic);
+
+// PUT /api/template/:template_id/mqtt/topic/:entry_id - Update a topic
+router.route('/:template_id/mqtt/topic/:entry_id')
+  .put(Template.updateMqttTopic);
+
+// DELETE /api/template/:template_id/mqtt/topic/:entry_id - Delete a topic
+router.route('/:template_id/mqtt/topic/:entry_id')
+  .delete(Template.deleteMqttTopic);
+
 // check admin access
 
 // GET /api/templates - List all resources (admin/debug)

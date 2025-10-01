@@ -83,6 +83,15 @@
                       <% } %>
                       class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
                   </li>
+                  <% if(project_name != "lwm2m"){%>
+                    <li class="w-100">
+                      <a href="./mqttSettings"
+                      <% if(page == "MqttSettings"){%>
+                        class="active"
+                      <% } %>
+                      class="nav-link px-0"> <span class="d-none d-sm-inline">MQTT Settings</span></a>
+                    </li>
+                  <% } %>
                   <li>
                       <a href="./access"
                       <% if(page == "Access"){%>

@@ -1,5 +1,6 @@
 var Template = require('../models/templates');
 var LwM2MTemplate = require('../models/lwm2mTemplate');
+var mqttTemplate = require('../models/mqttTemplate');
 
 var Joi = require('joi');
 var httpStatus = require('http-status-codes');
@@ -417,4 +418,164 @@ module.exports = {
     }
   }
   */
+
+  // ===== Mqtt Template Methods =====
+
+  // Get all topics for a mqtt template
+  getMqttTopics: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+      
+      if (!templateId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
+      }
+
+      mqttTemplate.getTopics(templateId, (err, topics) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+
+        return response.send(res, topics);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Add a new mqtt topic
+  addMqttTopic: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+
+      const val = Joi.object({
+        topic: Joi.string().required(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'json') // Allowed data types
+              .required(),
+            title: Joi.string().required(),
+            readable: Joi.boolean().required(),
+            writable: Joi.boolean().required(),
+          }).required(),
+        }).optional(),
+        defaultData: Joi.object({
+          value: Joi.required()
+        }).optional(),
+        readInterval: Joi.number().min(0).optional(), // Publishing interval in seconds
+      }).validate(req.body);
+
+      const { topic, description, defaultData, readInterval } = req.body;
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        mqttTemplate.addTopic(
+          templateId,
+          topic,
+          description,
+          defaultData,
+          readInterval,
+          (err, result) => {
+            if (err) {
+              return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+            }
+            return response.send(res, result);
+          }
+        );
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Update an existing mqtt topic
+  updateMqttTopic: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+      const entryId = req.params.entry_id;
+      const updateData = req.body;
+
+      if (!templateId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      const val = Joi.object({
+        topic: Joi.string().optional(),
+        description: Joi.object({
+          attributes: Joi.object({
+            type: Joi.string()
+              .valid('string', 'integer', 'float', 'boolean', 'json')
+              .required(),
+            title: Joi.string().required(),
+            readable: Joi.boolean().required(),
+            writable: Joi.boolean().required(),
+          }).required(),
+        }).optional(),
+        defaultData: Joi.object({
+          value: Joi.required()
+        }).optional(),
+        readInterval: Joi.number().min(0).optional(),
+      }).validate(req.body);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        mqttTemplate.updateEntry(entryId, updateData, (err, result) => {
+          if (err) {
+            return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+          }
+          return response.send(res, result);
+        });
+      }
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Delete a mqtt topic
+  deleteMqttTopic: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+      const entryId = req.params.entry_id;
+
+      if (!templateId || !entryId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID and Entry ID are required");
+      }
+
+      mqttTemplate.deleteEntry(entryId, (err, result) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        return response.send(res, result);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  },
+
+  // Get a specific mqtt topic
+  getMqttTopic: async (req, res, next) => {
+    try {
+      const templateId = req.params.template_id;
+
+      if (!templateId) {
+        return response.error(res, httpStatus.BAD_REQUEST, "Template ID is required");
+      }
+
+      mqttTemplate.getById(templateId, (err, topics) => {
+        if (err) {
+          return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+        }
+        
+        if (!topics || topics.length === 0) {
+          return response.error(res, httpStatus.NOT_FOUND, "No topics found for this template");
+        }
+
+        return response.send(res, topics);
+      });
+    } catch (error) {
+      return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  }
 };

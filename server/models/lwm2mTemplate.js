@@ -43,7 +43,6 @@ var self = module.exports = {
 
     db.queryRow(query)
     .then(rows => {
-      console.log(rows)
       return cb(null, rows);
     })
     .catch(error => {

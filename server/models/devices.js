@@ -1041,6 +1041,99 @@ var self = module.exports =  {
     });
   },
 
+  // MQTT Topics methods
+  getMqttTopics : async (deviceId,cb)=>{
+    let query = `SELECT * FROM mqtt WHERE device_id = ? ORDER BY topic`
+    let table = [deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  addMqttTopic: async (deviceId, topic, description, defaultData, readInterval, cb) => {
+    let obj = {
+      device_id: deviceId,
+      topic: topic,
+      description: JSON.stringify(description),
+      defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      readInterval: readInterval,
+      createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // check if name already exists for device_id
+    let query = "SELECT * FROM mqtt WHERE device_id = ? AND topic = ?";
+    let table = [deviceId, topic];
+    query = mysql.format(query, table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if (rows.length > 0) {
+        return cb("MQTT topic name already exists for this device", null);
+      } else {
+        return db.insert("mqtt", obj);
+      }
+    })
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  updateMqttTopic: async (entryId, updateData, cb) => {
+    let obj = {
+      updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    // Add fields that are being updated
+    if (updateData.topic !== undefined) {
+      obj.topic = updateData.topic;
+    }
+    if (updateData.description !== undefined) {
+      obj.description = JSON.stringify(updateData.description);
+    }
+    if (updateData.defaultData !== undefined) {
+      obj.defaultData = updateData.defaultData ? JSON.stringify(updateData.defaultData) : null;
+    }
+    if (updateData.readInterval !== undefined) {
+      obj.readInterval = updateData.readInterval;
+    }
+
+    let filter = {
+      id: entryId
+    };
+
+    db.update("mqtt", obj, filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
+  deleteMqttTopic: async (entryId, cb) => {
+    let filter = {
+      id: entryId
+    };
+
+    db.delete("mqtt", filter)
+    .then(rows => {
+      return cb(null, rows);
+    })
+    .catch(error => {
+      return cb(error, null);
+    });
+  },
+
   add : async (device,cb)=>{
 
     const projectId = await Project.getId(device.projectName);
@@ -1072,7 +1165,10 @@ var self = module.exports =  {
       if(device.projectName == "lwm2m" && device.templateId){
         // copy template to lwm2m table
         resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,device.templateId)
-        console.log(resLwm2m);
+      }else{
+        // copy template to lwm2m table
+        resMqtt = await associateMqttTemplateToDevice(res?.insertId,device.templateId)
+        console.log(resMqtt);
       }
       return cb(null, res[0]);
     }else{
@@ -1482,6 +1578,44 @@ async function associateLwm2mTemplateToDevice(deviceId, deviceTemplateId) {
       ...rest
     };
     const insertRes = await db.insert('lwm2m', data);
+    res.push(insertRes);
+  }
+
+  return res;
+}
+
+/**
+ * Copies all elements from mqttTemplate (where template_id = deviceTemplateId)
+ * to mqtt, setting device_id = deviceId for each inserted row.
+ * 
+ * @param {number} deviceId - The target device's ID (res[0].insertId)
+ * @param {number} deviceTemplateId - The source template's ID (device.templateId)
+ * @returns {Promise}
+ */
+async function associateMqttTemplateToDevice(deviceId, deviceTemplateId) {
+  
+  // 1. Get all rows from mqttTemplate for the given templateId
+  let query = `SELECT * FROM ?? where template_id = ?;`
+  let table = ["mqttTemplate",deviceTemplateId];
+  query = mysql.format(query,table);
+  let templates = await db.queryRow(query);
+
+  if (!templates || !templates.length) return res; // nothing to copy, return empty array
+
+  const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+  let res = [];
+  
+  // 2. Insert each template into lwm2m with device_id
+  for (const tpl of templates) {
+    // Remove the primary key (if it exists), createdAt and updatedAt
+    const { id, createdAt, updatedAt, ...rest } = tpl;
+    const data = {
+      device_id: deviceId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ...rest
+    };
+    const insertRes = await db.insert('mqtt', data);
     res.push(insertRes);
   }
 

@@ -146,6 +146,17 @@ router.route('/:device_id/lwm2m/object/:entry_id')
 router.route('/:device_id/lwm2m/resource/:entry_id')
   .delete(Device.deleteResource);
 
+// MQTT topics routes
+router.route("/:device_id/mqtt/topics")
+  .get(Device.getMqttTopics)
+
+router.route('/:device_id/mqtt/topic')
+  .post(Device.addMqttTopic);
+
+router.route('/:device_id/mqtt/topic/:entry_id')
+  .put(Device.updateMqttTopic)
+  .delete(Device.deleteMqttTopic);
+  
 router.use('/:device_id',Client.checkDevicePermissionsAccess,(req,res,next)=>{next()});
 
 // protected zone to owner or admin
