@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.0.69
+  Add global exception handling to prevent application exit except in dev mode
+  Supports templates for mqtt projects
+
 ## version 1.0.68
   template/lwm2mEdit: fixes error defaultData.value not defined
   

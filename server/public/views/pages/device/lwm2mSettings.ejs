@@ -443,7 +443,7 @@
     }
 
     function createObjectDropdown(objects, objectId) {
-      
+
       objectId = objectId != null ? objectId : 0;
       const dropdownContainer = $('#objectDropdown');
       const contentContainer = $('#objectContent');
@@ -609,6 +609,7 @@
       resource.readInterval = 0;
       
       if (isIncluded) {
+
         // Check if object is already associated to the device
         const objectExists = deviceResources.find(deviceResource => 
           deviceResource.objectId == resource.objectId && 
