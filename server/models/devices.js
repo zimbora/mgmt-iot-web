@@ -915,7 +915,9 @@ var self = module.exports =  {
       query += ` AND lwm2m.objectId = ?`
       table.push(objectId);
     }
+
     query += ` ORDER BY lwm2m.objectId, lwm2m.objectInstanceId, lwm2m.resourceId`
+
     query = mysql.format(query,table);
 
     db.queryRow(query)

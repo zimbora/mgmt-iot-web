@@ -90,10 +90,12 @@
         <!-- Template -->
         <div class="mb-3">
           <label for="templateSelect" class="form-label">Template</label>
+
           <select id="templateSelect" class="form-select">
             <!-- populated by JS -->
           </select>
           <div class="invalid-feedback">Template selection is optional.</div>
+
         </div>
 
         <!-- Model -->
@@ -291,6 +293,7 @@
       // Prepare device data object
       const deviceData = {
         projectName: projectSelect.options[projectSelect.selectedIndex].text,
+        templateId: templateSelect.options[templateSelect.selectedIndex].value,
         modelName: modelSelect.options[modelSelect.selectedIndex].text,
         uid: deviceUID,
         name: deviceName,

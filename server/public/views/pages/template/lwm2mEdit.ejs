@@ -431,7 +431,7 @@
     }
 
     function createObjectDropdown(objects, objectId) {
-      
+
       objectId = objectId != null ? objectId : 0;
       const dropdownContainer = $('#objectDropdown');
       const contentContainer = $('#objectContent');
@@ -585,7 +585,6 @@
 
     function toggleResource(entryId, element, isIncluded) {
       const resourceData = JSON.parse(element.getAttribute('data-resource'));
-
       let resource = {};
       resource.objectId = resourceData.objectId;
       resource.objectInstanceId = 0;
@@ -599,6 +598,7 @@
       resource.readInterval = 0;
       
       if (isIncluded) {
+
         // Check if object is already associated to the template
         const objectExists = templateResources.find(templateResource => 
           templateResource.objectId == resource.objectId && 
@@ -615,7 +615,7 @@
           $(element).prop('checked', false);
           return;
         }
-        
+
         // Add resource to template
         api.template.lwm2m.addResource(templateId, resource, (err, res) => {
           if (err) {
