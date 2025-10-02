@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.0.70
+  Fixes previous PR - mqtt templates
+
 ## version 1.0.69
   Add global exception handling to prevent application exit except in dev mode
   Supports templates for mqtt projects
