@@ -489,6 +489,23 @@ module.exports = {
     }
   },
 
+  updateDeviceField : (req, res, next)=>{
+
+    const val = Joi.object({
+      field: Joi.required(),
+      data: Joi.optional().allow(null),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.updateDeviceField(req.params.device_id,req.body.field,req.body.data,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
   sendMqttMessage : (req,res,next)=>{
 
     const val = Joi.object({

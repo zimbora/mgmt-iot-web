@@ -1390,6 +1390,26 @@ var self = module.exports =  {
     });
   },
 
+  updateDeviceField : async (deviceId,field,data,cb)=>{
+
+    let obj = {
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+    obj[field] = data;
+
+    let filter = {
+      id : deviceId
+    };
+
+    db.update("devices",obj,filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
   triggerFota : async(deviceId,version,app_version,cb)=>{
 
     try{

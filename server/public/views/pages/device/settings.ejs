@@ -883,7 +883,7 @@
     });
 
     function assignTemplateToDevice(templateId) {
-      api.updateDeviceProjectField(deviceID, "template_id", templateId, (err, res) => {
+      api.updateDeviceField(deviceID, "template_id", templateId, (err, res) => {
         if (err) {
           $('#error').text("Failed to assign template");
           if (err.hasOwnProperty("sqlMessage"))
@@ -901,7 +901,7 @@
 
     function unassignTemplate() {
       if (confirm('Are you sure you want to remove the template assignment?')) {
-        api.updateDeviceProjectField(deviceID, "template_id", null, (err, res) => {
+        api.updateDeviceField(deviceID, "template_id", null, (err, res) => {
           if (err) {
             $('#error').text("Failed to remove template");
             if (err.hasOwnProperty("sqlMessage"))
