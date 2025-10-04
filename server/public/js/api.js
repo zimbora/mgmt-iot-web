@@ -764,6 +764,28 @@ var api = {
     });
   },
 
+  updateDeviceField : (deviceID,field,data,cb)=>{
+    fetch(Settings.api+"/device/"+deviceID+"/field", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        field: field,
+        data: data
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   addDevice: (deviceData, cb)=>{
     fetch(Settings.api+"/devices", {
       method: 'POST',
