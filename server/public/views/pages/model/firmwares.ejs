@@ -64,6 +64,15 @@
                         <label class="input-group-text" for="inputGroupSelect23">App version</label>
                         <input type="text" id="_appversion_" class="form-control" placeholder="type your app version in format xx.yy.zz">
                       </div>
+                      <div class="input-group py-2">
+                        <label class="input-group-text" for="releaseSelect">Release</label>
+                        <select class="form-select" id="_release_">
+                          <option value="dev">dev</option>
+                          <option value="stage">stage</option>
+                          <option value="prod">prod</option>
+                          <option value="critical">critical</option>
+                        </select>
+                      </div>
                       <div class="py-2">
                         <input class="form-control" type="file" id="formFile">
                       </div>
@@ -125,9 +134,58 @@
     $("#submit_fw").click(()=>{
       let version = $("#_version_").val();
       let app_version = $("#_appversion_").val();
+      let release = $("#_release_").val();
       var input = document.getElementById("formFile");
       var file = input.files[0];
-      api.addFirmware(modelID,file,version,app_version,(err,res)=>{
+      
+      // Validate inputs
+      if(!version) {
+        $('#error').text("FW version is required");
+        $('#suggestion').text("Please enter a firmware version in format xx.yy.zz");
+        $('#modalError').modal('show');
+        return;
+      }
+      if(!app_version) {
+        $('#error').text("App version is required");
+        $('#suggestion').text("Please enter an app version in format xx.yy.zz");
+        $('#modalError').modal('show');
+        return;
+      }
+      if(!release) {
+        $('#error').text("Release is required");
+        $('#suggestion').text("Please select a release type");
+        $('#modalError').modal('show');
+        return;
+      }
+      if(!file) {
+        $('#error').text("File is required");
+        $('#suggestion').text("Please select a firmware file");
+        $('#modalError').modal('show');
+        return;
+      }
+      
+      // Check if filename contains fw version, app version and release
+      let filename = file.name;
+      if(!filename.includes(version)) {
+        $('#error').text("Filename validation failed");
+        $('#suggestion').text("Filename must contain the firmware version: " + version);
+        $('#modalError').modal('show');
+        return;
+      }
+      if(!filename.includes(app_version)) {
+        $('#error').text("Filename validation failed");
+        $('#suggestion').text("Filename must contain the app version: " + app_version);
+        $('#modalError').modal('show');
+        return;
+      }
+      if(!filename.includes(release)) {
+        $('#error').text("Filename validation failed");
+        $('#suggestion').text("Filename must contain the release: " + release);
+        $('#modalError').modal('show');
+        return;
+      }
+      
+      api.addFirmware(modelID,file,version,app_version,release,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           if(err.hasOwnProperty("sqlMessage"))
