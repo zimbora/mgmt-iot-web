@@ -121,6 +121,9 @@ router.route("/:device_id/settings")
 router.route("/:device_id/project/field")
   .put(Device.updateDeviceProjectField)
 
+router.route("/:device_id/field")
+  .put(Device.updateDeviceField)
+
 router.route("/:device_id/mqtt/message")
   .post(Device.sendMqttMessage)
 
