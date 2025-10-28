@@ -1,7 +1,19 @@
 # Changelog
 
 ## version 1.0.70
-  Fixes previous PR - mqtt templates
+  feat: Add template association functionality to device settings page (#45)
+    * Add template selection UI and functionality to device settings page
+    * Add backend support for updating device template_id field
+    * Complete template association feature implementation and testing
+    * Adds remove lwm2m and mqtt templates
+  Add release option support for firmware uploads with multiple releases per version (#47)
+    * Add release option to firmware upload with validation
+    * Complete firmware release feature implementation with testing
+  Mqtt template (#43)
+    * Add freeRTOS2 template support for MQTT-based projects (#39)
+    * Add freeRTOS2 template support - models, controllers, routes and UI
+    * Complete freeRTOS2 template implementation with database schema
+    * mqtt: Supports mqtt template and CRUD for device mqtt settings
 
 ## version 1.0.69
   Add global exception handling to prevent application exit except in dev mode
