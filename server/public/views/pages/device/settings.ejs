@@ -470,6 +470,8 @@
       // Initialize MQTT active checkbox
       if(device?.remote_settings?.mqtt?.active == 1){
         $("#mqtt_active").prop('checked', true);
+      }else{
+        $("#mqtt_active").prop('checked', false);
       }
 
       $(".fwReleaseOption").change((event)=>{
