@@ -1147,11 +1147,18 @@ var self = module.exports =  {
     }
 
     const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    
+    // Convert empty string template_id to null to avoid MySQL error
+    let templateId = device?.templateId;
+    if (templateId === '' || templateId === undefined) {
+      templateId = null;
+    }
+    
     obj = {
       uid : device.uid,
       name : device?.name,
       project_id : projectId,
-      template_id: device?.templateId,
+      template_id: templateId,
       model_id : modelId,
       protocol : device.protocol,
       psk : device?.psk,
@@ -1162,12 +1169,25 @@ var self = module.exports =  {
     const res = await db.insert('devices', obj);
 
     if(res?.insertId){
-      if(device.projectName == "lwm2m" && device.templateId){
+      // Add owner permission for the user who created the device
+      if(device.clientId){
+        try {
+          await self.addClientPermission(res.insertId, device.clientId, 5, (err, permRes) => {
+            if(err) {
+              console.error('Error adding owner permission:', err);
+            }
+          });
+        } catch(error) {
+          console.error('Error adding owner permission:', error);
+        }
+      }
+      
+      if(device.projectName == "lwm2m" && templateId){
         // copy template to lwm2m table
-        resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,device.templateId)
-      }else{
-        // copy template to lwm2m table
-        resMqtt = await associateMqttTemplateToDevice(res?.insertId,device.templateId)
+        resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,templateId)
+      }else if(templateId){
+        // copy template to mqtt table
+        resMqtt = await associateMqttTemplateToDevice(res?.insertId,templateId)
         console.log(resMqtt);
       }
       return cb(null, res[0]);
