@@ -1154,7 +1154,7 @@ var self = module.exports =  {
       templateId = null;
     }
     
-    obj = {
+    const obj = {
       uid : device.uid,
       name : device?.name,
       project_id : projectId,
@@ -1166,29 +1166,38 @@ var self = module.exports =  {
       updatedAt : timestamp
     }
     
-    const res = await db.insert('devices', obj);
+    try {
+      const res = await db.insert('devices', obj);
 
-    if(res?.insertId){
-      // Add owner permission for the user who created the device
-      if(device.clientId){
-        self.addClientPermission(res.insertId, device.clientId, 5, (err, permRes) => {
-          if(err) {
-            console.error('Error adding owner permission:', err);
-          }
-        });
+      if(res?.insertId){
+        // Add owner permission for the user who created the device
+        if(device.clientId){
+          await new Promise((resolve, reject) => {
+            self.addClientPermission(res.insertId, device.clientId, 5, (err, permRes) => {
+              if(err) {
+                console.error('Error adding owner permission:', err);
+                reject(err);
+              } else {
+                resolve(permRes);
+              }
+            });
+          });
+        }
+        
+        if(device.projectName == "lwm2m" && templateId){
+          // copy template to lwm2m table
+          const resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,templateId)
+        }else if(templateId){
+          // copy template to mqtt table (not lwm2m)
+          const resMqtt = await associateMqttTemplateToDevice(res?.insertId,templateId)
+          console.log(resMqtt);
+        }
+        return cb(null, res[0]);
+      }else{
+        return cb('Error adding device', null);
       }
-      
-      if(device.projectName == "lwm2m" && templateId){
-        // copy template to lwm2m table
-        resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,templateId)
-      }else if(templateId){
-        // copy template to mqtt table (not lwm2m)
-        resMqtt = await associateMqttTemplateToDevice(res?.insertId,templateId)
-        console.log(resMqtt);
-      }
-      return cb(null, res[0]);
-    }else{
-      return cb('Error adding device', null);
+    } catch(error) {
+      return cb(error, null);
     }
         
   },
