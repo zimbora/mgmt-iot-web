@@ -1172,25 +1172,37 @@ var self = module.exports =  {
       if(res?.insertId){
         // Add owner permission for the user who created the device
         if(device.clientId){
-          await new Promise((resolve, reject) => {
-            self.addClientPermission(res.insertId, device.clientId, 5, (err, permRes) => {
-              if(err) {
-                console.error('Error adding owner permission:', err);
-                reject(err);
-              } else {
-                resolve(permRes);
-              }
+          try {
+            await new Promise((resolve, reject) => {
+              self.addClientPermission(res.insertId, device.clientId, 5, (err, permRes) => {
+                if(err) {
+                  reject(err);
+                } else {
+                  resolve(permRes);
+                }
+              });
             });
-          });
+          } catch(permError) {
+            console.error('Error adding owner permission:', permError);
+            // Continue with device creation even if permission fails
+          }
         }
         
         if(device.projectName == "lwm2m" && templateId){
-          // copy template to lwm2m table
-          const resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,templateId)
+          try {
+            // copy template to lwm2m table
+            const resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,templateId);
+          } catch(templateError) {
+            console.error('Error associating lwm2m template:', templateError);
+          }
         }else if(templateId){
-          // copy template to mqtt table (not lwm2m)
-          const resMqtt = await associateMqttTemplateToDevice(res?.insertId,templateId)
-          console.log(resMqtt);
+          try {
+            // copy template to mqtt table (not lwm2m)
+            const resMqtt = await associateMqttTemplateToDevice(res?.insertId,templateId);
+            console.log(resMqtt);
+          } catch(templateError) {
+            console.error('Error associating mqtt template:', templateError);
+          }
         }
         return cb(null, res[0]);
       }else{
