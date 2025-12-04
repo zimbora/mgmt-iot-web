@@ -1188,18 +1188,17 @@ var self = module.exports =  {
           }
         }
         
-        if(device.projectName == "lwm2m" && templateId){
+        if(device.projectName === "lwm2m" && templateId){
           try {
             // copy template to lwm2m table
-            const resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,templateId);
+            await associateLwm2mTemplateToDevice(res?.insertId,templateId);
           } catch(templateError) {
             console.error('Error associating lwm2m template:', templateError);
           }
         }else if(templateId){
           try {
             // copy template to mqtt table (not lwm2m)
-            const resMqtt = await associateMqttTemplateToDevice(res?.insertId,templateId);
-            console.log(resMqtt);
+            await associateMqttTemplateToDevice(res?.insertId,templateId);
           } catch(templateError) {
             console.error('Error associating mqtt template:', templateError);
           }
