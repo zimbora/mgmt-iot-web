@@ -1171,22 +1171,18 @@ var self = module.exports =  {
     if(res?.insertId){
       // Add owner permission for the user who created the device
       if(device.clientId){
-        try {
-          await self.addClientPermission(res.insertId, device.clientId, 5, (err, permRes) => {
-            if(err) {
-              console.error('Error adding owner permission:', err);
-            }
-          });
-        } catch(error) {
-          console.error('Error adding owner permission:', error);
-        }
+        self.addClientPermission(res.insertId, device.clientId, 5, (err, permRes) => {
+          if(err) {
+            console.error('Error adding owner permission:', err);
+          }
+        });
       }
       
       if(device.projectName == "lwm2m" && templateId){
         // copy template to lwm2m table
         resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,templateId)
       }else if(templateId){
-        // copy template to mqtt table
+        // copy template to mqtt table (not lwm2m)
         resMqtt = await associateMqttTemplateToDevice(res?.insertId,templateId)
         console.log(resMqtt);
       }
