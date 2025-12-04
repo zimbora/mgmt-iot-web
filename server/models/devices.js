@@ -1148,11 +1148,8 @@ var self = module.exports =  {
 
     const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
     
-    // Convert empty string template_id to null to avoid MySQL error
-    let templateId = device?.templateId;
-    if (templateId === '' || templateId === undefined) {
-      templateId = null;
-    }
+    // Convert empty string or undefined template_id to null to avoid MySQL error
+    const templateId = device?.templateId || null;
     
     const obj = {
       uid : device.uid,
