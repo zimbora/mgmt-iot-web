@@ -1,5 +1,10 @@
 # Changelog
 
+## version 1.0.72
+  ftp-serv updated to 4.6.3
+  Add active state checkbox to MQTT second connection settings (#49)
+  server/models/devices: fix getProjectInfo query
+
 ## version 1.0.71
   feat: Add template association functionality to device settings page (#45)
     * Add template selection UI and functionality to device settings page
