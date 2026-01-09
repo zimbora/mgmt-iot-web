@@ -344,12 +344,11 @@
       api.deleteDevice(id,(err,res)=>{
         if(err){
           $('#error').text("Error deleting device");
-          $('#suggestion').text(err);
+          $('#suggestion').text(err?.sqlMessage);
           $('#modalError').modal('show');
         }else{
           // Show success message - you could add a success modal or notification here
           $("#successHeader").text("Device successfully deleted");
-          $('#successMsg').text(res);
           $('#modalSuccess').modal('show');
           setTimeout(()=>{location.reload()},2000);
         } 
