@@ -192,6 +192,13 @@
               <div class="form-text">Enter the default value for this topic</div>
             </div>
 
+            <!-- Remote Data -->
+            <div id="remoteDataDiv" class="mb-3">
+              <label for="remoteData" class="form-label">Remote Data</label>
+              <input type="text" class="form-control" id="remoteData" name="remoteData" placeholder="Enter remote data">
+              <div class="form-text">Enter the remote value for this topic</div>
+            </div>
+
           </form>
         </div>
         <div class="modal-footer">
@@ -242,12 +249,12 @@
               <table id="topics-table" class="display table" style="width: 100%;">
                 <thead>
                   <tr>
-                    <th style="width: 60px;">Edit</th>
+                    <th style="width: 30px;">Edit</th>
                     <th style="width: 40px;">Path</th>
-                    <th style="width: 120px;">Name</th>
+                    <th style="width: 80px;">Name</th>
                     <th style="width: 40px;">Template</th>
-                    <th style="width: 20px;" title="Readable" >R</th>
-                    <th style="width: 20px;" title="Writable" >W</th>
+                    <th style="width: 40px;" title="default data" >default</th>
+                    <th style="width: 40px;" title="remote data" >remote</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -258,6 +265,7 @@
         `);
 
       api.device.getMqttTopics(deviceId, (err, topics) => {
+        console.log(topics);
         $('#loading-topics').hide();
         if (err) {
           console.error('Error loading MQTT topics:', err);
@@ -329,15 +337,59 @@
             {
               data: null,
               render: function (data, type, row) {
-                // Render readable attribute
-                return row.description?.attributes?.readable ? 'Yes' : 'No';
+                const val = row?.defaultData?.value;
+
+                // For sort/filter, return plain text (not HTML)
+                if (type !== 'display') {
+                  if (val == null) return '';
+                  return (val !== null && typeof val === 'object') ? JSON.stringify(val) : String(val);
+                }
+
+                if (val == null) return '';
+
+                const isObject = (v) => v !== null && typeof v === 'object';
+                const text = isObject(val) ? JSON.stringify(val) : String(val);
+
+                const escapeAttr = (s) =>
+                  String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+
+                const escaped = escapeAttr(text);
+
+                // readonly => non-editable but selectable; use disabled if you prefer non-focusable
+                return `<input type="text" class="form-control form-control-sm" style="width:100%;" value="${escaped}" readonly />`;
               },
             },
             {
               data: null,
               render: function (data, type, row) {
-                // Render writable attribute
-                return row.description?.attributes?.writable ? 'Yes' : 'No';
+                const val = row?.remoteData?.value;
+                
+                // For sort/filter, return plain text (not HTML)
+                if (type !== 'display') {
+                  if (val == null) return '';
+                  return (val !== null && typeof val === 'object') ? JSON.stringify(val) : String(val);
+                }
+
+                if (val == null) return '';
+
+                const isObject = (v) => v !== null && typeof v === 'object';
+                const text = isObject(val) ? JSON.stringify(val) : String(val);
+
+                const escapeAttr = (s) =>
+                  String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+
+                const escaped = escapeAttr(text);
+
+                // readonly => non-editable but selectable; use disabled if you prefer non-focusable
+                return `<input type="text" class="form-control form-control-sm" style="width:100%;" value="${escaped}" readonly />`;
               },
             },
           ],
@@ -383,6 +435,12 @@
       // Update modal title
       document.getElementById('editTopicModalLabel').textContent = 'Add New Topic';
       
+      let el = document.getElementById('defaultData');
+      if (el) el.readOnly = false;
+
+      el = document.getElementById('remoteDataDiv');
+      if (el) el.style.display = 'none';
+
       // Show modal
       const modal = new bootstrap.Modal(document.getElementById('editTopicModal'));
       modal.show();
@@ -414,6 +472,22 @@
         document.getElementById('defaultData').value = '';
       }
 
+      // Handle remote data
+      if (topic.remoteData?.value !== undefined) {
+        document.getElementById('remoteData').value = 
+          typeof topic.remoteData.value === 'object' ? 
+          JSON.stringify(topic.remoteData.value) : 
+          topic.remoteData.value;
+      } else {
+        document.getElementById('remoteData').value = '';
+      }
+
+      let el = document.getElementById('defaultData');
+      if (el) el.readOnly = true;
+
+      el = document.getElementById('remoteDataDiv');
+      if (el) el.style.display = '';
+
       // Update modal title
       document.getElementById('editTopicModalLabel').textContent = 'Edit Topic';
       
@@ -431,6 +505,7 @@
       const writable = document.getElementById('writable').checked;
       const readInterval = parseInt(document.getElementById('readInterval').value);
       const defaultDataValue = document.getElementById('defaultData').value.trim();
+      const remoteDataValue = document.getElementById('remoteData').value.trim();
 
       // Validation
       if (!topicPath || !topicTitle) {
@@ -440,7 +515,7 @@
 
       // Parse default data
       let defaultData = null;
-      if (defaultDataValue) {
+      if (!document.getElementById('defaultData').readOnly && defaultDataValue) {
         try {
           if (type === 'json') {
             defaultData = { value: JSON.parse(defaultDataValue) };
@@ -459,6 +534,27 @@
         }
       }
 
+      // Parse remote data
+      let remoteData = null;
+      if (!document.getElementById('remoteData').readOnly && remoteDataValue) {
+        try {
+          if (type === 'json') {
+            remoteData = { value: JSON.parse(remoteDataValue) };
+          } else if (type === 'boolean') {
+            remoteData = { value: remoteDataValue.toLowerCase() === 'true' };
+          } else if (type === 'integer') {
+            remoteData = { value: parseInt(remoteDataValue) };
+          } else if (type === 'float') {
+            remoteData = { value: parseFloat(remoteDataValue) };
+          } else {
+            remoteData = { value: remoteDataValue };
+          }
+        } catch (e) {
+          alert('Invalid remote data format');
+          return;
+        }
+      }
+
       const topicData = {
         topic: topicPath,
         description: {
@@ -469,9 +565,14 @@
             writable: writable,
           }
         },
-        defaultData: defaultData,
         readInterval: readInterval,
       };
+
+      if(defaultData)
+        topicData['defaultData'] = defaultData;
+
+      if(remoteData)
+        topicData['remoteData'] = remoteData;
 
       if (entryId) {
         // Update existing topic
