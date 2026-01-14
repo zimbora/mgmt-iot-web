@@ -1062,6 +1062,7 @@ var self = module.exports =  {
       topic: topic,
       description: JSON.stringify(description),
       defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      remoteData: defaultData ? JSON.stringify(defaultData) : null,
       readInterval: readInterval,
       createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
@@ -1100,8 +1101,8 @@ var self = module.exports =  {
     if (updateData.description !== undefined) {
       obj.description = JSON.stringify(updateData.description);
     }
-    if (updateData.defaultData !== undefined) {
-      obj.defaultData = updateData.defaultData ? JSON.stringify(updateData.defaultData) : null;
+    if (updateData.remoteData !== undefined) {
+      obj.remoteData = updateData.remoteData ? JSON.stringify(updateData.remoteData) : null;
     }
     if (updateData.readInterval !== undefined) {
       obj.readInterval = updateData.readInterval;

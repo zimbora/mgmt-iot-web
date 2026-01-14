@@ -848,7 +848,7 @@ module.exports = {
             writable: Joi.boolean().required(),
           }).required(),
         }).optional(),
-        defaultData: Joi.object({
+        remoteData: Joi.object({
           value: Joi.required()
         }).optional(),
         readInterval: Joi.number().min(0).optional(),
