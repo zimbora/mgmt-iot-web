@@ -107,18 +107,33 @@ app.use(auth.check_authentication,(req,res,next)=>{
 
 // server.js (express example)
 app.get('*/settings.js', (req, res) => {
+  /*
+  fs.readFile(path.join(__dirname, config.public_path+'/js/settings.js'), function(err, data) {
+    if (err) {
+      res.writeHead(500, {'Content-Type': 'text/plain'});
+      res.end('Error loading module');
+    } else {
+      res.writeHead(200, {'Content-Type': 'application/javascript'});
+      res.end(data);
+    }
+  });
+  */
+  
   const mqttHost = $.config.mqtt.host || req.hostname;
+  const mqttPort = $.config.web.mqttPort || 443;
+  const mqttSSL = $.config.web.mqttSSL || true;
   res.type('application/javascript').send(`
     var Settings = {
       url : window.location.protocol+"//"+window.location.hostname+":"+window.location.port,
       api : window.location.protocol+"//"+window.location.hostname+":"+window.location.port+"/api",
       mqtt : {
         host : "${mqttHost}",
-        port : 8888,
-        ssl : false
+        port : ${mqttPort} ,
+        ssl : ${mqttSSL}
       }
     };
   `);
+  
 });
 
 app.use('*/js',express.static(path.join(__dirname, config.public_path+'/js')))

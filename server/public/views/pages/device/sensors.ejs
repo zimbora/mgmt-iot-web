@@ -174,10 +174,7 @@
 
       // connect the client
       if(mqtt != null){
-        if(window.location.protocol == "https:"){
-          Settings.mqtt.ssl = true;
-          Settings.mqtt.port = 443;
-        }
+        
         client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
 
         // set callback handlers
