@@ -192,11 +192,21 @@
               <div class="form-text">Enter the default value for this topic</div>
             </div>
 
-            <!-- Remote Data -->
-            <div id="remoteDataDiv" class="mb-3">
-              <label for="remoteData" class="form-label">Remote Data</label>
-              <input type="text" class="form-control" id="remoteData" name="remoteData" placeholder="Enter remote data">
-              <div class="form-text">Enter the remote value for this topic</div>
+            <!-- Local Data -->
+            <div id="localDataDiv" class="mb-3">
+              <label for="localData" class="form-label">Local Data</label>
+              <input type="text" class="form-control" id="localData" name="localData" placeholder="Enter local data">
+              <div class="form-text">Enter the local value for this topic</div>
+            </div>
+
+            <!-- Synch -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="synch" name="synch">
+                  <label class="form-check-label" for="synch" title="Synch local data with device">Synch</label>
+                </div>
+              </div>
             </div>
 
           </form>
@@ -249,12 +259,12 @@
               <table id="topics-table" class="display table" style="width: 100%;">
                 <thead>
                   <tr>
-                    <th style="width: 30px;">Edit</th>
+                    <th style="width: 20px;">Edit</th>
                     <th style="width: 40px;">Path</th>
                     <th style="width: 80px;">Name</th>
                     <th style="width: 40px;">Template</th>
                     <th style="width: 40px;" title="default data" >default</th>
-                    <th style="width: 40px;" title="remote data" >remote</th>
+                    <th style="width: 40px;" title="local data" >local</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -292,18 +302,30 @@
               data: null,
               render: function(data, type, row) {
                 const entryId = row.id;
+                const isInSynch = row?.synch ? true : false;
+                const showSynch = row?.synch ? '' : 'd-none';
+
+                const isSynched = row?.synched ? true : false;
+                const statusClass = isSynched ? 'bg-success' : 'bg-danger';
+                const statusTitle = isSynched ? 'Synched with device' : 'Not synched';
+                const statusText = isSynched ? 'Synched' : 'Not synched';
+
                 return `
-                  <button class="btn btn-danger small-btn me-1" 
-                    data-topic='${JSON.stringify(data)}' 
-                    onclick="deleteTopic('${entryId}', this)">
-                    <span class="icon small-icon">&times;</span>
-                  </button>
-                  <button class="btn btn-primary small-btn" 
-                    data-topic='${JSON.stringify(data)}' 
-                    onclick="editTopic('${entryId}', this)">
-                    <i class="fas fa-pencil-alt small-icon"></i>
-                  </button>
-                  `;
+                  <div class="d-flex align-items-center">
+                    <button class="btn btn-danger small-btn me-1" 
+                      data-topic='${JSON.stringify(data)}' 
+                      onclick="deleteTopic('${entryId}', this)">
+                      <span class="icon small-icon">&times;</span>
+                    </button>
+                    <button class="btn btn-primary small-btn" 
+                      data-topic='${JSON.stringify(data)}' 
+                      onclick="editTopic('${entryId}', this)">
+                      <i class="fas fa-pencil-alt small-icon"></i>
+                    </button>
+                    <span class="badge rounded-pill ${statusClass} me-2" title="${statusTitle}">${statusText}</span>
+                    <span class="badge rounded-pill bg-info me-2 ${showSynch}" title="synching">synching</span>
+                  </div>
+                    `;
               }
             },
             {
@@ -366,7 +388,7 @@
             {
               data: null,
               render: function (data, type, row) {
-                const val = row?.remoteData?.value;
+                const val = row?.localData?.value;
                 
                 // For sort/filter, return plain text (not HTML)
                 if (type !== 'display') {
@@ -430,6 +452,7 @@
       // Set defaults
       document.getElementById('readable').checked = true;
       document.getElementById('writable').checked = false;
+      document.getElementById('synch').checked = false;
       document.getElementById('readInterval').value = '0';
       
       // Update modal title
@@ -438,7 +461,7 @@
       let el = document.getElementById('defaultData');
       if (el) el.readOnly = false;
 
-      el = document.getElementById('remoteDataDiv');
+      el = document.getElementById('localDataDiv');
       if (el) el.style.display = 'none';
 
       // Show modal
@@ -461,6 +484,7 @@
       document.getElementById('readable').checked = topic.description?.attributes?.readable || false;
       document.getElementById('writable').checked = topic.description?.attributes?.writable || false;
       document.getElementById('readInterval').value = topic.readInterval || 0;
+      document.getElementById('synch').checked = topic.synch || false;
       
       // Handle default data
       if (topic.defaultData?.value !== undefined) {
@@ -473,19 +497,19 @@
       }
 
       // Handle remote data
-      if (topic.remoteData?.value !== undefined) {
-        document.getElementById('remoteData').value = 
-          typeof topic.remoteData.value === 'object' ? 
-          JSON.stringify(topic.remoteData.value) : 
-          topic.remoteData.value;
+      if (topic.localData?.value !== undefined) {
+        document.getElementById('localData').value = 
+          typeof topic.localData.value === 'object' ? 
+          JSON.stringify(topic.localData.value) : 
+          topic.localData.value;
       } else {
-        document.getElementById('remoteData').value = '';
+        document.getElementById('localData').value = '';
       }
 
       let el = document.getElementById('defaultData');
       if (el) el.readOnly = true;
 
-      el = document.getElementById('remoteDataDiv');
+      el = document.getElementById('localDataDiv');
       if (el) el.style.display = '';
 
       // Update modal title
@@ -503,9 +527,10 @@
       const type = document.getElementById('type').value;
       const readable = document.getElementById('readable').checked;
       const writable = document.getElementById('writable').checked;
+      const synch = document.getElementById('synch').checked;
       const readInterval = parseInt(document.getElementById('readInterval').value);
       const defaultDataValue = document.getElementById('defaultData').value.trim();
-      const remoteDataValue = document.getElementById('remoteData').value.trim();
+      const localDataValue = document.getElementById('localData').value.trim();
 
       // Validation
       if (!topicPath || !topicTitle) {
@@ -535,19 +560,19 @@
       }
 
       // Parse remote data
-      let remoteData = null;
-      if (!document.getElementById('remoteData').readOnly && remoteDataValue) {
+      let localData = null;
+      if (!document.getElementById('localData').readOnly && localDataValue) {
         try {
           if (type === 'json') {
-            remoteData = { value: JSON.parse(remoteDataValue) };
+            localData = { value: JSON.parse(localDataValue) };
           } else if (type === 'boolean') {
-            remoteData = { value: remoteDataValue.toLowerCase() === 'true' };
+            localData = { value: localDataValue.toLowerCase() === 'true' };
           } else if (type === 'integer') {
-            remoteData = { value: parseInt(remoteDataValue) };
+            localData = { value: parseInt(localDataValue) };
           } else if (type === 'float') {
-            remoteData = { value: parseFloat(remoteDataValue) };
+            localData = { value: parseFloat(localDataValue) };
           } else {
-            remoteData = { value: remoteDataValue };
+            localData = { value: localDataValue };
           }
         } catch (e) {
           alert('Invalid remote data format');
@@ -566,13 +591,14 @@
           }
         },
         readInterval: readInterval,
+        synch: synch,
       };
 
       if(defaultData)
         topicData['defaultData'] = defaultData;
 
-      if(remoteData)
-        topicData['remoteData'] = remoteData;
+      if(localData)
+        topicData['localData'] = localData;
 
       if (entryId) {
         // Update existing topic
