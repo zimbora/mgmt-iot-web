@@ -801,18 +801,20 @@ module.exports = {
           value: Joi.required()
         }).optional(),
         readInterval: Joi.number().min(0).optional(), // Publishing interval in seconds
+        synch: Joi.boolean().required(), // synch local data with remote
       }).validate(req.body);
 
       if(val.error){
         response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
       }else{
-        const { topic, description, defaultData, readInterval } = req.body;
+        const { topic, description, defaultData, readInterval, synch } = req.body;
         device.addMqttTopic(
           deviceId,
           topic,
           description,
           defaultData,
           readInterval,
+          synch,
           (err, result) => {
             if (err) {
               return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
@@ -848,10 +850,11 @@ module.exports = {
             writable: Joi.boolean().required(),
           }).required(),
         }).optional(),
-        defaultData: Joi.object({
+        localData: Joi.object({
           value: Joi.required()
         }).optional(),
         readInterval: Joi.number().min(0).optional(),
+        synch: Joi.boolean().optional(), // synch local data with remote
       }).validate(req.body);
 
       if(val.error){
