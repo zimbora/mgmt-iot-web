@@ -1152,11 +1152,15 @@ var self = module.exports =  {
     }
 
     const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
-    obj = {
+    
+    // Convert empty string or undefined template_id to null to avoid MySQL error
+    const templateId = device?.templateId || null;
+    
+    const obj = {
       uid : device.uid,
       name : device?.name,
       project_id : projectId,
-      template_id: device?.templateId,
+      template_id: templateId,
       model_id : modelId,
       protocol : device.protocol,
       psk : device?.psk,
@@ -1164,24 +1168,49 @@ var self = module.exports =  {
       updatedAt : timestamp
     }
     
-    try{
+    try {
       const res = await db.insert('devices', obj);
 
       if(res?.insertId){
-        if(device.projectName == "lwm2m" && device.templateId){
-          // copy template to lwm2m table
-          resLwm2m = await associateLwm2mTemplateToDevice(res?.insertId,device.templateId)
-        }else{
-          // copy template to lwm2m table
-          resMqtt = await associateMqttTemplateToDevice(res?.insertId,device.templateId)
-          console.log(resMqtt);
+        // Add owner permission for the user who created the device
+        if(device.clientId){
+          try {
+            await new Promise((resolve, reject) => {
+              self.addClientPermission(res.insertId, device.clientId, 5, (err, permRes) => {
+                if(err) {
+                  reject(err);
+                } else {
+                  resolve(permRes);
+                }
+              });
+            });
+          } catch(permError) {
+            console.error('Error adding owner permission:', permError);
+            // Continue with device creation even if permission fails
+          }
+        }
+        
+        if(device.projectName === "lwm2m" && templateId){
+          try {
+            // copy template to lwm2m table
+            await associateLwm2mTemplateToDevice(res?.insertId,templateId);
+          } catch(templateError) {
+            console.error('Error associating lwm2m template:', templateError);
+          }
+        }else if(templateId){
+          try {
+            // copy template to mqtt table (not lwm2m)
+            await associateMqttTemplateToDevice(res?.insertId,templateId);
+          } catch(templateError) {
+            console.error('Error associating mqtt template:', templateError);
+          }
         }
         return cb(null, res[0]);
       }else{
         return cb('Error adding device', null);
       }
-    }catch(err){
-      return cb(err?.sqlMessage, null);
+    } catch(error) {
+      return cb(error, null);
     }
         
   },

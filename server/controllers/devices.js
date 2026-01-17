@@ -359,7 +359,13 @@ module.exports = {
       psk: Joi.string(),
     }).validate(req.body);
 
-    device.add(req.body,(err,rows)=>{
+    // Add client_id from authenticated user to device data
+    const deviceData = {
+      ...req.body,
+      clientId: req.user?.client_id
+    };
+
+    device.add(deviceData,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
