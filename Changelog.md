@@ -1,5 +1,21 @@
 # Changelog
 
+## version 1.0.74
+  server/controllers/db:delete: fix call
+    truncate table, fix filter construction
+  server/models/devices:delete: add curly brackets
+  pages/devices_list:deleteDevice: fix object text
+
+## version 1.0.73
+  fix device registration
+    catch error while double inserting a device
+    fix associateMqttTemplateToDevice if no template is selected
+
+## version 1.0.72
+  ftp-serv updated to 4.6.3
+  Add active state checkbox to MQTT second connection settings (#49)
+  server/models/devices: fix getProjectInfo query
+
 ## version 1.0.71
   feat: Add template association functionality to device settings page (#45)
     * Add template selection UI and functionality to device settings page

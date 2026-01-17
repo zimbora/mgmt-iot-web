@@ -1104,11 +1104,6 @@ var api = {
   },
   getMqttCredentials : (cb)=>{
 
-    if(window.location.protocol == "https:"){
-      Settings.mqtt.ssl = true;
-      Settings.mqtt.port = 443;
-    }
-
     $.ajax({
       url : Settings.api+'/mqtt/credentials',type: 'GET',
       data : {},

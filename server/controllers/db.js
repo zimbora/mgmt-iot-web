@@ -158,32 +158,32 @@ var self = module.exports = {
     });
   },
 
-  delete : async(table,filter)=>{
+  delete: async (table, filter) => {
+    
+    return new Promise((resolve, reject) => {
+      self.getConnection((err, conn) => {
+        if (err) return reject(err);
 
-    return new Promise((resolve,reject) => {
-
-      self.getConnection((err,conn)=>{
-        if(err) return reject(err);
-
-        let query = "";
-        if(typeof filter === "object"){
-          let values = [];
-          query = `DELETE FROM ${table} WHERE `;
-          for (let key in filter){
-            if(values.length > 0)
-              query += " AND ";
-            query += key + " = ?"
-            values.push(filter[key]);
-          }
-          query = mysql.format(query,values);
-        }else{
-          return reject("filter passed is not an object");
+        if (typeof filter !== "object" || filter === null) {
+          return reject(new Error("filter passed is not an object"));
         }
 
-        conn.query(query,function(err,rows){
+        const keys = Object.keys(filter);
+        if (keys.length === 0) {
+          return reject(new Error("Refusing to delete without a filter."));
+        }
+
+        // Build WHERE clause using identifier/value placeholders
+        const where = keys.map(() => "?? = ?").join(" AND ");
+        const params = [table, ...keys.flatMap(k => [k, filter[k]])];
+
+        // Use ?? for identifiers so hyphens and reserved words are escaped safely
+        const sql = mysql.format(`DELETE FROM ?? WHERE ${where}`, params);
+
+        conn.query(sql, (err, rows) => {
           self.close_db_connection(conn);
-          if(err) return reject(err)
-          else return resolve(rows);
+          if (err) return reject(err);
+          return resolve(rows);
         });
       });
     });

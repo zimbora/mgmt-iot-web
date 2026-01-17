@@ -563,9 +563,9 @@ var self = module.exports =  {
 
     let model = await self.getModel(deviceId);
     if(model == null)
-      return cb(null,null);
+      return cb(`no model found for deviceId ${deviceId}`,null);
 
-    let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,p.* FROM ?? as p left join devices as d on d.id = p.device_id where d.id = ?;`
+    let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,p.* FROM devices as d left join ?? as p on d.id = p.device_id where d.id = ?;`
     let table = [project,deviceId]
     query = mysql.format(query,table);
 
@@ -1062,7 +1062,9 @@ var self = module.exports =  {
       topic: topic,
       description: JSON.stringify(description),
       defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      localData: defaultData ? JSON.stringify(defaultData) : null,
       readInterval: readInterval,
+      synch,
       createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
@@ -1100,11 +1102,14 @@ var self = module.exports =  {
     if (updateData.description !== undefined) {
       obj.description = JSON.stringify(updateData.description);
     }
-    if (updateData.defaultData !== undefined) {
-      obj.defaultData = updateData.defaultData ? JSON.stringify(updateData.defaultData) : null;
+    if (updateData.localData !== undefined) {
+      obj.localData = updateData.localData ? JSON.stringify(updateData.localData) : null;
     }
     if (updateData.readInterval !== undefined) {
       obj.readInterval = updateData.readInterval;
+    }
+    if (updateData.synch !== undefined) {
+      obj.synch = updateData.synch;
     }
 
     let filter = {
@@ -1226,16 +1231,18 @@ var self = module.exports =  {
 
     try{
 
-      if(project_table != null)
+      if(project_table != null){
         console.log(`deleting project_table ${project_table}`)
         if( await db.tableExists(project_table)){
           await db.delete(project_table,filter);
         }
-      if(project_logs_table != null)
+      }
+      if(project_logs_table != null){
         console.log(`deleting project_logs_table ${project_logs_table}`)
         if( await db.tableExists(project_logs_table)){
           await db.delete(project_logs_table,filter);
         }
+      }
       if(model_table != null){
         console.log(`deleting model_table ${model_table}`)
         if( await db.tableExists(model_table)){
@@ -1709,10 +1716,11 @@ async function associateMqttTemplateToDevice(deviceId, deviceTemplateId) {
   query = mysql.format(query,table);
   let templates = await db.queryRow(query);
 
-  if (!templates || !templates.length) return res; // nothing to copy, return empty array
+  let res = [];
+
+  if (!templates || !templates?.length) return res; // nothing to copy, return empty array
 
   const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
-  let res = [];
   
   // 2. Insert each template into lwm2m with device_id
   for (const tpl of templates) {
