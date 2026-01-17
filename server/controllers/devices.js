@@ -20,7 +20,6 @@ module.exports = {
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
-    
   },
 
   getPreSharedKey : async (req, res, next)=>{
@@ -29,7 +28,6 @@ module.exports = {
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });
-    
   },
 
   getObservations : async (req, res, next)=>{
@@ -98,7 +96,6 @@ module.exports = {
     }
   },
 
-
   addClientPermission : (req, res, next)=>{
 
     const val = Joi.object({
@@ -150,7 +147,7 @@ module.exports = {
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });
     }
- },
+  },
 
   list : (req, res, next)=>{
     
@@ -897,6 +894,99 @@ module.exports = {
       return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   },
+
+  assignTemplate: async (req,res,next) => {
+
+    const val = Joi.object({
+      templateId: Joi.required(),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      const templateId = req.body.templateId;
+      const deviceId = req.params.device_id;
+
+      const deviceInfo = await device.getById(deviceId);
+      if(deviceInfo == null){
+        response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"device not found");
+      }
+
+      if(deviceInfo?.protocol.toLowerCase() === "mqtt"){
+        await device.associateMqttTemplateToDevice(deviceId,templateId)
+        .then(()=>{
+          device.updateDeviceField(req.params.device_id,"template_id",templateId,(err,rows)=>{
+            if(!err) response.send(res,rows);
+            else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+          });
+        })
+        .catch((err)=>{
+          response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }else if(deviceInfo?.protocol.toLowerCase() === "lwm2m"){
+        await device.associateLwm2mTemplateToDevice(deviceId,templateId)
+        .then(()=>{
+          device.updateDeviceField(req.params.device_id,"template_id",templateId,(err,rows)=>{
+            if(!err) response.send(res,rows);
+            else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+          });
+        })
+        .catch((err)=>{
+          response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }else{
+        response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"Protocol not know for this device");
+      }
+    }
+  },
+
+  unassignTemplate: async (req,res,next) => {
+
+    const val = Joi.object({
+      templateId: Joi.required(),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      const templateId = req.body.templateId;
+      const deviceId = req.params.device_id;
+
+      const deviceInfo = await device.getById(deviceId);
+      if(deviceInfo == null){
+        response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"device not found");
+      }
+
+      if(deviceInfo?.protocol.toLowerCase() === "mqtt"){
+        console.log("removeMqttTemplateFromDevice");
+        await device.removeMqttTemplateFromDevice(deviceId,templateId)
+        .then(()=>{
+          console.log("updateDeviceField");
+          device.updateDeviceField(req.params.device_id,"template_id",null,(err,rows)=>{
+            if(!err) response.send(res,rows);
+            else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+          });
+        })
+        .catch((err)=>{
+          response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }else if(deviceInfo?.protocol.toLowerCase() === "lwm2m"){
+        await device.removeLwm2mTemplateFromDevice(deviceId,templateId)
+        .then(()=>{
+          device.updateDeviceField(req.params.device_id,"template_id",templateId,(err,rows)=>{
+            if(!err) response.send(res,rows);
+            else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+          });
+        })
+        .catch((err)=>{
+          response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }else{
+        response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"Protocol not know for this device");
+      }
+    }
+  },
+
 };
 /*
 function update(req, res, next) {

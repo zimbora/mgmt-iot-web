@@ -831,6 +831,57 @@ var api = {
       return parseError(error,cb);
     });
   },
+
+
+  // Assign template to device
+  deviceAssignTemplate: (deviceId, templateId, cb) => {
+
+    const data = {
+      templateId
+    };
+
+    fetch(Settings.api + `/device/${deviceId}/template`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data, cb);
+    })
+    .catch(function (error) {
+      return parseError(error, cb);
+    });
+  },
+
+  // Unassign template to device
+  deviceUnassignTemplate: (deviceId, templateId, cb) => {
+
+    const data = {
+      templateId
+    };
+    
+    fetch(Settings.api + `/device/${deviceId}/template`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data, cb);
+    })
+    .catch(function (error) {
+      return parseError(error, cb);
+    });
+  },
   // --- ----- ---
 
   // --- user ---
@@ -1741,6 +1792,7 @@ var api = {
           return parseError(error, cb);
         });
       }
+
     },
   },
   

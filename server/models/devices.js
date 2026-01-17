@@ -1056,7 +1056,7 @@ var self = module.exports =  {
     })
   },
 
-  addMqttTopic: async (deviceId, topic, description, defaultData, readInterval, cb) => {
+  addMqttTopic: async (deviceId, topic, description, defaultData, readInterval, synch, cb) => {
     let obj = {
       device_id: deviceId,
       topic: topic,
@@ -1443,63 +1443,7 @@ var self = module.exports =  {
 
     db.update("devices",obj,filter)
     .then (async rows => {
-      if(field === "template_id"){
-        templateId = data;
-        // validate templateId
-        device = await self.getById(deviceId);
-        project = await Project.getById(device.project_id); // fix this function, requires callback !!
-        let rows = null;
-        let error = null;
-
-        if(data == null){
-          // remove old template if any
-          console.log("project name:",project.name);
-          console.log("remove old template");
-          if(project.name == "lwm2m"){
-            // copy template to lwm2m table
-            try{
-              rows = await removeLwm2mTemplateFromDevice(res?.insertId,templateId)
-            }catch(err){
-              error = err
-            }
-          }else{
-            // copy template to lwm2m table
-            try{
-              rows = await removeMqttTemplateFromDevice(res?.insertId,templateId)
-            }catch(err){
-              error = err
-            }
-          }
-        }else if(data != null){
-          console.log(device);
-          console.log("associate new template")
-          // associate new template
-          if(device.projectName == "lwm2m"){
-            // copy template to lwm2m table
-            try{
-              rows = await associateLwm2mTemplateToDevice(res?.insertId,templateId)
-            }catch(err){
-              error = err
-            }
-          }else{
-            // copy template to lwm2m table
-            try{
-              rows = await associateMqttTemplateToDevice(res?.insertId,templateId)
-            }catch(err){
-              error = err
-            }
-          }
-        }
-        console.log(error)
-        console.log(rows);
-        if(error)
-          return cb(error,null);
-        else
-          return cb(null,rows);
-
-      }else{
-        return cb(null,rows);
-      }
+      return cb(null,rows);
     })
     .catch(error => {
       return cb(error,null);
@@ -1624,7 +1568,151 @@ var self = module.exports =  {
       return cb(error,null);
     }
 
-  }
+  },
+
+  /**
+   * Copies all elements from lwm2mTemplate (where template_id = deviceTemplateId)
+   * to lwm2m, setting device_id = deviceId for each inserted row.
+   * 
+   * @param {number} deviceId - The target device's ID (res[0].insertId)
+   * @param {number} deviceTemplateId - The source template's ID (device.templateId)
+   * @returns {Promise}
+   */
+  associateLwm2mTemplateToDevice : async(deviceId, deviceTemplateId)=>{
+    
+    // 1. Get all rows from lwm2mTemplate for the given templateId
+    let query = `SELECT * FROM ?? where template_id = ?;`
+    let table = ["lwm2mTemplate",deviceTemplateId];
+    query = mysql.format(query,table);
+    let templates = await db.queryRow(query);
+
+    if (!templates || !templates.length) return res; // nothing to copy, return empty array
+
+    const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    let res = [];
+    
+    // 2. Insert each template into lwm2m with device_id
+    for (const tpl of templates) {
+      // Remove the primary key (if it exists), createdAt and updatedAt
+      const { id, createdAt, updatedAt, ...rest } = tpl;
+      const data = {
+        device_id: deviceId,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        ...rest
+      };
+      const insertRes = await db.insert('lwm2m', data);
+      res.push(insertRes);
+    }
+
+    return res;
+  },
+
+  /**
+   * Copies all elements from mqttTemplate (where template_id = deviceTemplateId)
+   * to mqtt, setting device_id = deviceId for each inserted row.
+   * 
+   * @param {number} deviceId - The target device's ID (res[0].insertId)
+   * @param {number} deviceTemplateId - The source template's ID (device.templateId)
+   * @returns {Promise}
+   */
+  associateMqttTemplateToDevice: async(deviceId, deviceTemplateId)=>{
+    
+    // 1. Get all rows from mqttTemplate for the given templateId
+    let query = `SELECT * FROM ?? where template_id = ?;`
+    let table = ["mqttTemplate",deviceTemplateId];
+    query = mysql.format(query,table);
+    let templates = await db.queryRow(query);
+
+    let res = [];
+
+    if (!templates || !templates?.length) return res; // nothing to copy, return empty array
+
+    const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    
+    // 2. Insert each template into lwm2m with device_id
+    for (const tpl of templates) {
+      // Remove the primary key (if it exists), createdAt and updatedAt
+      const { id, createdAt, updatedAt, ...rest } = tpl;
+      const data = {
+        device_id: deviceId,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        mqttTemplate_id: id,
+        ...rest
+      };
+      const insertRes = await db.insert('mqtt', data);
+      res.push(insertRes);
+    }
+
+    return res;
+  },
+
+  /**
+   * Removes all lwm2m rows from a device that were originally associated with a particular template.
+   *
+   * @param {number} deviceId - The target device's ID.
+   * @param {number} deviceTemplateId - The template ID whose elements should be removed from the device.
+   * @returns {Promise} - Resolves with the result of the delete operation.
+   */
+  removeLwm2mTemplateFromDevice: async (deviceId, deviceTemplateId)=>{
+    // 1. Get all row keys from lwm2mTemplate for the given templateId
+    let query = `SELECT * FROM ?? WHERE template_id = ?;`;
+    let table = ["lwm2mTemplate", deviceTemplateId];
+    query = mysql.format(query, table);
+    let templates = await db.queryRow(query);
+
+    if (!templates || !templates.length) return []; // nothing to delete
+
+    let deleteResults = [];
+    for (const tpl of templates) {
+      // Build a where clause to match device_id and all template-specific identifying columns except id/timestamps
+      const { id, createdAt, updatedAt, template_id, ...keyFields } = tpl;
+      // device_id and all key fields must match for deletion
+      const where = {
+        device_id: deviceId,
+        ...keyFields
+      };
+      // You may want to add template_id: deviceTemplateId to where if it's also stored in lwm2m
+      const delRes = await db.delete('lwm2m', where);
+      deleteResults.push(delRes);
+    }
+
+    return deleteResults;
+  },
+
+  /**
+   * Removes all mqtt rows from a device that were originally associated with a particular template.
+   *
+   * @param {number} deviceId - The target device's ID.
+   * @param {number} deviceTemplateId - The template ID whose elements should be removed from the device.
+   * @returns {Promise} - Resolves with the result of the delete operation.
+   */
+  removeMqttTemplateFromDevice: async (deviceId, deviceTemplateId)=>{
+    // 1. Get all row keys from mqttTemplate for the given templateId
+    let query = `SELECT * FROM ?? WHERE template_id = ?;`;
+    let table = ["mqttTemplate", deviceTemplateId];
+    query = mysql.format(query, table);
+    let templates = await db.queryRow(query);
+
+    if (!templates || !templates.length) return []; // nothing to delete
+
+    let deleteResults = [];
+    for (const tpl of templates) {
+      // Build a where clause to match device_id and all template-specific identifying columns except id/timestamps
+      const { id, createdAt, updatedAt, template_id, ...keyFields } = tpl;
+      // device_id and all key fields must match for deletion
+      const where = {
+        device_id: deviceId,
+        mqttTemplate_id: id
+      };
+      // You may want to add template_id: deviceTemplateId to where if it's also stored in mqtt
+      const delRes = await db.delete('mqtt', where);
+      deleteResults.push(delRes);
+    }
+
+    return deleteResults;
+  },
 
 };
 
@@ -1660,147 +1748,4 @@ async function publishAndWaitForResponse(publishTopic, messagePayload, responseT
       }, timeout);
     });
   });
-}
-
-/**
- * Copies all elements from lwm2mTemplate (where template_id = deviceTemplateId)
- * to lwm2m, setting device_id = deviceId for each inserted row.
- * 
- * @param {number} deviceId - The target device's ID (res[0].insertId)
- * @param {number} deviceTemplateId - The source template's ID (device.templateId)
- * @returns {Promise}
- */
-async function associateLwm2mTemplateToDevice(deviceId, deviceTemplateId) {
-  
-  // 1. Get all rows from lwm2mTemplate for the given templateId
-  let query = `SELECT * FROM ?? where template_id = ?;`
-  let table = ["lwm2mTemplate",deviceTemplateId];
-  query = mysql.format(query,table);
-  let templates = await db.queryRow(query);
-
-  if (!templates || !templates.length) return res; // nothing to copy, return empty array
-
-  const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
-  let res = [];
-  
-  // 2. Insert each template into lwm2m with device_id
-  for (const tpl of templates) {
-    // Remove the primary key (if it exists), createdAt and updatedAt
-    const { id, createdAt, updatedAt, ...rest } = tpl;
-    const data = {
-      device_id: deviceId,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      ...rest
-    };
-    const insertRes = await db.insert('lwm2m', data);
-    res.push(insertRes);
-  }
-
-  return res;
-}
-
-/**
- * Copies all elements from mqttTemplate (where template_id = deviceTemplateId)
- * to mqtt, setting device_id = deviceId for each inserted row.
- * 
- * @param {number} deviceId - The target device's ID (res[0].insertId)
- * @param {number} deviceTemplateId - The source template's ID (device.templateId)
- * @returns {Promise}
- */
-async function associateMqttTemplateToDevice(deviceId, deviceTemplateId) {
-  
-  // 1. Get all rows from mqttTemplate for the given templateId
-  let query = `SELECT * FROM ?? where template_id = ?;`
-  let table = ["mqttTemplate",deviceTemplateId];
-  query = mysql.format(query,table);
-  let templates = await db.queryRow(query);
-
-  let res = [];
-
-  if (!templates || !templates?.length) return res; // nothing to copy, return empty array
-
-  const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
-  
-  // 2. Insert each template into lwm2m with device_id
-  for (const tpl of templates) {
-    // Remove the primary key (if it exists), createdAt and updatedAt
-    const { id, createdAt, updatedAt, ...rest } = tpl;
-    const data = {
-      device_id: deviceId,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      ...rest
-    };
-    const insertRes = await db.insert('mqtt', data);
-    res.push(insertRes);
-  }
-
-  return res;
-}
-
-/**
- * Removes all lwm2m rows from a device that were originally associated with a particular template.
- *
- * @param {number} deviceId - The target device's ID.
- * @param {number} deviceTemplateId - The template ID whose elements should be removed from the device.
- * @returns {Promise} - Resolves with the result of the delete operation.
- */
-async function removeLwm2mTemplateFromDevice(deviceId, deviceTemplateId) {
-  // 1. Get all row keys from lwm2mTemplate for the given templateId
-  let query = `SELECT * FROM ?? WHERE template_id = ?;`;
-  let table = ["lwm2mTemplate", deviceTemplateId];
-  query = mysql.format(query, table);
-  let templates = await db.queryRow(query);
-
-  if (!templates || !templates.length) return []; // nothing to delete
-
-  let deleteResults = [];
-  for (const tpl of templates) {
-    // Build a where clause to match device_id and all template-specific identifying columns except id/timestamps
-    const { id, createdAt, updatedAt, template_id, ...keyFields } = tpl;
-    // device_id and all key fields must match for deletion
-    const where = {
-      device_id: deviceId,
-      ...keyFields
-    };
-    // You may want to add template_id: deviceTemplateId to where if it's also stored in lwm2m
-    const delRes = await db.delete('lwm2m', where);
-    deleteResults.push(delRes);
-  }
-
-  return deleteResults;
-}
-
-/**
- * Removes all mqtt rows from a device that were originally associated with a particular template.
- *
- * @param {number} deviceId - The target device's ID.
- * @param {number} deviceTemplateId - The template ID whose elements should be removed from the device.
- * @returns {Promise} - Resolves with the result of the delete operation.
- */
-async function removeMqttTemplateFromDevice(deviceId, deviceTemplateId) {
-  // 1. Get all row keys from mqttTemplate for the given templateId
-  let query = `SELECT * FROM ?? WHERE template_id = ?;`;
-  let table = ["mqttTemplate", deviceTemplateId];
-  query = mysql.format(query, table);
-  let templates = await db.queryRow(query);
-
-  if (!templates || !templates.length) return []; // nothing to delete
-
-  let deleteResults = [];
-  for (const tpl of templates) {
-    // Build a where clause to match device_id and all template-specific identifying columns except id/timestamps
-    const { id, createdAt, updatedAt, template_id, ...keyFields } = tpl;
-    // device_id and all key fields must match for deletion
-    const where = {
-      device_id: deviceId,
-      ...keyFields
-    };
-    // You may want to add template_id: deviceTemplateId to where if it's also stored in mqtt
-    const delRes = await db.delete('mqtt', where);
-    deleteResults.push(delRes);
-  }
-
-  return deleteResults;
 }

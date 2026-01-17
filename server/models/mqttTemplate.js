@@ -35,13 +35,15 @@ var self = module.exports = {
   },
 
   // Add a new topic
-  addTopic: async (templateId, topic, description, defaultData, readInterval, cb) => {
+  addTopic: async (templateId, topic, description, defaultData, localData, readInterval, synch, cb) => {
     let obj = {
       template_id: templateId,
       topic: topic,
       description: JSON.stringify(description),
       defaultData: defaultData ? JSON.stringify(defaultData) : null,
+      localData: localData ? JSON.stringify(localData) : defaultData,
       readInterval: readInterval,
+      synch,
       createdAt: moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
     };
@@ -71,8 +73,15 @@ var self = module.exports = {
     if (updateData.defaultData !== undefined) {
       obj.defaultData = updateData.defaultData ? JSON.stringify(updateData.defaultData) : null;
     }
+    if (updateData.localData !== undefined) {
+      obj.localData = updateData.localData ? JSON.stringify(updateData.defaultData) : null;
+    }
     if (updateData.readInterval !== undefined) {
       obj.readInterval = updateData.readInterval;
+    }
+
+    if (updateData.synch !== undefined) {
+      obj.synch = updateData.synch;
     }
 
     let filter = {

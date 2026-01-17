@@ -130,6 +130,7 @@
                 <input type="text" readonly class="form-control-plaintext fw-bold" id="rssi" value="<%=fw?.rssi%>">
               </div>
             </div>
+            <% if(device.template_id == null) { %>
             <div class="btn-group">
               <label class="input-group-text" for="inputGroupSelect21">Template:</label>
                 <select class="form-select templateSelect" id="_template_select_">
@@ -140,6 +141,7 @@
                   <i class="bi bi-check"></i> Assign
                 </button>
             </div>
+            <% } %>
             
             <!-- Show assigned templates -->
             <div class="mt-2" id="assignedTemplates">
@@ -147,7 +149,7 @@
                 <div class="alert alert-info">
                   <strong>Assigned Template:</strong> 
                   <span id="currentTemplate">Template ID: <%= device.template_id %></span>
-                  <button class="btn btn-sm btn-outline-danger ms-2" onclick="unassignTemplate()" title="Remove template assignment">
+                  <button class="btn btn-sm btn-outline-danger ms-2" onclick="unassignTemplate(<%= device.template_id %>)" title="Remove template assignment">
                     <i class="bi bi-x"></i> Remove
                   </button>
                 </div>
@@ -914,11 +916,11 @@
         return;
       }
       
-      assignTemplateToDevice(templateId);
+      assignTemplate(templateId);
     });
 
-    function assignTemplateToDevice(templateId) {
-      api.updateDeviceField(deviceID, "template_id", templateId, (err, res) => {
+    function assignTemplate(templateId) {
+      api.deviceAssignTemplate(deviceID, templateId, (err, res) => {
         if (err) {
           $('#error').text("Failed to assign template");
           if (err.hasOwnProperty("sqlMessage"))
@@ -934,9 +936,9 @@
       });
     }
 
-    function unassignTemplate() {
+    function unassignTemplate(templateId) {
       if (confirm('Are you sure you want to remove the template assignment?')) {
-        api.updateDeviceField(deviceID, "template_id", null, (err, res) => {
+        api.deviceUnassignTemplate(deviceID, templateId, (err, res) => {
           if (err) {
             $('#error').text("Failed to remove template");
             if (err.hasOwnProperty("sqlMessage"))

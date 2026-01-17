@@ -462,10 +462,14 @@ module.exports = {
         defaultData: Joi.object({
           value: Joi.required()
         }).optional(),
+        localData: Joi.object({
+          value: Joi.required()
+        }).optional(),
         readInterval: Joi.number().min(0).optional(), // Publishing interval in seconds
+        synch: Joi.boolean().required(), // synch local data with remote
       }).validate(req.body);
 
-      const { topic, description, defaultData, readInterval } = req.body;
+      const { topic, description, defaultData, localData, readInterval, synch } = req.body;
 
       if(val.error){
         response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
@@ -475,7 +479,9 @@ module.exports = {
           topic,
           description,
           defaultData,
+          localData,
           readInterval,
+          synch,
           (err, result) => {
             if (err) {
               return response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
@@ -515,7 +521,11 @@ module.exports = {
         defaultData: Joi.object({
           value: Joi.required()
         }).optional(),
+        localData: Joi.object({
+          value: Joi.required()
+        }).optional(),
         readInterval: Joi.number().min(0).optional(),
+        synch: Joi.boolean().required(), // synch local data with remote
       }).validate(req.body);
 
       if(val.error){

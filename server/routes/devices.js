@@ -127,19 +127,15 @@ router.route("/:device_id/field")
 router.route("/:device_id/mqtt/message")
   .post(Device.sendMqttMessage)
 
-// POST /api/template/:device_id - Add a new object
 router.route('/:device_id/lwm2m/object')
   .post(Device.addObject);
 
-// POST /api/template/:device_id - Add a new resource
 router.route('/:device_id/lwm2m/resource')
   .post(Device.addResource);
 
-// PUT /api/template/:device_id/:resource_id - Update a resource
 router.route('/:device_id/lwm2m/object/:entry_id')
   .put(Device.updateObject);
 
-// PUT /api/template/:device_id/:resource_id - Update a resource
 router.route('/:device_id/lwm2m/resource/:entry_id')
   .put(Device.updateResource);
 
@@ -160,6 +156,10 @@ router.route('/:device_id/mqtt/topic/:entry_id')
   .put(Device.updateMqttTopic)
   .delete(Device.deleteMqttTopic);
   
+router.route('/:device_id/template')
+  .put(Device.assignTemplate)
+  .delete(Device.unassignTemplate);
+
 router.use('/:device_id',Client.checkDevicePermissionsAccess,(req,res,next)=>{next()});
 
 // protected zone to owner or admin

@@ -201,6 +201,22 @@
               <div class="form-text">Enter the default value for this topic</div>
             </div>
 
+            <div id="localDataDiv" class="mb-3">
+              <label for="localData" class="form-label">Local Data</label>
+              <input type="text" class="form-control" id="localData" name="localData" placeholder="Enter local data">
+              <div class="form-text">Enter the local value for this topic</div>
+            </div>
+
+            <!-- Synch -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="synch" name="synch">
+                  <label class="form-check-label" for="synch" title="Synch local data with device">Synch</label>
+                </div>
+              </div>
+            </div>
+
           </form>
         </div>
         <div class="modal-footer">
@@ -339,23 +355,30 @@
       // Set defaults
       document.getElementById('readable').checked = true;
       document.getElementById('writable').checked = false;
+      document.getElementById('synch').checked = false;
       document.getElementById('readInterval').value = '0';
       
       // Update modal title
       document.getElementById('editTopicModalLabel').textContent = 'Add New Topic';
       
+      let el = document.getElementById('defaultData');
+      if (el) el.readOnly = false;
+
+      el = document.getElementById('localDataDiv');
+      if (el) el.style.display = 'none';
+
       // Show modal
       const modal = new bootstrap.Modal(document.getElementById('editTopicModal'));
       modal.show();
     }
 
     function editTopic(topicId) {
-      const topic = templateTopics.find(t => t.id === topicId);
+      const topic = templateTopics.find(t => t.id == topicId);
       if (!topic) {
         alert('Topic not found');
         return;
       }
-
+      console.log(topic);
       // Populate form
       document.getElementById('entryId').value = topic.id;
       document.getElementById('topicPath').value = topic.topic || '';
@@ -364,6 +387,7 @@
       document.getElementById('readable').checked = topic.description?.attributes?.readable || false;
       document.getElementById('writable').checked = topic.description?.attributes?.writable || false;
       document.getElementById('readInterval').value = topic.readInterval || 0;
+      document.getElementById('synch').checked = topic.synch || false;
       
       // Handle default data
       if (topic.defaultData?.value !== undefined) {
@@ -374,6 +398,22 @@
       } else {
         document.getElementById('defaultData').value = '';
       }
+
+      // Handle remote data
+      if (topic.localData?.value !== undefined) {
+        document.getElementById('localData').value = 
+          typeof topic.localData.value === 'object' ? 
+          JSON.stringify(topic.localData.value) : 
+          topic.localData.value;
+      } else {
+        document.getElementById('localData').value = '';
+      }
+
+      let el = document.getElementById('defaultData');
+      if (el) el.readOnly = true;
+
+      el = document.getElementById('localDataDiv');
+      if (el) el.style.display = '';
 
       // Update modal title
       document.getElementById('editTopicModalLabel').textContent = 'Edit Topic';
@@ -390,8 +430,10 @@
       const type = document.getElementById('type').value;
       const readable = document.getElementById('readable').checked;
       const writable = document.getElementById('writable').checked;
+      const synch = document.getElementById('synch').checked;
       const readInterval = parseInt(document.getElementById('readInterval').value);
       const defaultDataValue = document.getElementById('defaultData').value.trim();
+      const localDataValue = document.getElementById('localData').value.trim();
 
       // Validation
       if (!topicPath || !topicTitle) {
@@ -420,6 +462,27 @@
         }
       }
 
+      // Parse local data
+      let localData = null;
+      if (!document.getElementById('localData').readOnly && localDataValue) {
+        try {
+          if (type === 'json') {
+            localData = { value: JSON.parse(localDataValue) };
+          } else if (type === 'boolean') {
+            localData = { value: localDataValue.toLowerCase() === 'true' };
+          } else if (type === 'integer') {
+            localData = { value: parseInt(localDataValue) };
+          } else if (type === 'float') {
+            localData = { value: parseFloat(localDataValue) };
+          } else {
+            localData = { value: localDataValue };
+          }
+        } catch (e) {
+          alert('Invalid remote data format');
+          return;
+        }
+      }
+
       const topicData = {
         topic: topicPath,
         description: {
@@ -430,9 +493,15 @@
             writable: writable,
           }
         },
-        defaultData: defaultData,
         readInterval: readInterval,
+        synch: synch,
       };
+
+      if(defaultData)
+        topicData['defaultData'] = defaultData;
+
+      if(localData)
+        topicData['localData'] = localData;
 
       if (entryId) {
         // Update existing topic
