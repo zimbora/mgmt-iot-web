@@ -60,6 +60,7 @@
                 </label>
                 <div class="col-6">
                   <input type="text" readonly class="form-control-plaintext fw-bold" id="version" value="<%=device.version%>">
+                  <small class="text-muted">Latest: <span id="latest_version">-</span></small>
                 </div>
               </div>
               <div class="mb-4 row">
@@ -71,6 +72,7 @@
                 </label>
                 <div class="col-6">
                   <input type="text" readonly class="form-control-plaintext fw-bold" id="app_version" value="<%=device.app_version%>">
+                  <small class="text-muted">Latest: <span id="latest_app_version">-</span></small>
                 </div>
               </div>
               <div class="btn-group">
@@ -467,11 +469,32 @@
         addOptionWithDescription('#_lte_tech_',item.value,item.description, item.value == lte?.tech);
       })
 
-      // Initialize MQTT active checkbox
-      if(device?.remote_settings?.mqtt?.active == 1){
-        $("#mqtt_active").prop('checked', true);
-      }else{
-        $("#mqtt_active").prop('checked', false);
+      // Fetch and display latest firmware versions
+      if (device && device.model_id && device.accept_release) {
+        $.ajax({
+          url: Settings.api + '/model/' + device.model_id + '/firmware/latest',
+          type: 'GET',
+          data: {
+            accept_release: device.accept_release
+          },
+          success: function(data, status, xhr) {
+            if (data && !data.Error) {
+              const result = data.Result;
+              if (result && result.latest_version) {
+                document.getElementById('latest_version').textContent = result.latest_version;
+              }
+              if (result && result.latest_app_version) {
+                document.getElementById('latest_app_version').textContent = result.latest_app_version;
+              }
+            }
+          },
+          error: function(xhr, status, error) {
+            console.log('Error fetching latest firmware versions:', error);
+            document.getElementById('latest_version').textContent = 'N/A';
+            document.getElementById('latest_app_version').textContent = 'N/A';
+          },
+          dataType: 'JSON'
+        });
       }
 
       $(".fwReleaseOption").change((event)=>{

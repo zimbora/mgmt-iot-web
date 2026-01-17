@@ -173,4 +173,27 @@ module.exports = {
       });
     }
   },
+
+  getLatestFirmware : async (req, res, next) => {
+    try {
+      const modelId = req.params.model_id;
+      const acceptRelease = req.query.accept_release || 'prod'; // Default to 'prod' if not specified
+      
+      // Import Firmware model
+      const Firmware = require('../models/firmwares');
+      
+      // Get latest versions using existing functions
+      const latestVersion = await Firmware.getLatestVersion(modelId, acceptRelease);
+      const latestAppVersion = await Firmware.getLatestAppVersion(modelId, acceptRelease);
+      
+      const result = {
+        latest_version: latestVersion ? latestVersion.version : null,
+        latest_app_version: latestAppVersion ? latestAppVersion.app_version : null
+      };
+      
+      response.send(res, result);
+    } catch (err) {
+      response.error(res, httpStatus.INTERNAL_SERVER_ERROR, err);
+    }
+  },
 };
