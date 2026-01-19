@@ -129,7 +129,7 @@
       let string = type == "string" ? "selected" : "";
       let number = type == "number" ? "selected" : "";
       t.row.add([
-        `<button id="${id}" onclick="deleteSensor('${id}');" type="button" class="delete btn btn-danger btn-sm">
+        `<button id="delete-${id}" onclick="deleteSensor('${id}');" type="button" class="delete btn btn-danger btn-sm">
           <i class="fa-sharp fa-solid fa-trash"></i>
         </button>`,
         `<div class="form-check form-switch">
@@ -189,13 +189,15 @@
 
     function deleteSensor(sensorId){
       sensorIdToDelete = sensorId;
-      $('#modal_message').text("You are about to delete sensor with ID: " + sensorId);
+      $('#modal_message').text(`You are about to delete sensor with ID: ${sensorId}`);
       $('#modalConfirmation').modal('show');
     }
 
     $("#modalProceed").click(()=>{
       if(sensorIdToDelete){
-        api.model.deleteSensor(modelID, sensorIdToDelete, (err,res)=>{
+        const idToDelete = sensorIdToDelete;
+        sensorIdToDelete = null;
+        api.model.deleteSensor(modelID, idToDelete, (err,res)=>{
           if(err){
             $('#error').text("Your request cannot be executed");
             $('#suggestion').text(err);
@@ -204,7 +206,6 @@
             location.reload();
           }
         });
-        sensorIdToDelete = null;
       }
     });
 
