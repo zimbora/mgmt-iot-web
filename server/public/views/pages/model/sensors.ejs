@@ -46,10 +46,12 @@
                     <table id="sensors" class="display">
                       <thead>
                         <tr>
+                          <th>delete</th>
                           <th>active</th>
                           <th>ref</th>
                           <th>name</th>
                           <th>type</th>
+                          <th>property</th>
                           <th>created</th>
                           <th>updated</th>
                         </tr>
@@ -81,7 +83,7 @@
         if(err) console.log(err)
         else{
           res.forEach((item, i) => {
-            addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.createdAt).format('YY/MM/DD LT'),moment(item.updatedAt).format('YY/MM/DD LT'));
+            addRow(item?.id,item?.ref,item?.name,item?.type,item?.property,item?.active,moment(item?.createdAt).format('YY/MM/DD LT'),moment(item?.updatedAt).format('YY/MM/DD LT'));
 
             if(i==res.length-1){
               $('.form-check-input').on('change', function() {
@@ -119,7 +121,7 @@
       })
     });
 
-    function addRow(id,ref,name,type,active,created,updated){
+    function addRow(id,ref,name,type,property,active,created,updated){
       let state = "";
       if(active)
         state = "checked"
@@ -127,17 +129,21 @@
       let string = type == "string" ? "selected" : "";
       let number = type == "number" ? "selected" : "";
       t.row.add([
+        `<button id="delete-${id}" onclick="deleteSensor('${id}');" type="button" class="delete btn btn-danger btn-sm">
+          <i class="fa-sharp fa-solid fa-trash"></i>
+        </button>`,
         `<div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" role="switch" id=${id} ${state}>
         </div>`,
         ref,
-        `<input type="text" class="form-control" id=${id} value=${name} oninput="handleNameChange(${id},this.value)">`,
+        `<input type="text" class="form-control" id=${id} value="${name}" oninput="handleNameChange(${id},this.value)">`,
         `<select class="form-control select_type" id=${id} name="dataTypes" value=${type}>
           <option value=""></option>
           <option ${json} value="json">json</option>
           <option ${string} value="string">string</option>
           <option ${number} value="number">number</option>
         </select>`,
+        property,
         created,
         updated
       ]).draw(true);
@@ -163,11 +169,12 @@
     }
 
     function addSensor(){
-      let ref = $("#_modalRef_").val();
-      let name = $("#_modalName_").val();
-      let type = $("#type").val();
+      const ref = $("#_modalRef_").val();
+      const name = $("#_modalName_").val();
+      const type = $("#type").val();
+      const property = $("#_modalProperty_").val();
 
-      api.model.addSensor(modelID,ref,name,type,(err,res)=>{
+      api.model.addSensor(modelID,ref,name,type,property,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);
@@ -177,6 +184,30 @@
         }
       });
     }
+
+    var sensorIdToDelete = null;
+
+    function deleteSensor(sensorId){
+      sensorIdToDelete = sensorId;
+      $('#modal_message').text(`You are about to delete sensor with ID: ${sensorId}`);
+      $('#modalConfirmation').modal('show');
+    }
+
+    $("#modalProceed").click(()=>{
+      if(sensorIdToDelete){
+        const idToDelete = sensorIdToDelete;
+        sensorIdToDelete = null;
+        api.model.deleteSensor(modelID, idToDelete, (err,res)=>{
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }else{
+            location.reload();
+          }
+        });
+      }
+    });
 
   </script>
 </body>

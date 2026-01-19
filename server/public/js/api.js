@@ -232,7 +232,7 @@ var api = {
       });
     },
 
-    addSensor: (modelId,ref,name,type,cb)=>{
+    addSensor: (modelId,ref,name,type,property,cb)=>{
       fetch(Settings.api+"/model/"+modelId+"/sensor", {
         method: 'POST',
         headers: {
@@ -241,7 +241,8 @@ var api = {
         body: JSON.stringify({
           ref: ref,
           name: name,
-          type: type
+          type: type,
+          property: property
         })
       })
       .then(function (response) {
@@ -265,6 +266,27 @@ var api = {
           sensor_id: sensorId,
           property: property,
           value: value
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+     deleteSensor: (modelId,sensorId,cb)=>{
+      fetch(Settings.api+"/model/"+modelId+"/sensor", {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sensor_id: sensorId,
         })
       })
       .then(function (response) {

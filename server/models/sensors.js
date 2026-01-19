@@ -4,7 +4,7 @@ const moment = require('moment');
 
 var self = module.exports = {
 
-  add : async(model_id,device_id,ref,name,type,cb)=>{
+  add : async(model_id,device_id,ref,name,type,property,cb)=>{
 
     let obj = {
       model_id : model_id,
@@ -12,6 +12,7 @@ var self = module.exports = {
       ref : ref,
       name : name,
       type: type,
+      property: property,
       createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
@@ -37,6 +38,21 @@ var self = module.exports = {
     };
 
     db.update("sensors",obj,filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
+  delete : async (id,cb)=>{
+
+    let filter = {
+      id : id
+    };
+
+    db.delete("sensors",filter)
     .then (rows => {
       return cb(null,rows);
     })
