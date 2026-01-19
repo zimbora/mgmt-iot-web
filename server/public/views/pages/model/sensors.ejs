@@ -46,6 +46,7 @@
                     <table id="sensors" class="display">
                       <thead>
                         <tr>
+                          <th>delete</th>
                           <th>active</th>
                           <th>ref</th>
                           <th>name</th>
@@ -128,6 +129,9 @@
       let string = type == "string" ? "selected" : "";
       let number = type == "number" ? "selected" : "";
       t.row.add([
+        `<button id="delete-${id}" onclick="deleteSensor('${id}');" type="button" class="delete btn btn-danger btn-sm">
+          <i class="fa-sharp fa-solid fa-trash"></i>
+        </button>`,
         `<div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" role="switch" id=${id} ${state}>
         </div>`,
@@ -180,6 +184,30 @@
         }
       });
     }
+
+    var sensorIdToDelete = null;
+
+    function deleteSensor(sensorId){
+      sensorIdToDelete = sensorId;
+      $('#modal_message').text(`You are about to delete sensor with ID: ${sensorId}`);
+      $('#modalConfirmation').modal('show');
+    }
+
+    $("#modalProceed").click(()=>{
+      if(sensorIdToDelete){
+        const idToDelete = sensorIdToDelete;
+        sensorIdToDelete = null;
+        api.model.deleteSensor(modelID, idToDelete, (err,res)=>{
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }else{
+            location.reload();
+          }
+        });
+      }
+    });
 
   </script>
 </body>
