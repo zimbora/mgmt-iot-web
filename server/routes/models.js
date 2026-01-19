@@ -103,7 +103,7 @@ router.route('/:model_id/sensors')
 
 router.route('/:model_id/sensor')
   //.get(Sensor.get)
-  //.delete(Sensor.delete)
+  .delete(Sensor.delete)
   .put(Sensor.update)
   .post(Sensor.add)
 

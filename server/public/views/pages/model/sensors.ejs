@@ -50,6 +50,7 @@
                           <th>ref</th>
                           <th>name</th>
                           <th>type</th>
+                          <th>property</th>
                           <th>created</th>
                           <th>updated</th>
                         </tr>
@@ -81,7 +82,7 @@
         if(err) console.log(err)
         else{
           res.forEach((item, i) => {
-            addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.createdAt).format('YY/MM/DD LT'),moment(item.updatedAt).format('YY/MM/DD LT'));
+            addRow(item?.id,item?.ref,item?.name,item?.type,item?.property,item?.active,moment(item?.createdAt).format('YY/MM/DD LT'),moment(item?.updatedAt).format('YY/MM/DD LT'));
 
             if(i==res.length-1){
               $('.form-check-input').on('change', function() {
@@ -119,7 +120,7 @@
       })
     });
 
-    function addRow(id,ref,name,type,active,created,updated){
+    function addRow(id,ref,name,type,property,active,created,updated){
       let state = "";
       if(active)
         state = "checked"
@@ -138,6 +139,7 @@
           <option ${string} value="string">string</option>
           <option ${number} value="number">number</option>
         </select>`,
+        property,
         created,
         updated
       ]).draw(true);
@@ -163,11 +165,12 @@
     }
 
     function addSensor(){
-      let ref = $("#_modalRef_").val();
-      let name = $("#_modalName_").val();
-      let type = $("#type").val();
+      const ref = $("#_modalRef_").val();
+      const name = $("#_modalName_").val();
+      const type = $("#type").val();
+      const property = $("#_modalProperty_").val();
 
-      api.model.addSensor(modelID,ref,name,type,(err,res)=>{
+      api.model.addSensor(modelID,ref,name,type,property,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);
