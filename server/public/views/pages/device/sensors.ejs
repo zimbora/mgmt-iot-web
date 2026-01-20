@@ -81,11 +81,14 @@
                     <table id="sensors" class="display">
                       <thead>
                         <tr>
+                          <th>delete</th>
+                          <th>active</th>
                           <th>ref</th>
                           <th>name</th>
+                          <th>type</th>
+                          <th>property</th>
                           <th>updated</th>
                           <th>last_value</th>
-                          <th>logs</th>
                         </tr>
                       </thead>
                     </table>
@@ -125,8 +128,17 @@
         if(err) console.log(err)
         else{
           res.forEach((item, i) => {
-            addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.updatedAt).format('YY/MM/DD LT'),"");
-            /*
+            console.log(item);
+            addRowDeviceSensor(
+              item?.id,
+              item?.ref,
+              item?.name,
+              item?.type,
+              item?.property,
+              item?.active,
+              moment(item?.updatedAt).format('YY/MM/DD LT'),
+              "");
+            
             if(i==res.length-1){
               $('.form-check-input').on('change', function() {
                 let id = $(this).attr('id');
@@ -134,7 +146,7 @@
                 if ($(this).is(':checked'))
                   active = "1";
 
-                api.model.updateSensor(modelId,id,"active",active,(err,res)=>{
+                api.model.updateSensor(deviceId,id,"active",active,(err,res)=>{
                   if(err){
                     $('#error').text("Your request cannot be executed");
                     $('#suggestion').text(err);
@@ -147,7 +159,7 @@
               $('.select_type').on('change', function() {
                   let id = $(this).attr('id');
                   let type = $(this).val();
-                  api.model.updateSensor(modelId,id,"type",type,(err,res)=>{
+                  api.device.updateSensor(deviceId,id,"type",type,(err,res)=>{
                     if(err){
                       $('#error').text("Your request cannot be executed");
                       $('#suggestion').text(err);
@@ -156,7 +168,7 @@
                   });
               });
             }
-            */
+            
 
           });
 
@@ -167,7 +179,15 @@
         if(err) console.log(err)
         else{
           res.forEach((item, i) => {
-            addRow(item.id,item.ref,item.name,item.type,item.active,moment(item.updatedAt).format('YY/MM/DD LT'),"");
+            addRowModelSensor(
+              item?.id,
+              item?.ref,
+              item?.name,
+              item?.type,
+              item?.property,
+              item?.active,
+              moment(item?.updatedAt).format('YY/MM/DD LT'),
+              "");
           });
         }
       })
@@ -248,35 +268,111 @@
       });
     }
 
-    function addRow(id,ref,name,type,active,updated,last_value){
+    function addRowDeviceSensor(id,ref,name,type,property,active,updated,last_value){
       let state = "";
-      if(!active) return;
+      if(active)
+        state = "checked"
+      let json = type == "json" ? "selected" : '';
+      let string = type == "string" ? "selected" : '';
+      let number = type == "number" ? "selected" : '';
       t.row.add([
+        `<button id="delete-${id}" onclick="deleteSensor('${id}');" type="button" class="delete btn btn-danger btn-sm">
+          <i class="fa-sharp fa-solid fa-trash"></i>
+        </button>`,
+        `<div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" id=${id} ${state}>
+        </div>`,
         ref,
-        name,
+        `<input type="text" class="form-control" id=${id} value="${name}" oninput="handleNameChange(${id},this.value)">`,
+        `<select class="form-control select_type" id=${id} name="dataTypes" value=${type}>
+          <option value=""></option>
+          <option ${json} value="json">json</option>
+          <option ${string} value="string">string</option>
+          <option ${number} value="number">number</option>
+        </select>`,
+        property,
         updated,
-        last_value,
-        `<button class="btn btn-light btn-sm" type="submit" onclick=Display.showSensorsLogs(${id},'${type}')>
-          <i class="bi bi-list"></i>
-        </button>`
+        `<div class="d-flex align-items-center gap-2">
+          <button class="btn btn-light btn-sm" type="button"
+            onclick="Display.showSensorsLogs(${id}, '${type}')"
+            title="View logs">
+            <i class="bi bi-list"></i>
+          </button>
+          <input type="text" class="form-control form-control-sm" readonly
+            value="${String(last_value)}"
+            title="Last value"
+            style="max-width: 180px;">
+        </div>`,
       ]).draw(true);
 
+    }
+
+    function addRowModelSensor(id,ref,name,type,property,active,updated,last_value){
+      let state = "";
+      if(active)
+        state = "checked"
+      let json = type == "json" ? "selected" : 'disabled';
+      let string = type == "string" ? "selected" : 'disabled';
+      let number = type == "number" ? "selected" : 'disabled';
+      t.row.add([
+        ``,
+        `<div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" id=${id} ${state} disabled>
+        </div>`,
+        ref,
+        `<input readonly type="text" class="form-control " id=${id} value="${name}" oninput="handleNameChange(${id},this.value)">`,
+        `<select class="form-control select_type" id=${id} name="dataTypes" value=${type}>
+          <option value=""></option>
+          <option ${json} value="json">json</option>
+          <option ${string} value="string">string</option>
+          <option ${number} value="number">number</option>
+        </select>`,
+        property,
+        updated,
+        `<div class="d-flex align-items-center gap-2">
+          <button class="btn btn-light btn-sm" type="button"
+            onclick="Display.showSensorsLogs(${id}, '${type}')"
+            title="View logs">
+            <i class="bi bi-list"></i>
+          </button>
+          <input type="text" class="form-control form-control-sm" readonly
+            value="${String(last_value)}"
+            title="Last value"
+            style="max-width: 180px;">
+        </div>`,
+      ]).draw(true);
+
+    }
+
+    function handleNameChange(id,value){
+      clearTimeout(timerInputChange);
+      timerInputChange = setTimeout(function() {
+        api.device.updateSensor(deviceId,id,"name",value,(err,res)=>{
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }
+        });
+
+      }, 1000); // 500ms delay
     }
 
     function addSensor(){
       let ref = $("#_modalRef_").val();
       let name = $("#_modalName_").val();
       let type = $("#type").val();
+      const property = $("#_modalProperty_").val();
 
       // Validation (optional)
-      if (!ref || !name || !type || !deviceId) {
+      if (!ref || !name || !type || !property || !deviceId) {
         $('#error').text("Invalid fields");
         $('#suggestion').text("Check your fields and retry again");
         $('#modalError').modal('show');
         return;
       }
 
-      api.device.addSensor(deviceId,ref,name,type,(err,res)=>{
+      api.device.addSensor(deviceId,ref,name,type,property,(err,res)=>{
         if(err){
           $('#error').text("Error adding sensor");
           if(err.hasOwnProperty("sqlMessage"))
@@ -297,6 +393,34 @@
         }
       });
     }
+
+    function showAddSensorModal(){
+      $('#modalAddSensor').modal('show');
+    }
+
+    var sensorIdToDelete = null;
+
+    function deleteSensor(sensorId){
+      sensorIdToDelete = sensorId;
+      $('#modal_message').text(`You are about to delete sensor with ID: ${sensorId}`);
+      $('#modalConfirmation').modal('show');
+    }
+
+    $("#modalProceed").click(()=>{
+      if(sensorIdToDelete){
+        const idToDelete = sensorIdToDelete;
+        sensorIdToDelete = null;
+        api.device.deleteSensor(deviceId, idToDelete, (err,res)=>{
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }else{
+            location.reload();
+          }
+        });
+      }
+    });
 
   </script>
 </body>

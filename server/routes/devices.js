@@ -74,6 +74,8 @@ router.route("/:device_id/fw/logs")
 
 router.route("/:device_id/sensor")
   .post(Sensor.add)
+  .put(Sensor.update)
+  .delete(Sensor.delete)
 
 router.route("/:device_id/sensors")
   .get(Sensor.list)

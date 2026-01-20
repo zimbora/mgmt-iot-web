@@ -305,8 +305,8 @@ var api = {
 
   device: {
 
-    addSensor: (deviceId,ref,name,type,cb)=>{
-      fetch(Settings.api+"/device/"+deviceId+"/sensors", {
+    addSensor: (deviceId,ref,name,type,property,cb)=>{
+      fetch(Settings.api+"/device/"+deviceId+"/sensor", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -314,7 +314,54 @@ var api = {
         body: JSON.stringify({
           ref: ref,
           name: name,
-          type: type
+          type: type,
+          property: property,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    updateSensor: (deviceId, sensorId, property, value, cb )=>{
+      
+      fetch(Settings.api+"/device/"+deviceId+"/sensor", {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sensor_id: sensorId,
+          property,
+          value
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    deleteSensor: (deviceId, sensorId, cb )=>{
+      
+      fetch(Settings.api+"/device/"+deviceId+"/sensor", {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sensor_id: sensorId
         })
       })
       .then(function (response) {
