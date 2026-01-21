@@ -1215,6 +1215,7 @@ var self = module.exports =  {
         
   },
 
+  // hard delete
   delete : async (deviceId,cb)=>{
 
     let project_table = await self.getProject(deviceId);
@@ -1272,6 +1273,45 @@ var self = module.exports =  {
     }
 
     db.delete("devices",filter)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  // soft delete
+  softDelete: async(deviceId,cb)=>{
+
+    data = {
+      deleted : true
+    }
+
+    filter = {
+      id : deviceId,
+    }
+
+    db.update("devices",data,filter)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  disable: async(deviceId,cb)=>{
+
+    data = {
+      disabled : true
+    }
+
+    filter = {
+      id : deviceId,
+    }
+
+    db.update("devices",data,filter)
     .then(rows => {
       return cb(null,rows);
     })
