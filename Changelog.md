@@ -1,5 +1,30 @@
 # Changelog
 
+## version 1.0.75
+  fix mqtt web connection
+    Get parameters from config file or use default configurations
+  Synch mqtt topics (#52)
+    * allows remote config change
+    * mqttSettings page: shows default and remote configs, allows remote config changes
+    * page mqttSettings: synch support
+    supports synch update for mqtt topics
+    fixes localData
+    fixes json data
+    Adds labels synched and synching if available
+  Fix device creation: handle null template_id and add owner permissions (#51)
+  Show latest firmware versions on device settings page (#5)
+  supports template assignment and unassignment
+    Use Settings tab in UI to do it
+    MQTT: Template topics are created on device (assignment)
+    MQTT: Template topics are removed from device (unassignment)
+    Lwm2m: need to check
+  Model sensor (#55)
+    * model sensor: new features
+      supports property key (backend/frontend)
+      supports sensor deletion (backend)
+    * Add sensor deletion with confirmation modal to model sensors table (#54)
+  device/sensor: enables editing and deleting sensors associated to device
+
 ## version 1.0.74
   server/controllers/db:delete: fix call
     truncate table, fix filter construction
