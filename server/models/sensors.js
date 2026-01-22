@@ -12,11 +12,11 @@ var self = module.exports = {
       ref : ref,
       name : name,
       type: type,
-      property: property,
+      property: property ? property : '',
       createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
-
+    
     db.insert("sensors",obj)
     .then (rows => {
       return cb(null,rows);

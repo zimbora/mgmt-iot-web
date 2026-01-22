@@ -12,7 +12,7 @@ module.exports = {
       ref: Joi.string().required(),
       name: Joi.string().required(),
       type: Joi.string().required(),
-      property: Joi.string().required(),
+      property: Joi.string().allow('', null),
     }).validate(req.body);
 
     if(val.error){
@@ -24,7 +24,7 @@ module.exports = {
         req.body.ref,
         req.body.name,
         req.body.type,
-        req.body.property,
+        req.body?.property,
         (err,rows)=>{
           if(!err) response.send(res,rows);
           else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);

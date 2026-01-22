@@ -128,7 +128,7 @@
         if(err) console.log(err)
         else{
           res.forEach((item, i) => {
-            console.log(item);
+            console.log(item)
             addRowDeviceSensor(
               item?.id,
               item?.ref,
@@ -365,9 +365,16 @@
       const property = $("#_modalProperty_").val();
 
       // Validation (optional)
-      if (!ref || !name || !type || !property || !deviceId) {
+      if (!ref || !name || !type || !deviceId) {
         $('#error').text("Invalid fields");
         $('#suggestion').text("Check your fields and retry again");
+        $('#modalError').modal('show');
+        return;
+      }
+
+      if (type.toLowerCase() === "json" && !property) {
+        $('#error').text("Invalid fields");
+        $('#suggestion').text("You must define a property");
         $('#modalError').modal('show');
         return;
       }
