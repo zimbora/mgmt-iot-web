@@ -19,8 +19,7 @@ module.exports = {
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
       Sensor.add(
-        req.params?.model_id,
-        req.params?.device_id,
+        req.params.device_id,
         req.body.ref,
         req.body.name,
         req.body.type,
@@ -68,7 +67,7 @@ module.exports = {
   },
 
   list : (req, res, next)=>{  
-    Sensor.list(req.params?.model_id,req.params?.device_id,(err,rows)=>{
+    Sensor.list(req.params?.device_id,(err,rows)=>{
       if(!err) response.send(res,rows);
       else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     });

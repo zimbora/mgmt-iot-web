@@ -2,7 +2,36 @@ var mysql = require('mysql2');
 var db = require('../controllers/db');
 const moment = require('moment');
 
+const Table = "sensors";
+
 var self = module.exports = {
+
+  getByRef : async(deviceId, ref, property, cb)=>{
+    if(!deviceId)
+      return cb("Add deviceId to params",null);
+
+    if(!ref)
+      return cb("ref not known",null);
+
+    var table = [];
+    var query = `select * from ?? where device_id = ? and ref = ?`;
+    table.push(Table,deviceId,ref);
+
+    if(property){
+      query += " and property = ?"
+      table.push(property);
+    }
+    
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })    
+  },
 
   add : async(model_id,device_id,ref,name,type,property,cb)=>{
 
@@ -16,8 +45,8 @@ var self = module.exports = {
       createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
     }
-    
-    db.insert("sensors",obj)
+
+    db.insert(Table,obj)
     .then (rows => {
       return cb(null,rows);
     })
@@ -37,7 +66,24 @@ var self = module.exports = {
       id : id
     };
 
-    db.update("sensors",obj,filter)
+    db.update(Table,obj,filter)
+    .then (rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
+  updateObject : async (id,obj,cb)=>{
+
+    obj['updatedAt'] = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+
+    let filter = {
+      id : id
+    };
+
+    db.update(Table,obj,filter)
     .then (rows => {
       return cb(null,rows);
     })
@@ -52,7 +98,7 @@ var self = module.exports = {
       id : id
     };
 
-    db.delete("sensors",filter)
+    db.delete(Table,filter)
     .then (rows => {
       return cb(null,rows);
     })
@@ -61,20 +107,15 @@ var self = module.exports = {
     });
   },
 
-  list : async (modelId, deviceId, cb)=>{
+  list : async (deviceId, cb)=>{
 
-    if(!modelId && !deviceId)
-      return cb("Add modelId or deviceId to params",null);
+    if(!deviceId)
+      return cb("Add deviceId to params",null);
 
     var table = [];
-    var query = `select * from sensors where `;
-    if(deviceId){
-      query += `device_id = ?`
-      table.push(deviceId);
-    }else if(modelId){
-      query += `model_id = ?`
-      table.push(modelId);
-    }
+    var query = `select * from ?? where device_id = ?`;
+    table.push(Table,deviceId);
+    
     query = mysql.format(query,table);
 
     db.queryRow(query)

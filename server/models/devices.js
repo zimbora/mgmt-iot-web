@@ -290,6 +290,28 @@ var self = module.exports =  {
     })
   },
 
+  // front end
+  // list all devices matching modelId
+  listByModel : async (modelId, cb)=>{
+    
+    if(!modelId){
+      return cb(null,null);
+    }
+
+    let query = `select * from devices where model_id = ?`;
+    let table = [modelId];
+    
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
   getProject : async (deviceId) =>{
 
     return new Promise( (resolve,reject)=>{
@@ -1193,18 +1215,25 @@ var self = module.exports =  {
         if(device.projectName === "lwm2m" && templateId){
           try {
             // copy template to lwm2m table
-            await associateLwm2mTemplateToDevice(res?.insertId,templateId);
+            await self.associateLwm2mTemplateToDevice(res?.insertId,templateId);
           } catch(templateError) {
             console.error('Error associating lwm2m template:', templateError);
           }
         }else if(templateId){
           try {
             // copy template to mqtt table (not lwm2m)
-            await associateMqttTemplateToDevice(res?.insertId,templateId);
+            await self.associateMqttTemplateToDevice(res?.insertId,templateId);
           } catch(templateError) {
             console.error('Error associating mqtt template:', templateError);
           }
         }
+
+        try{
+          await self.associateSensorsTemplateToDevice(res?.insertId,modelId);
+        } catch(sensorsTemplateError){
+          console.error('Error associating sensors template:', sensorsTemplateError);
+        }
+
         return cb(null, res[0]);
       }else{
         return cb('Error adding device', null);
@@ -1758,6 +1787,43 @@ var self = module.exports =  {
     return deleteResults;
   },
 
+  /**
+   * Copies all elements from sensorsTemplate (where modelId = deviceModelId)
+   * to sensors, setting device_id = deviceId and model_id = modelId for each inserted row.
+   * 
+   * @param {number} deviceId - The target device's ID (res[0].insertId)
+   * @param {number} deviceModelId - The source template's ID (device.modelId)
+   * @returns {Promise}
+   */
+  associateSensorsTemplateToDevice: async (deviceId,deviceModelId)=>{
+    // 1. Get all rows from sensorsTemplate for the given modelId
+    let query = `SELECT * FROM ?? where model_id = ?;`
+    let table = ["sensorsTemplate",deviceModelId];
+    query = mysql.format(query,table);
+    let sensors = await db.queryRow(query);
+
+    let res = [];
+
+    if (!sensors || !sensors?.length) return res; // nothing to copy, return empty array
+
+    const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    
+    // 2. Insert each template into lwm2m with device_id
+    for (const sensor of sensors) {
+      // Remove the primary key (if it exists), createdAt and updatedAt
+      const { id, createdAt, updatedAt, ...rest } = sensor;
+      const data = {
+        device_id: deviceId,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        ...rest
+      };
+      const insertRes = await db.insert('sensors', data);
+      res.push(insertRes);
+    }
+
+    return res;
+  },
 };
 
 async function publishAndWaitForResponse(publishTopic, messagePayload, responseTopic, qos, retain, timeout = 5000) {
