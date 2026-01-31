@@ -1,5 +1,73 @@
 # Changelog
 
+## version 1.0.76
+  fix device deletion
+  
+  Sensors template (#56)
+
+    * adds a method for soft delete and disable a device
+    Check if we should use it later on
+
+    * new sensor: fix error while adding new sensor
+    property "property" was not accepting empty values
+    Force property to be defined if sensor is of type json
+
+    * adds new functionality: sensorsTemplate
+    on device creation associate sensors from model to device
+
+    Creates sensorsTemplate CRUD
+    Allows sensor propagation from model sensors to all associated devices
+
+    * all sensors are now associated to each device
+    Each sensor has the last reading stored in db
+    server/models/sensors: adds updateObject
+    updateObject added to enable sensors synch with model
+
+    * pages/device/sensors: fix
+    show last value
+    fix api call
+    removes api calls to models
+
+    * pages/device/mqttSettings: fix device uid text
+    removes log
+
+    * public/js/display: get payload type by analyzing it's type
+    remove reversed data before display logs
+    fix indentation
+
+    * express-web: routes changes
+    send data associated to device
+    if protocol is lwm2m sends lwm2m settings page, else sends mqtt settings page
+    creates new route for manage device
+    On manage route request sends lwm2m for protocol lwm2m otherwise sends mqtt page
+    Changes on sensors request. Sensors are now created for each device
+
+    * server/models/devices:
+    dedicated tables for each model are now deprecated
+    getSensors method is now public
+
+    * pages/device/mqttSettings: Small change on dashboard (shows model name)
+
+    * pages/device/sensors: sensor logs
+    Logs are now obtained from sensors
+    Updated column removed
+    Allows sensor request
+    If model is sniffer, subscribes only sniffer topic
+    If model is sniffer-gw, ignores packets messages
+    sendMessage: builds properly topic for sniffer model
+    rows are now filled with sensor json struct. No api request needed to get this data
+    New readSensor method
+
+    * pages/device/settings: get logs from sensors
+    Logs are now obtained from sensors
+    If model is sniffer, subscribes only sniffer topic
+    sendMessage: builds properly topic for sniffer model
+    rows are now filled with sensor json struct. No api request needed to get this data
+
+    * partials/device/sidebar: mqttSettings removed, added Manage
+
+    * Adds lwm2m and mqtt pages. Moved from inloc project
+
 ## version 1.0.75
   fix mqtt web connection
     Get parameters from config file or use default configurations
