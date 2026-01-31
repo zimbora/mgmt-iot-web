@@ -470,6 +470,7 @@ app.get('/device/:device_id/sensors',(req,res)=>{
       project:data.project,
       model:data.model,
       modelFeat:data.modelFeat,
+      associated:data.associated,
       fw:data.fw,
       sensors:data.sensors,
       mqtt:data.mqtt,
@@ -485,7 +486,7 @@ app.get('/device/:device_id/settings',(req,res)=>{
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model){
 
-    if(data.project_name === "lwm2m"){
+    if(data.device?.protocol.toLowerCase() === "lwm2m"){
       res.render(path.join(__dirname, config.public_path+'/views/pages/device/lwm2mSettings'),{
         project_name:data.project_name,
         model_name:data.model_name,
@@ -493,6 +494,7 @@ app.get('/device/:device_id/settings',(req,res)=>{
         project:data.project,
         model:data.model,
         modelFeat:data.modelFeat,
+        associated:data.associated,
         fw:data.fw,
         sensors:data.sensors,
         mqtt:data.mqtt,
@@ -500,13 +502,14 @@ app.get('/device/:device_id/settings',(req,res)=>{
         page:'Settings'
       });
     }else{
-      res.render(path.join(__dirname, config.public_path+'/views/pages/device/settings'),{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqttSettings'),{
         project_name:data.project_name,
         model_name:data.model_name,
         device:data.device,
         project:data.project,
         model:data.model,
         modelFeat:data.modelFeat,
+        associated:data.associated,
         fw:data.fw,
         sensors:data.sensors,
         mqtt:data.mqtt,
@@ -519,23 +522,43 @@ app.get('/device/:device_id/settings',(req,res)=>{
   }
 });
 
-app.get('/device/:device_id/mqttSettings',(req,res)=>{
+// access should be restrict to device admins!!
+app.get('/device/:device_id/manage',(req,res)=>{
 
   let data = req.user.data;
   if(data.device != null && data.mqtt != null && data.model){
-    res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqttSettings'),{
-      project_name:data.project_name,
-      model_name:data.model_name,
-      device:data.device,
-      project:data.project,
-      model:data.model,
-      modelFeat:data.modelFeat,
-      fw:data.fw,
-      sensors:data.sensors,
-      mqtt:data.mqtt,
-      user:req.user,
-      page:'MqttSettings'
-    });
+
+    if(data.device?.protocol.toLowerCase() === "lwm2m"){
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/lwm2m'),{
+        project_name:data.project_name,
+        model_name:data.model_name,
+        device:data.device,
+        project:data.project,
+        model:data.model,
+        modelFeat:data.modelFeat,
+        associated:data.associated,
+        fw:data.fw,
+        sensors:data.sensors,
+        mqtt:data.mqtt,
+        user:req.user,
+        page:'Manage'
+      });
+    }else{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqtt'),{
+        project_name:data.project_name,
+        model_name:data.model_name,
+        device:data.device,
+        project:data.project,
+        model:data.model,
+        modelFeat:data.modelFeat,
+        associated:data.associated,
+        fw:data.fw,
+        sensors:data.sensors,
+        mqtt:data.mqtt,
+        user:req.user,
+        page:'Manage'
+      });
+    }
   }else{
     res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }
@@ -679,12 +702,18 @@ function collectData(req,callback){
       });
     },
     (next)=>{
-      Device.getSensors(req.params.device_id,data.device?.model_id,(err,row)=>{
-        data.sensors = row;
-        if(err){
-          log.warn(`warning - no table for model ${data.device?.model}`);
+      Device.getSensors(req.params.device_id,(err,rows)=>{
+        data.sensors = {};
+        if(err)
+          next(err)
+        else if(!rows?.length)
+          next();
+        else{
+          rows.map((sensor)=>{
+            data.sensors[sensor?.name] = sensor;
+          })
+          next();
         }
-        next();
       });
     },
     (next)=>{
