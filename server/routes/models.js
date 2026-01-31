@@ -3,7 +3,7 @@ var express = require('express');
 
 var Model = require('../controllers/models');
 var Firmware = require('../controllers/firmwares');
-var Sensor = require('../controllers/sensors');
+var SensorTemplate = require('../controllers/sensorsTemplate');
 
 // send file
 var filePath = "";
@@ -99,13 +99,16 @@ router.route('/:model_id/firmware/latest')
   .get(Model.getLatestFirmware)
 
 router.route('/:model_id/sensors')
-  .get(Sensor.list)
+  .get(SensorTemplate.list)
 
 router.route('/:model_id/sensor')
-  //.get(Sensor.get)
-  .delete(Sensor.delete)
-  .put(Sensor.update)
-  .post(Sensor.add)
+  //.get(SensorTemplate.get)
+  .delete(SensorTemplate.delete)
+  .put(SensorTemplate.update)
+  .post(SensorTemplate.add)
+
+router.route('/:model_id/sensor/propagate')
+  .post(SensorTemplate.propagate)
 
 router.route('/:model_id/option')
   .put(Model.updateOption)

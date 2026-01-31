@@ -6,10 +6,11 @@ var Display = {
     api.getSensorLogs(dId,sensorId,(err,res)=>{
       if(err) console(err);
       else if(res?.length > 0){
-        if(type.toLowerCase() == "string" )
-          Display.showList('value',res);
-        else if(type.toLowerCase() == "number" )
+        if(isNumber(res[0].value)){
           Display.drawLinearChart('value',res);
+        }else if((res[0].value)){
+          Display.showList('value',res);
+        }
         else console.log("format not supported");
       }else{
         console.log("no elements found");
@@ -45,115 +46,145 @@ var Display = {
 
 	drawLinearChart : (sensor,reversedData)=>{
 
-      const data = [...reversedData].reverse();
+    const data = [...reversedData].reverse();
 
-      let option = {
-        legend:{
-          data:[sensor],
-          type:"scroll"
+    let option = {
+      legend:{
+        data:[sensor],
+        type:"scroll"
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: function (params) {
+          return 'date: '+moment.unix(Number(params[0].axisValue)).local().format('YYYY/MM/DD HH:mm') + '<br />' + sensor+': '+params[0].value;
+        }
+      },
+      dataZoom:[{type:'inside'}],
+      xAxis: {
+        name: 'time',
+        nameLocation: 'center',
+        nameGap:20,
+        nameTextStyle:{
+          fontWeight:'bold',
         },
-        tooltip: {
-          trigger: 'axis',
-          formatter: function (params) {
-            return 'date: '+moment.unix(Number(params[0].axisValue)).local().format('YYYY/MM/DD HH:mm') + '<br />' + sensor+': '+params[0].value;
+        data: data.map(function (item) {
+          return moment(item.createdAt).unix();
+        }),
+        axisLabel: {
+          formatter: function (value, idx) {
+            return moment.unix(value).format('DD HH:mm');
           }
         },
-        dataZoom:[{type:'inside'}],
-        xAxis: {
-          name: 'time',
-          nameLocation: 'center',
-          nameGap:20,
-          nameTextStyle:{
-            fontWeight:'bold',
-          },
+      },
+      yAxis: {
+        /*
+        name: 'values',
+        nameLocation: 'center',
+        nameGap:35,
+        nameTextStyle:{
+          fontWeight:'bold',
+        },
+        */
+      },
+      series: [
+        {
           data: data.map(function (item) {
-            return moment(item.createdAt).unix();
+            if(sensor == "status"){
+              return item[sensor] == "online" ? 1 : 0;
+            }else return item[sensor];
           }),
-          axisLabel: {
-            formatter: function (value, idx) {
-              return moment.unix(value).format('DD HH:mm');
-            }
-          },
-        },
-        yAxis: {
-          /*
-          name: 'values',
-          nameLocation: 'center',
-          nameGap:35,
-          nameTextStyle:{
-            fontWeight:'bold',
-          },
-          */
-        },
-        series: [
-          {
-            data: data.map(function (item) {
-              if(sensor == "status"){
-                return item[sensor] == "online" ? 1 : 0;
-              }else return item[sensor];
-            }),
-            name:sensor,
-            type: 'line',
-            smooth: true
-          }
-        ]
-      };
+          name:sensor,
+          type: 'line',
+          smooth: true
+        }
+      ]
+    };
 
-      ctx.setOption(option)
-      ctx.resize();
+    ctx.setOption(option)
+    ctx.resize();
 
-      $('#modalChartLogs').modal('show');
-    },
+    $('#modalChartLogs').modal('show');
+  },
 
 	showList : (sensor,reversedData)=>{
-      // Sort the array
-      const data = [...reversedData].reverse();
+    // Sort the array
+    const data = [...reversedData].reverse();
+    table_list.clear();
+    Display.calculateTimeDifference(reversedData);
+    data.map((item,i)=>{
+      if(data?.duration)
+        data.duration = 0;
+      table_list.row.add([
+        moment(item.createdAt).local().format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
+      ]).draw(true);
+    })
 
-      table_list.clear();
-      Display.calculateTimeDifference(data);
-      data.map((item,i)=>{
-        if(data?.duration)
-          data.duration = 0;
-        table_list.row.add([
-          moment(item.createdAt).local().format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
-        ]).draw(true);
-      })
-
-      table_list.order([0, 'desc']).draw();
-      $('#modalListLogs').modal('show');
-    },
+    table_list.order([0, 'desc']).draw();
+    $('#modalListLogs').modal('show');
+  },
 
 	calculateTimeDifference : (data)=>{
 
-      data.slice(1).map((item, i) => {
-        // convert both current and previous timestamps to milliseconds
-        let current = moment(item.createdAt).unix();
-        let previous = moment(data[i].createdAt).unix();
+    data.slice(1).map((item, i) => {
+      // convert both current and previous timestamps to milliseconds
+      let current = moment(item.createdAt).unix();
+      let previous = moment(data[i].createdAt).unix();
 
-        data[i].duration = Display.getDifference(current,previous);
-        return;
-      });
-      let previous = moment(data[data.length-1].createdAt).unix();
-      let current = moment().unix();
-      data[data.length-1].duration = Display.getDifference(current,previous);
-    },
+      data[i].duration = Display.getDifference(current,previous);
+      return;
+    });
+    let previous = moment(data[data.length-1].createdAt).unix();
+    let current = moment().unix();
+    data[data.length-1].duration = Display.getDifference(current,previous);
+  },
 
 	getDifference : (current, previous)=>{
-      // calculate difference in seconds
-      let differenceInSeconds = (current - previous) % 60;
-      differenceInSeconds = differenceInSeconds.toFixed(0);
-      let sec_str = String(differenceInSeconds).padStart(2, '0');
+    // calculate difference in seconds
+    let differenceInSeconds = (current - previous) % 60;
+    differenceInSeconds = differenceInSeconds.toFixed(0);
+    let sec_str = String(differenceInSeconds).padStart(2, '0');
 
-      // you can convert the difference to minutes, hours etc.
-      let differenceInMinutes = (current - previous) % 3600 / 60;
-      differenceInMinutes = Math.floor(differenceInMinutes);
-      let min_str = String(differenceInMinutes).padStart(2, '0');
+    // you can convert the difference to minutes, hours etc.
+    let differenceInMinutes = (current - previous) % 3600 / 60;
+    differenceInMinutes = Math.floor(differenceInMinutes);
+    let min_str = String(differenceInMinutes).padStart(2, '0');
 
-      let differenceInHours = (current - previous) / 3600;
-      differenceInHours = Math.floor(differenceInHours);
-      let hour_str = String(differenceInHours).padStart(2, '0');
-      let time = hour_str+":"+min_str+":"+sec_str;
-      return time;
+    let differenceInHours = (current - previous) / 3600;
+    differenceInHours = Math.floor(differenceInHours);
+    let hour_str = String(differenceInHours).padStart(2, '0');
+    let time = hour_str+":"+min_str+":"+sec_str;
+    return time;
+  }
+
+}
+
+// Extended: accepts numbers and numeric strings, including ones surrounded by matching quotes (' or ").
+function isNumber(val) {
+  if (typeof val === 'number') return Number.isFinite(val);
+
+  // Handle String objects (new String(...))
+  if (val instanceof String) {
+    return isNumber(val.valueOf());
+  }
+
+  if (typeof val === 'string') {
+    let s = val.trim();
+    if (!s) return false;
+
+    // Strip matching surrounding quotes: '...'(single) or "..."(double)
+    const quote = s[0];
+    if ((quote === "'" || quote === '"') && s[s.length - 1] === quote) {
+      s = s.slice(1, -1).trim();
+      if (!s) return false;
     }
 
+    const n = Number(s);
+    return Number.isFinite(n);
+  }
+
+  return false;
+}
+
+function isString(val) {
+  return typeof val === 'string';
 }

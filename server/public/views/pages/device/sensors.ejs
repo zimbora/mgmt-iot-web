@@ -50,7 +50,7 @@
           <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
             <div class="content-header">
               <h5>
-                <button class="btn btn-primary btn-sm" type="submit" onclick="Display.showDeviceLogs(`status`)">
+                <button class="btn btn-primary btn-sm" type="submit" onclick="Display.showSensorsLogs(`<%=sensors?.status?.id%>`)">
                   <i class="bi bi-list"></i>
                 </button>
                 <%= device.name != null ? device.name : device.uid %>
@@ -87,7 +87,6 @@
                           <th>name</th>
                           <th>type</th>
                           <th>property</th>
-                          <th>updated</th>
                           <th>last_value</th>
                         </tr>
                       </thead>
@@ -110,11 +109,23 @@
     var deviceId = api.getDeviceID();
     var device = <%- JSON.stringify(device) %>;
     var mqtt = <%- JSON.stringify(mqtt) %>;
+    var sensors = <%- JSON.stringify(sensors) %>;
+    const associated = <%- JSON.stringify(associated) %>;
+    const fw = <%- JSON.stringify(fw) %>;
+    const model = <%- JSON.stringify(model) %>;
+    const modelFeat = <%- JSON.stringify(modelFeat) %>;
+
     let modelId = device.model_id;
     var timerInputChange = null;
 
-    const project = device.project;
+    let project_name = <%- JSON.stringify(project_name) %>;
+    let model_name = <%- JSON.stringify(model_name) %>;
+
     const uid = device.uid;
+    var loading = $('#modalLoading');
+    var waitingSensorId = null;
+    var waitingTopicResponse = null;
+    var waitingSensorNameResponse = null;
 
     $(document).ready(function () {
 
@@ -124,73 +135,43 @@
       t = $('#sensors').DataTable();
       ctx = echarts.init(document.getElementById('myChart'));
 
-      api.device.getSensors(deviceId,(err,res)=>{
-        if(err) console.log(err)
-        else{
-          res.forEach((item, i) => {
-            console.log(item);
-            addRowDeviceSensor(
-              item?.id,
-              item?.ref,
-              item?.name,
-              item?.type,
-              item?.property,
-              item?.active,
-              moment(item?.updatedAt).format('YY/MM/DD LT'),
-              "");
-            
-            if(i==res.length-1){
-              $('.form-check-input').on('change', function() {
-                let id = $(this).attr('id');
-                let active = "0";
-                if ($(this).is(':checked'))
-                  active = "1";
+      let i = 0;
+      Object.values(sensors).map((item) => {
+        item.remoteUnixTs = moment.unix(item?.remoteUnixTs).format('YYYY/MM/DD LT');
+        addRowDeviceSensor(item);
 
-                api.model.updateSensor(deviceId,id,"active",active,(err,res)=>{
-                  if(err){
-                    $('#error').text("Your request cannot be executed");
-                    $('#suggestion').text(err);
-                    $('#modalError').modal('show');
-                  }
-                });
+        if(i==Object.values(sensors).length-1){
+          $('.form-check-input').on('change', function() {
+            let id = $(this).attr('id');
+            let active = "0";
+            if ($(this).is(':checked'))
+              active = "1";
 
-              });
-
-              $('.select_type').on('change', function() {
-                  let id = $(this).attr('id');
-                  let type = $(this).val();
-                  api.device.updateSensor(deviceId,id,"type",type,(err,res)=>{
-                    if(err){
-                      $('#error').text("Your request cannot be executed");
-                      $('#suggestion').text(err);
-                      $('#modalError').modal('show');
-                    }
-                  });
-              });
-            }
-            
+            api.device.updateSensor(deviceId,id,"active",active,(err,res)=>{
+              if(err){
+                $('#error').text("Your request cannot be executed");
+                $('#suggestion').text(err);
+                $('#modalError').modal('show');
+              }
+            });
 
           });
 
-        }
-      })
-      
-      api.model.getSensors(modelId,(err,res)=>{
-        if(err) console.log(err)
-        else{
-          res.forEach((item, i) => {
-            addRowModelSensor(
-              item?.id,
-              item?.ref,
-              item?.name,
-              item?.type,
-              item?.property,
-              item?.active,
-              moment(item?.updatedAt).format('YY/MM/DD LT'),
-              "");
+          $('.select_type').on('change', function() {
+              let id = $(this).attr('id');
+              let type = $(this).val();
+              api.device.updateSensor(deviceId,id,"type",type,(err,res)=>{
+                if(err){
+                  $('#error').text("Your request cannot be executed");
+                  $('#suggestion').text(err);
+                  $('#modalError').modal('show');
+                }
+              });
           });
         }
-      })
+        i++;
+
+      });
 
       // connect the client
       if(mqtt != null){
@@ -212,13 +193,19 @@
 
     });
 
-        // called when the client connects
+      // called when the client connects
     function onConnect() {
       // Once a connection has been made, make a subscription and send a message.
       let button = document.querySelector('#mqtt_status');
       button.classList.toggle("btn-secondary",false);
       button.classList.toggle("btn-success",true);
-      client.subscribe(project+"/"+uid+"/#");
+
+      // get uid of main device
+      if(model_name === "sniffer"){ // add a different property to check when main device should be used
+        client.subscribe(`${project_name}/${associated.uid}/app/${model_name}/${device.uid}/#`);
+      }else{
+        client.subscribe(project_name+"/"+uid+"/#");
+      }
     }
 
     // called when the client loses its connection
@@ -238,6 +225,11 @@
       let topic = message.destinationName;
       let payload = message.payloadString;
 
+      if(model_name === "sniffer-gw"){
+        if(topic.includes("/packets/"))
+          return;
+      }
+
       if(topic.includes("/status")){
         let button = document.querySelector('#status');
         button.classList.toggle("btn-secondary",false);
@@ -246,12 +238,46 @@
         else
           button.classList.toggle("btn-danger",true);
       }
+      
+      if(waitingTopicResponse && topic.endsWith(waitingTopicResponse)){
+        $(document).trigger("closeModalLoading"); // set confirmation
+
+        try{
+          payload = JSON.parse(payload);
+        }catch(e){}
+
+        if(payload !== null && typeof payload === 'object'){
+          if(sensors.hasOwnProperty(waitingSensorNameResponse)){
+            const property = sensors[waitingSensorNameResponse]?.property;
+            if(payload.hasOwnProperty(property)){
+              payload = payload[property];
+            }
+          }
+        }
+
+        const el = document.getElementById(`sensor-${waitingSensorId}`);
+        if (el) {
+          if ('value' in el) el.value = payload;    // inputs, textareas, etc.
+          else el.textContent = String(payload);    // non-input elements
+          if ('title' in el) el.title = moment().format('YYYY/MM/DD LT');
+        }
+
+        waitingTopicResponse = null;
+        waitingSensorId = null;
+        waitingSensorNameResponse = null;
+      }
+      
     }
 
     function sendMessage(topic,payload){
-      message = new Paho.MQTT.Message(payload);
-      message.destinationName = project+"/"+uid+"/"+topic;
 
+      message = new Paho.MQTT.Message(payload);
+      if(model_name === "sniffer"){
+        message.destinationName = `${project_name}/${associated.uid}/app/${model_name}/${device.uid}/${topic}`;
+      }else{
+        message.destinationName = project_name+"/"+uid+"/"+topic;
+      }
+      
       loading.modal('show');
       setTimeout(()=>{
         client.send(message);
@@ -268,76 +294,43 @@
       });
     }
 
-    function addRowDeviceSensor(id,ref,name,type,property,active,updated,last_value){
+    function addRowDeviceSensor(sensor){
       let state = "";
-      if(active)
+      if(sensor?.active)
         state = "checked"
-      let json = type == "json" ? "selected" : '';
-      let string = type == "string" ? "selected" : '';
-      let number = type == "number" ? "selected" : '';
+      let json = sensor?.type == "json" ? "selected" : '';
+      let string = sensor?.type == "string" ? "selected" : '';
+      let number = sensor?.type == "number" ? "selected" : '';
       t.row.add([
-        `<button id="delete-${id}" onclick="deleteSensor('${id}');" type="button" class="delete btn btn-danger btn-sm">
+        `<button id="delete-${sensor?.id}" onclick="deleteSensor('${sensor?.id}');" type="button" class="delete btn btn-danger btn-sm">
           <i class="fa-sharp fa-solid fa-trash"></i>
-        </button>`,
+        </button>
+        <button class="btn btn-light btn-sm" type="button"
+            onclick="readSensor('${sensor?.id}','${sensor?.ref}','${sensor?.name}')"
+            title="View logs">
+            <i class="bi bi-search"></i>
+          </button>`,
         `<div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch" id=${id} ${state}>
+          <input class="form-check-input" type="checkbox" role="switch" id=${sensor?.id} ${state}>
         </div>`,
-        ref,
-        `<input type="text" class="form-control" id=${id} value="${name}" oninput="handleNameChange(${id},this.value)">`,
-        `<select class="form-control select_type" id=${id} name="dataTypes" value=${type}>
+        sensor?.ref,
+        `<input type="text" class="form-control" id=${sensor?.id} value="${sensor?.name}" oninput="handleNameChange(${sensor?.id},this.value)">`,
+        `<select class="form-control select_type" id=${sensor?.id} name="dataTypes" value=${sensor?.type}>
           <option value=""></option>
           <option ${json} value="json">json</option>
           <option ${string} value="string">string</option>
           <option ${number} value="number">number</option>
         </select>`,
-        property,
-        updated,
+        sensor?.property,
         `<div class="d-flex align-items-center gap-2">
           <button class="btn btn-light btn-sm" type="button"
-            onclick="Display.showSensorsLogs(${id}, '${type}')"
+            onclick="Display.showSensorsLogs(${sensor?.id}, '${sensor?.type}')"
             title="View logs">
             <i class="bi bi-list"></i>
           </button>
-          <input type="text" class="form-control form-control-sm" readonly
-            value="${String(last_value)}"
-            title="Last value"
-            style="max-width: 180px;">
-        </div>`,
-      ]).draw(true);
-
-    }
-
-    function addRowModelSensor(id,ref,name,type,property,active,updated,last_value){
-      let state = "";
-      if(active)
-        state = "checked"
-      let json = type == "json" ? "selected" : 'disabled';
-      let string = type == "string" ? "selected" : 'disabled';
-      let number = type == "number" ? "selected" : 'disabled';
-      t.row.add([
-        ``,
-        `<div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch" id=${id} ${state} disabled>
-        </div>`,
-        ref,
-        `<input readonly type="text" class="form-control " id=${id} value="${name}" oninput="handleNameChange(${id},this.value)">`,
-        `<select class="form-control select_type" id=${id} name="dataTypes" value=${type}>
-          <option value=""></option>
-          <option ${json} value="json">json</option>
-          <option ${string} value="string">string</option>
-          <option ${number} value="number">number</option>
-        </select>`,
-        property,
-        updated,
-        `<div class="d-flex align-items-center gap-2">
-          <button class="btn btn-light btn-sm" type="button"
-            onclick="Display.showSensorsLogs(${id}, '${type}')"
-            title="View logs">
-            <i class="bi bi-list"></i>
-          </button>
-          <input type="text" class="form-control form-control-sm" readonly
-            value="${String(last_value)}"
-            title="Last value"
+          <input id="sensor-${String(sensor?.id)}" type="text" class="form-control form-control-sm" readonly
+            value="${String(sensor?.value)}"
+            title="${String(sensor?.remoteUnixTs)}"
             style="max-width: 180px;">
         </div>`,
       ]).draw(true);
@@ -365,9 +358,16 @@
       const property = $("#_modalProperty_").val();
 
       // Validation (optional)
-      if (!ref || !name || !type || !property || !deviceId) {
+      if (!ref || !name || !type || !deviceId) {
         $('#error').text("Invalid fields");
         $('#suggestion').text("Check your fields and retry again");
+        $('#modalError').modal('show');
+        return;
+      }
+
+      if (type.toLowerCase() === "json" && !property) {
+        $('#error').text("Invalid fields");
+        $('#suggestion').text("You must define a property");
         $('#modalError').modal('show');
         return;
       }
@@ -421,6 +421,13 @@
         });
       }
     });
+
+    function readSensor(id,ref,name){
+      waitingSensorId = id;
+      waitingTopicResponse = ref;
+      waitingSensorNameResponse = name;
+      sendMessage(ref+"/get","");
+    }
 
   </script>
 </body>

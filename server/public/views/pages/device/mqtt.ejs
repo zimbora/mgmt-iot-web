@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/head.ejs') %>
+  
+  <style type="text/css" media="screen">
+    .lwm2m-tab-content {
+      height: 600px;
+      overflow-y: auto;
+    }
+    .lwm2m-table {
+      width: 100%;
+    }
+    .tooltip-value {
+      cursor: help;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
+    .action-buttons {
+      white-space: nowrap;
+    }
+    .action-buttons button {
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+    /* Badge notification styles */
+    .notification-badges {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .notification-badge {
+      padding: 10px 15px;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+      max-width: 250px;
+    }
+    .notification-badge.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .badge-success {
+      background-color: #28a745;
+    }
+    .badge-warning {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    .badge-danger {
+      background-color: #dc3545;
+    }
+    .badge-info {
+      background-color: #17a2b8;
+    }
+  </style>
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <%- include('../../partials/scripts.ejs') %>
+  <%- include('../../partials/device/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/success.ejs') %>
+  <%- include('../../partials/modal/addSensor.ejs') %>
+  <%- include('../../partials/modal/loading.ejs') %>
+  <%- include('../../partials/modal/timeout.ejs') %>
+  <%- include('../../partials/modal/logsChart.ejs') %>
+  <%- include('../../partials/modal/logsList.ejs') %>
+
+  <!-- Notification Badges -->
+  <div class="notification-badges" id="notificationBadges"></div>
+
+  <script src="./assets/js/jquery.min.js"></script>
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/ace.js"></script>
+  <script src="./assets/js/mqttws31.min.js" type="text/javascript"></script>
+  <script type="module" src="./app.mjs"></script>
+
+  <div class="container-fluid">
+    <div class="row flex-nowrap">
+      <%- include('../../partials/device/sidebar.ejs') %>
+      <div class="col py-3">
+        <div class="row">
+          <div class="col-12 mb-3">
+            <div class="content-header">
+
+              <div class="row py-3">
+                <div class="col-xs-12 col-sm-6 mb-4 mb-sm-0">
+                  <div class="content-header">
+                    <h5>MQTT Available
+                      <button id="mqtt_status" type="button" class="btn btn-secondary" disabled></button>
+                    </h5>
+                  </div>
+                  <div class="col">
+                    <div class="mb-1 row">
+                      <label for="project" class="col-4 col-form-label">Project</label>
+                      <div class="col-6">
+                        <input type="text" readonly class="form-control-plaintext fw-bold" id="project" value="<%=project_name%>">
+                      </div>
+                    </div>
+                    <div class="mb-1 row">
+                      <label for="model" class="col-4 col-form-label">Model</label>
+                      <div class="col-6">
+                        <input type="text" readonly class="form-control-plaintext fw-bold" id="model" value="<%=model_name%>">
+                      </div>
+                    </div>
+                    <% if(device.template_id == null) { %>
+                    <div class="btn-group">
+                      <label class="input-group-text" for="inputGroupSelect21">Template:</label>
+                        <select class="form-select templateSelect" id="_template_select_">
+                          <option value="">Select a template...</option>
+                          <!-- populated by JS -->
+                        </select>
+                        <button id="assignTemplate" class="btn btn-primary btn-sm" type="button" title="Assign template to device">
+                          <i class="bi bi-check"></i> Assign
+                        </button>
+                    </div>
+                    <% } %>
+                  </div>
+                </div>
+                <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+                  <div class="content-header">
+                    <h5>
+                      <button class="btn btn-primary btn-sm" type="submit" onclick="Display.showSensorsLogs(`<%=sensors?.status?.id%>`)">
+                        <i class="bi bi-list"></i>
+                      </button>
+                      <%= device.uid %>
+                      <button id="status" type="button" class="btn btn-secondary" disabled></button
+                    </h5>
+                  </div>
+                  <div class="row align-items-center g-2 mb-1">
+                    <div class="col-md-8 d-flex align-items-center gap-2">
+                      <button class="btn btn-primary btn-sm" type="button"
+                              onclick="Display.showSensorsLogs(<%= sensors?.version?.id %>)">
+                        <i class="bi bi-list"></i>
+                      </button>
+
+                      <label for="version" class="col-form-label mb-0">version</label>
+
+                      <input type="text" readonly class="form-control-plaintext fw-bold"
+                             id="version" value="<%= sensors?.version?.value %>">
+                    </div>
+
+                    <div class="col-md-4 text-center">
+                      <small class="text-muted">Latest: <span id="latest_version">-</span></small>
+                    </div>
+                  </div>
+                  <% if(sensors?.app_version) { %>
+                  <div class="row align-items-center g-2 mb-1">
+                    <div class="col-md-8 d-flex align-items-center gap-2">
+                      <button class="btn btn-primary btn-sm" type="button"
+                              onclick="Display.showSensorsLogs(<%= sensors?.app_version?.id %>)">
+                        <i class="bi bi-list"></i>
+                      </button>
+
+                      <label for="app_version" class="col-form-label mb-0">App Version</label>
+
+                      <input type="text" readonly class="form-control-plaintext fw-bold"
+                             id="app_version" value="<%= sensors?.app_version?.value %>">
+                    </div>
+
+                    <div class="col-md-4 text-center">
+                      <small class="text-muted">Latest: <span id="latest_app_version">-</span></small>
+                    </div>
+                  </div>
+                  <% } %>
+                  
+                </div>
+                <div class=row py-3>
+                  <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+                    <!-- Show assigned templates -->
+                    <div id="assignedTemplates">
+                      <% if(device.template_id) { %>
+                        <div class="alert alert-info">
+                          <strong>Assigned Template:</strong> 
+                          <span id="currentTemplate">Template ID: <%= device.template_id %></span>
+                          <button class="btn btn-sm btn-outline-danger ms-2" onclick="unassignTemplate(<%= device.template_id %>)" title="Remove template assignment">
+                            <i class="bi bi-x"></i> Remove
+                          </button>
+                        </div>
+                      <% } else { %>
+                        <div class="text-muted" id="noTemplate">No template assigned</div>
+                      <% } %>
+                    </div>
+                  </div>
+                  <div class="col-xs-12 col-sm-6 mb-4 mb-sm-4">
+                    <div class="btn-group">
+                      <label class="input-group-text" for="inputGroupSelect21">
+                        release
+                      </label>
+                      <select class="form-select fwReleaseOption" id="_fwrelease_">
+                      </select>
+                      <button id="fotaTrigger" class="btn btn-warning btn-sm" type="button" title="Trigger manual FOTA update check">
+                        <i class="bi bi-download"></i> FOTA
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5>MQTT Topics</h5>
+                  <div class="d-flex gap-2 align-items-center">
+                    <label for="payloadFormat" class="form-label mb-0 me-2">Format:</label>
+                    <select id="payloadFormat" class="form-select form-select-sm" style="width: auto;">
+                      <option value="0">text/plain</option>
+                    </select>
+                    <!--
+                    <button class="btn btn-sm btn-outline-info" onclick="requestWellKnownCore()">
+                      <i class="bi bi-search"></i> /.well-known/core
+                    </button>
+                    -->
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <table class="table lwm2m-table" id="tableTopics">
+                  <thead>
+                    <tr>
+                      <th>Path</th>
+                      <th>Name</th>
+                      <th>Value</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-tableTopics">
+                    <!-- Rows will be rendered by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <script>
+
+    const device = <%- JSON.stringify(device) %>;
+    const mqtt = <%- JSON.stringify(mqtt) %>;
+    const project_name = <%- JSON.stringify(project_name) %>;
+    const model_name = <%- JSON.stringify(model_name) %>;
+    const sensors = <%- JSON.stringify(sensors) %>;
+    const associated = <%- JSON.stringify(associated) %>;
+    const fw = <%- JSON.stringify(fw) %>;
+    const model = <%- JSON.stringify(model) %>;
+    const modelFeat = <%- JSON.stringify(modelFeat) %>;
+    
+    var project = <%- JSON.stringify(project) %>;
+    
+    /*
+    console.log(project_name);
+    console.log(model_name);
+    //console.log(mqtt);
+    console.log(device);
+    console.log(sensors);
+    console.log(associated);
+    console.log(fw);
+    console.log(model);
+    console.log(modelFeat);
+    */
+
+    var uid = device.uid
+    var deviceID = device.id;
+    
+    var uid = device.uid;
+    var client;
+    var loading = $('#modalLoading');
+    
+    // Device status tracking
+    var deviceStatus = 'offline'; // online, idle, offline
+    var mqttTopics = [];
+
+    let mqttStartedTime = 0;
+
+    var release_arr = [
+      "dev",
+      "stage",
+      "prod",
+      "critical"
+    ]
+
+    var ctx;
+
+    $(document).ready(() => {
+
+      if(sensors.hasOwnProperty("status")){
+        changeDeviceStatus(sensors["status"]?.value);
+      }
+
+      table_list = $('#table_list').DataTable();
+      ctx = echarts.init(document.getElementById('myChart'));
+
+      initializeMqtt();
+      populateTopics();
+
+      fetchAndDisplayLatestFWVersions();
+      
+      // Load templates for the project
+      loadTemplatesForProject(device.project_id);
+
+      release_arr.forEach((item,i)=>{
+        addOption('#_fwrelease_',item, item == device?.accept_release);
+      });
+
+    });
+    
+    function initializeMqtt() {
+
+      mqttStartedTime = moment().unix();
+      let mqtt = <%- JSON.stringify(mqtt) %>;
+      if (mqtt != null) {
+
+        client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
+        client.connect({
+          userName: mqtt.type,
+          password: mqtt.password,
+          useSSL: Settings.mqtt.ssl,
+          timeout: 3,
+          onSuccess: onConnect
+        });
+
+      }
+    }
+    
+    function onConnect() {
+      let button = document.querySelector('#mqtt_status');
+      button.classList.remove("btn-secondary");
+      button.classList.add("btn-success");
+      client.subscribe(`${project_name}/${associated?.uid}/#`);
+    }
+    
+    function onConnectionLost(responseObject) {
+      let button = document.querySelector('#mqtt_status');
+      button.classList.remove("btn-secondary");
+      button.classList.add("btn-danger");
+      if (responseObject.errorCode !== 0) {
+        console.log("onConnectionLost:" + responseObject.errorMessage);
+      }
+    }
+    
+    function onMessageArrived(message) {
+
+      const topic = message.destinationName;
+      let payload = message.payloadString;
+
+      if(topic.endsWith("/get"))
+        return;
+
+      if(topic.endsWith("/set")){
+        if(payload != ""){
+          return;
+        }else{
+          showNotificationBadge('Ack received', 'info');
+          return;
+        }
+      } 
+
+      const topicParts = topic.split('/');
+      if(topicParts.length < 3) return;
+
+      if(topicParts[2] === "packets")
+        return;
+
+      if (topicParts[2] === "status") {
+        changeDeviceStatus(payload);
+      }
+
+      if(moment().unix() < mqttStartedTime + 2) // ignore messages before it
+        return;
+
+      showNotificationBadge('Message received', 'info');
+      handleMqttMessage(topicParts.slice(2).join('/'), payload);
+      
+    }
+    
+    function handleMqttMessage(topic, payload) {
+      
+      try {
+        let data = payload;
+        try {
+          data = JSON.parse(payload);
+        } catch (e) {}
+
+        updateMqttValue(topic, data);
+      } catch (error) {
+        console.error('Error handling mqtt response:', error);
+      }
+    }
+
+    function updateMqttValue(topic, payload) {
+      
+      if(model_name === "sniffer"){
+        let index = topic.indexOf(device.uid)
+        if(index > 0){
+          topic = topic.substring(index+device.uid.length+1)
+        }else{
+          return;
+        } 
+      }
+
+      // Find the resource row in the table
+      const tableRows = document.querySelectorAll(`#tbody-tableTopics tr`);
+      let targetRow = null;
+      tableRows.forEach(row => {
+        const pathCell = row.querySelector('td:first-child code');
+        if (pathCell && pathCell.textContent === topic) {
+          targetRow = row;
+        }
+      });
+      if (!targetRow) {
+        console.warn(`Could not find UI row for resource ${topic}`);
+        return;
+      }
+      const valueCell = targetRow.querySelector('td:nth-child(3) .tooltip-value');
+      if (!valueCell) {
+        console.warn(`Could not find value cell for resource ${topic}`);
+        return;
+      }
+      // Update the value based on response data
+      if (payload?.data && typeof payload.data === 'object' && payload.data.error) {
+        // Handle error response
+        valueCell.textContent = 'Error: ' + payload.data.error;
+        valueCell.style.color = 'red';
+        valueCell.setAttribute('title', `Error at ${new Date(payload.timestamp || Date.now()).toLocaleString()}: ${payload.data.error}`);
+      } else if ((payload?.data?.payload !== undefined && payload?.data?.payload !== null) || payload.value !== undefined) {
+        // Handle successful response
+        let displayValue = (payload?.data?.payload !== undefined && payload?.data?.payload !== null) ? payload.data.payload : payload.value;
+        const text = 
+          isObject(displayValue) ? safeJSONStringify(displayValue) : String(displayValue);
+        valueCell.value = text;
+        valueCell.style.color = '';
+        valueCell.setAttribute('title', `Last updated: ${new Date(payload.timestamp || Date.now()).toLocaleString()}`);
+        //console.log(`Updated topic ${topic} value to:`, displayValue);
+      }else if (payload){
+        let displayValue = (payload !== undefined && payload !== null) ? payload : 'NA';
+        const text = 
+          isObject(displayValue) ? safeJSONStringify(displayValue) : String(displayValue);
+        valueCell.value = text;
+        valueCell.style.color = '';
+        valueCell.setAttribute('title', `Last updated: ${new Date(payload.timestamp || Date.now()).toLocaleString()}`);
+        //console.log(`Updated topic ${topic} value to:`, displayValue);
+      }
+    }
+    
+    function populateTopics(){
+      api.device.getMqttTopics(deviceID,(err,topics)=>{
+        if(err){
+          console.log(err)
+        }else if(topics?.length > 0){
+          mqttTopics = topics;
+          loadMqttTopics();
+        }
+      });
+    }
+    
+    function loadMqttTopics() {
+      let rowsHtml = '';
+      mqttTopics.forEach(mqttTopic => {
+        console.log(mqttTopic)
+        let path = `${mqttTopic.topic}`;
+        let name = mqttTopic.description.attributes.title || 'Unknown';
+        let value = '';
+        let actions = '';
+        let hasError = false;
+        if (mqttTopic?.remoteData) {
+          if (mqttTopic.remoteData.error && mqttTopic.remoteData.error.trim() !== '') {
+            hasError = true;
+            value = `<span class="error-label" style="color: red; cursor: help;" title="Error: ${mqttTopic.remoteData.error}">error</span>`;
+          } else if (mqttTopic.remoteData?.value && mqttTopic.remoteData?.value !== '') {
+            value = mqttTopic.remoteData.value;
+            if (mqttTopic.description.attributes.units) {
+              value += ' ' + mqttTopic.description.attributes.units;
+            }
+          } else {
+            value = 'N/A';
+          }
+        } else {
+          value = 'N/A';
+        }
+        // Generate action buttons
+        let actionButtons = [];
+        if (mqttTopic.description.attributes.readable) {
+          actionButtons.push(`<button class="btn btn-sm btn-outline-primary" onclick="readTopicButton('${mqttTopic.topic}')">Read</button>`);
+        }
+        if (mqttTopic.description.attributes.writable) {
+          actionButtons.push(`<input type="text" class="form-control form-control-sm d-inline-block" style="width: auto; display: inline-block;" id="input-${mqttTopic.topic}" placeholder="New value">`);
+          actionButtons.push(`<button class="btn btn-sm btn-outline-success" onclick="writeTopicButton('${mqttTopic.topic}')">Write</button>`);
+        }
+        actions = `<div class="action-buttons">${actionButtons.join(' ')}</div>`;
+        // Determine tooltip based on data source
+        let tooltipText = '';
+
+        let date = mqttTopic.remoteData?.timestamp ? moment(mqttTopic.remoteData.timestamp).format('L LT') : moment(mqttTopic.updatedAt).format('L LT')
+        
+        if (hasError) {
+          tooltipText = `Error occurred at: ${date}`;
+        } else {
+          tooltipText = `Last updated: ${date}`;
+        }
+
+        const text = 
+          isObject(value) ? safeJSONStringify(value) : String(value);
+
+        const escapedValue = escapeAttr(text);
+        const escapedTitle = escapeAttr(tooltipText);
+
+        rowsHtml += `
+          <tr>
+            <td><code>${path}</code></td>
+            <td>${name}</td>
+            <td>
+              <input
+                type="text"
+                class="form-control form-control-sm tooltip-value"
+                value="${escapedValue}"
+                readonly
+                title="${escapedTitle}"
+                style="width:100%;"
+              >
+            </td>
+            <td>${actions}</td>
+          </tr>
+        `;
+      });
+      $(`#tbody-tableTopics`).html(rowsHtml);
+      if ($.fn.DataTable.isDataTable(`#tableTopics`)) {
+        $(`#tableTopics`).DataTable().destroy();
+      }
+      $(`#tableTopics`).DataTable({
+        pageLength: 25,
+        responsive: true,
+        order: [[0, 'asc']]
+      });
+    }
+
+    // Button handlers for read/write
+    function readTopicButton(topic) {
+      // topic is the MQTT topic, e.g. '3/0/0'
+      const format = getSelectedFormat();
+      let data = { format: format };
+      sendRequest(`${topic}/get`, "");
+    }
+
+    function writeTopicButton(topic) {
+      let inputId = `input-${topic}`;
+      let newValue = document.getElementById(inputId).value;
+      if (!newValue.trim()) {
+        alert('Please enter a value to write');
+        return;
+      }
+      const format = getSelectedFormat();
+      let data = newValue;
+      sendRequest(`${topic}/set`, JSON.stringify(data));
+      document.getElementById(inputId).value = '';
+    }
+
+    // Badge notification system
+    function showNotificationBadge(message, type) {
+      const badgeContainer = document.getElementById('notificationBadges');
+      const badgeId = 'badge-' + Date.now();
+      const badge = document.createElement('div');
+      badge.id = badgeId;
+      badge.className = `notification-badge badge-${type}`;
+      badge.textContent = message;
+      badgeContainer.appendChild(badge);
+      setTimeout(() => { badge.classList.add('show'); }, 10);
+      setTimeout(() => { hideBadge(badgeId); }, 2000);
+      return badgeId;
+    }
+
+    function hideBadge(badgeId) {
+      const badge = document.getElementById(badgeId);
+      if (badge) {
+        badge.classList.remove('show');
+        setTimeout(() => {
+          if (badge.parentNode) {
+            badge.parentNode.removeChild(badge);
+          }
+        }, 300);
+      }
+    }
+
+    function hideAllBadges() {
+      const badgeContainer = document.getElementById('notificationBadges');
+      const badges = badgeContainer.querySelectorAll('.notification-badge');
+      badges.forEach(badge => {
+        hideBadge(badge.id);
+      });
+    }
+
+    function sendRequest(topic, payload) {
+      if (client && client.isConnected()) {
+        hideAllBadges();
+        if (deviceStatus === 'online') {
+          let message = new Paho.MQTT.Message(payload);
+          if(model_name === "sniffer"){
+            message.destinationName = `${project_name}/${associated.uid}/app/${model_name}/${device.uid}/${topic}`;
+          }else{
+            message.destinationName = project_name+"/"+uid+"/"+topic;
+          }
+          console.log(message.destinationName)
+          console.log(message.payloadString)
+          message.retained = false;
+          client.send(message);
+          showNotificationBadge('Message sent', 'success');
+        } else if (deviceStatus === 'idle') {
+          let message = new Paho.MQTT.Message(payload);
+          if(model_name === "sniffer"){
+            message.destinationName = `${project_name}/${associated.uid}/app/${model_name}/${device.uid}/${topic}`;
+          }else{
+            message.destinationName = project_name+"/"+uid+"/"+topic;
+          }
+          message.retained = true;
+          client.send(message);
+          showNotificationBadge('Message queued', 'warning');
+        } else {
+          showNotificationBadge('Device is not registered', 'danger');
+        }
+      } else {
+        showNotificationBadge('MQTT not connected', 'danger');
+      }
+    }
+
+    function getSelectedFormat() {
+      const payloadFormatSelect = document.getElementById('payloadFormat');
+      const selectedValue = payloadFormatSelect.value;
+      const formatMap = {
+        '0': 'text/plain',
+      };
+      return formatMap[selectedValue] || 'text/plain';
+    }
+
+    // --- Template management functions ---
+    function loadTemplatesForProject(projectId) {
+      if (!projectId) return;
+      
+      api.template.list(projectId, function(err, templates) {
+        if (err) {
+          console.error('Error fetching templates:', err);
+          return;
+        }
+        
+        const select = document.getElementById('_template_select_');
+        if(select){
+          select.innerHTML = '<option value="">Select a template...</option>';
+
+          templates.forEach(template => {
+            const opt = document.createElement('option');
+            opt.value = template.id;
+            opt.textContent = `${template.tag} - ${template.name}`;
+            if (template.id == device.template_id) {
+              opt.selected = true;
+            }
+            select.appendChild(opt);
+          });
+        }
+        
+        
+        // Update current template display
+        updateCurrentTemplateDisplay(templates);
+      });
+    }
+
+    function updateCurrentTemplateDisplay(templates) {
+      const currentTemplateEl = document.getElementById('currentTemplate');
+      if (device.template_id && currentTemplateEl) {
+        const template = templates.find(t => t.id == device.template_id);
+        if (template) {
+          currentTemplateEl.textContent = `${template.tag} - ${template.name}`;
+        }
+      }
+    }
+
+    $("#assignTemplate").click(() => {
+      const templateSelect = document.getElementById('_template_select_');
+      const templateId = templateSelect.value;
+      
+      if (!templateId) {
+        alert('Please select a template to assign');
+        return;
+      }
+      
+      assignTemplate(templateId);
+    });
+
+    function assignTemplate(templateId) {
+      api.deviceAssignTemplate(deviceID, templateId, (err, res) => {
+        if (err) {
+          $('#error').text("Failed to assign template");
+          if (err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        } else {
+          // Update the device object and refresh display
+          device.template_id = templateId;
+          location.reload(); // Reload to show updated template assignment
+        }
+      });
+    }
+
+    function unassignTemplate(templateId) {
+      if (confirm('Are you sure you want to remove the template assignment?')) {
+        api.deviceUnassignTemplate(deviceID, templateId, (err, res) => {
+          if (err) {
+            $('#error').text("Failed to remove template");
+            if (err.hasOwnProperty("sqlMessage"))
+              $('#suggestion').text(err.sqlMessage);
+            else
+              $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          } else {
+            device.template_id = null;
+            location.reload(); // Reload to show updated template assignment
+          }
+        });
+      }
+    }
+    // ---- ----- ----
+
+    // --- fota management functions ---
+    $("#fotaTrigger").click(()=>{
+      // enhancements
+      // check last version using api
+      // display model confirmation with version to update
+      // proceed with tigger fota
+      // show modal loading
+      api.triggerFota(deviceID,(err,res)=>{
+        if(err){
+          $('#error').text("FOTA trigger failed");
+          if(err.hasOwnProperty("sqlMessage"))
+            $('#suggestion').text(err.sqlMessage);
+          else
+            $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          // Show success message - you could add a success modal or notification here
+          $('#successMsg').text(res);
+          $('#modalSuccess').modal('show');
+          //console.log("FOTA check triggered successfully:", res);
+        }
+      });
+    });
+
+    $(".fwReleaseOption").change((event)=>{
+      $( ".fwReleaseOption option:selected" ).each(function() {
+        let release = $( this ).text();
+        release = release.trim()
+        api.updateDeviceRelease(deviceID,release,(err,res)=>{
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            if(err.hasOwnProperty("sqlMessage"))
+              $('#suggestion').text(err.sqlMessage);
+            else
+              $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }
+        });
+      });
+    });
+
+    function fetchAndDisplayLatestFWVersions(){
+      // Fetch and display latest firmware versions
+      if (device && device.model_id && device.accept_release) {
+        $.ajax({
+          url: Settings.api + '/model/' + device.model_id + '/firmware/latest',
+          type: 'GET',
+          data: {
+            accept_release: device.accept_release
+          },
+          success: function(data, status, xhr) {
+            if (data && !data.Error) {
+              const result = data.Result;
+              //console.log(result)
+              if (result && result.latest_version) {
+                document.getElementById('latest_version').textContent = result.latest_version;
+              }
+              if (result && result.latest_app_version) {
+                document.getElementById('latest_app_version').textContent = result.latest_app_version;
+              }
+            }
+          },
+          error: function(xhr, status, error) {
+            console.log('Error fetching latest firmware versions:', error);
+            document.getElementById('latest_version').textContent = 'N/A';
+            document.getElementById('latest_app_version').textContent = 'N/A';
+          },
+          dataType: 'JSON'
+        });
+      }
+    }
+    // --- ----- ---
+
+    function addOption(id,value, select){
+      if(select){
+        $(id).append(`<option selected value="${value}">${value}</option>`);
+      }else{
+        $(id).append(`<option value="${value}">${value}</option>`);
+      }
+    }
+
+    function addOptionWithDescription(id,value,description, select){
+      if(select){
+        $(id).append(`<option selected value="${value}">${description}</option>`);
+      }else{
+        $(id).append(`<option value="${value}">${description}</option>`);
+      }
+    }
+
+    function changeDeviceStatus(payload){
+      let button = document.querySelector('#status');
+      button.classList.remove("btn-secondary");
+      // Update device status tracking
+      if (payload === "online") {
+        deviceStatus = "online";
+        button.classList.remove("btn-danger", "btn-warning");
+        button.classList.add("btn-success");
+      } else if (payload === "idle") {
+        deviceStatus = "idle";
+        button.classList.remove("btn-danger", "btn-success");
+        button.classList.add("btn-warning");
+      } else {
+        deviceStatus = "offline";
+        button.classList.remove("btn-success", "btn-warning");
+        button.classList.add("btn-danger");
+      }
+    }
+
+    const isObject = (v) => v !== null && typeof v === 'object';
+
+    function safeJSONStringify(value) {
+      const seen = new WeakSet();
+      try {
+        return JSON.stringify(value, (key, val) => {
+          if (typeof val === 'object' && val !== null) {
+            if (seen.has(val)) return '[Circular]';
+            seen.add(val);
+          }
+          return val;
+        });
+      } catch {
+        return String(value); // fallback
+      }
+    }
+
+    const escapeAttr = (s) =>
+      String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+
+  </script>
+</body>
+</html>

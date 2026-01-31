@@ -279,9 +279,30 @@ var api = {
       });
     },
 
-     deleteSensor: (modelId,sensorId,cb)=>{
+    deleteSensor: (modelId,sensorId,cb)=>{
       fetch(Settings.api+"/model/"+modelId+"/sensor", {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sensor_id: sensorId,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    propagateSensor: (modelId,sensorId,cb)=>{
+      fetch(Settings.api+"/model/"+modelId+"/sensor/propagate", {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
