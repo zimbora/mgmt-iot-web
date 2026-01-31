@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include(path+'/partials/head.ejs') %>
+  
+  <style type="text/css" media="screen">
+    .lwm2m-tab-content {
+      height: 600px;
+      overflow-y: auto;
+    }
+    
+    .lwm2m-table {
+      width: 100%;
+    }
+    
+    .tooltip-value {
+      cursor: help;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
+    
+    .action-buttons {
+      white-space: nowrap;
+    }
+    
+    .action-buttons button {
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+
+    /* Badge notification styles */
+    .notification-badges {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .notification-badge {
+      padding: 10px 15px;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+      max-width: 250px;
+    }
+    
+    .notification-badge.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    .badge-success {
+      background-color: #28a745;
+    }
+    
+    .badge-warning {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    
+    .badge-danger {
+      background-color: #dc3545;
+    }
+    
+    .badge-info {
+      background-color: #17a2b8;
+    }
+  </style>
+</head>
+<body>
+
+  <%- include(path+'/partials/scripts.ejs') %>
+  <%- include(path+'/partials/device/navbar.ejs') %>
+  
+  <%- include(path+'/partials/modal/confirmation.ejs') %>
+  <%- include(path+'/partials/modal/error.ejs') %>
+  <%- include(path+'/partials/modal/loading.ejs') %>
+  <%- include(path+'/partials/modal/timeout.ejs') %>
+
+  <!-- Notification Badges -->
+  <div class="notification-badges" id="notificationBadges"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+  
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+
+  <div class="container-fluid">
+    <div class="row flex-nowrap">
+      
+      <%- include(path+'/partials/device/sidebar.ejs') %>
+      
+      <div class="col py-3">
+        <div class="row">
+          <div class="col-12 mb-3">
+            <div class="content-header">
+              <div class="row">
+                <div class="col-6">
+                  <h5><%= device.model %> - LWM2M Dashboard
+                    <button id="mqtt_status" type="button" class="btn btn-secondary" disabled></button>
+                  </h5>
+                </div>
+                <div class="col-6">
+                  <button id="status" type="button" class="btn btn-secondary" disabled></button
+                  <h5 id="uid_device"> <%= device.uid %>
+                  </h5>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5>LWM2M Objects & Resources</h5>
+                  <div class="d-flex gap-2 align-items-center">
+                    <label for="payloadFormat" class="form-label mb-0 me-2">Format:</label>
+                    <select id="payloadFormat" class="form-select form-select-sm" style="width: auto;">
+                      <option value="0">text/plain</option>
+                      <option value="40">application/link-format</option>
+                      <option value="50">application/json</option>
+                      <option value="60">application/vnd.oma.lwm2m+tlv</option>
+                      <option value="61">application/vnd.oma.lwm2m+json</option>
+                      <option value="62">application/vnd.oma.lwm2m+cbor</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-info" onclick="requestWellKnownCore()">
+                      <i class="bi bi-search"></i> /.well-known/core
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <!-- Tabs Navigation -->
+                <ul class="nav nav-tabs" id="lwm2mTabs" role="tablist">
+                  <!-- Tabs will be dynamically generated here -->
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content mt-3" id="lwm2mTabContent">
+                  <!-- Tab panes will be dynamically generated here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let device = <%- JSON.stringify(device) %>;
+    var deviceID = api.getDeviceID();
+    var project = device.project;
+    var uid = device.uid;
+    var client;
+    var loading = $('#modalLoading');
+    
+    // Device status tracking
+    var deviceStatus = 'offline'; // online, idle, offline
+    
+    $(document).ready(() => {
+      // Initialize MQTT connection
+      initializeMqtt();
+      
+      populateObjects();
+
+      // Load first tab by default
+    });
+    
+    function initializeMqtt() {
+      let mqtt = <%- JSON.stringify(mqtt) %>;
+      
+      if (mqtt != null) {
+        
+        client = new Paho.MQTT.Client(Settings.mqtt.host, Settings.mqtt.port, mqtt.nick);
+        
+        // set callback handlers
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
+        
+        client.connect({
+          userName: mqtt.type,
+          password: mqtt.password,
+          useSSL: Settings.mqtt.ssl,
+          timeout: 3,
+          onSuccess: onConnect
+        });
+      }
+    }
+    
+    function onConnect() {
+      let button = document.querySelector('#mqtt_status');
+      button.classList.remove("btn-secondary");
+      button.classList.add("btn-success");
+      client.subscribe(`lwm2m/${uid}/#`);
+      client.subscribe(`lwm2m/responses/${uid}/#`);
+    }
+    
+    function onConnectionLost(responseObject) {
+      let button = document.querySelector('#mqtt_status');
+      button.classList.remove("btn-secondary");
+      button.classList.add("btn-danger");
+      if (responseObject.errorCode !== 0) {
+        console.log("onConnectionLost:" + responseObject.errorMessage);
+      }
+    }
+    
+    function onMessageArrived(message) {
+      let topic = message.destinationName;
+      let payload = message.payloadString;
+      
+      const topicParts = topic.split('/');
+      if(topicParts.length < 3)
+        return;
+
+      if (topicParts[2] === "status") {
+        let button = document.querySelector('#status');
+        button.classList.remove("btn-secondary");
+        
+        // Update device status tracking
+        if (payload === "online") {
+          deviceStatus = "online";
+          button.classList.remove("btn-danger", "btn-warning");
+          button.classList.add("btn-success");
+        } else if (payload === "idle") {
+          deviceStatus = "idle";
+          button.classList.remove("btn-danger", "btn-success");
+          button.classList.add("btn-warning");
+        } else {
+          deviceStatus = "offline";
+          button.classList.remove("btn-success", "btn-warning");
+          button.classList.add("btn-danger");
+        }
+      }
+      
+      if (topicParts[2] === "sensor") {
+        updateSensorValue(topic, payload);
+      }
+
+      // Handle LWM2M response messages
+      if (topicParts[1] === "responses") {
+        // Show message received badge
+        showNotificationBadge('Message received', 'info');
+        handleLwm2mResponse(topic, payload);
+      }
+    }
+    
+    function updateSensorValue(topic, payload) {
+      try {
+        // Parse topic: {project}/responses/{endpoint}/{method}{path}
+        // Example: lwm2m/device001/sensor/3/0/0
+        const topicParts = topic.split('/');
+        if (topicParts.length < 6) {
+          console.warn('Invalid response topic format:', topic);
+          return;
+        }
+        
+        const objectId = topicParts[3];
+        const instanceId = topicParts[4];
+        const resourceId = topicParts[5];
+        
+        // Parse JSON payload
+        let responseData;
+        try {
+          responseData = JSON.parse(payload);
+        } catch (e) {
+          console.error('Failed to parse response payload as JSON:', payload);
+          return;
+        }
+        
+        if(responseData?.notification)
+          showNotificationBadge('Observation received', 'info');
+
+        console.log(`Received sensor value for ${objectId}/${instanceId}/${resourceId}:`, responseData);
+
+        updateResourceValue(objectId, instanceId, resourceId, responseData);
+        
+      } catch (error) {
+        console.error('Error handling LWM2M response:', error);
+      }
+    }
+    
+    function handleLwm2mResponse(topic, payload) {
+      try {
+        // Parse topic: {project}/responses/{endpoint}/{method}{path}
+        // Example: lwm2m/responses/device001/GET/3/0/0
+        const topicParts = topic.split('/');
+        if (topicParts.length < 4) {
+          console.warn('Invalid response topic format:', topic);
+          return;
+        }
+        
+        // Extract method and path from the topic
+        const responsePathPart = topicParts.slice(3).join('/'); // GET/3/0/0
+        const methodMatch = responsePathPart.match(/^(GET|PUT|POST|DELETE|OBSERVE|CANCEL-OBSERVE)(.*)$/);
+        if (!methodMatch) {
+          console.warn('Could not extract method from topic:', topic);
+          return;
+        }
+        
+        const method = methodMatch[1];
+        const resourcePath = methodMatch[2]; // /3/0/0
+        
+        // Parse resource path to get objectId, instanceId, resourceId
+        const pathParts = resourcePath.split('/').filter(p => p); // ['3', '0', '0']
+        if (pathParts.length < 3) {
+          console.warn('Invalid resource path in topic:', resourcePath);
+          return;
+        }
+        
+        const objectId = pathParts[0];
+        const instanceId = pathParts[1];
+        const resourceId = pathParts[2];
+        
+        // Parse JSON payload
+        let responseData;
+        try {
+          responseData = JSON.parse(payload);
+        } catch (e) {
+          console.error('Failed to parse response payload as JSON:', payload);
+          return;
+        }
+        
+        console.log(`Received ${method} response for ${objectId}/${instanceId}/${resourceId}:`, responseData);
+
+        // Handle observation button updates for OBSERVE responses
+        if (method === 'OBSERVE') {
+          let observing = true;
+          updateObservationButton(observing,objectId, instanceId, resourceId, responseData);
+        }else if (method === 'CANCEL-OBSERVE') {
+          let observing = false;
+          updateObservationButton(observing,objectId, instanceId, resourceId, responseData);
+        }else if( method === 'GET' || method === 'PUT'){
+          updateResourceValue(objectId, instanceId, resourceId, responseData);
+        }
+
+        
+      } catch (error) {
+        console.error('Error handling LWM2M response:', error);
+      }
+    }
+
+    function updateResourceValue(objectId, instanceId, resourceId, responseData) {
+      // Find the resource row in the table
+      const resourcePath = `${objectId}/${instanceId}/${resourceId}`;
+      const tableRows = document.querySelectorAll(`#tbody-${objectId} tr`);
+      
+      let targetRow = null;
+      tableRows.forEach(row => {
+        const pathCell = row.querySelector('td:first-child code');
+        if (pathCell && pathCell.textContent === resourcePath) {
+          targetRow = row;
+        }
+      });
+      
+      if (!targetRow) {
+        console.warn(`Could not find UI row for resource ${resourcePath}`);
+        return;
+      }
+      
+      const valueCell = targetRow.querySelector('td:nth-child(3) .tooltip-value');
+      if (!valueCell) {
+        console.warn(`Could not find value cell for resource ${resourcePath}`);
+        return;
+      }
+
+      // Update the value based on response data
+      if (responseData.data && typeof responseData.data === 'object' && responseData.data.error) {
+        // Handle error response
+        valueCell.textContent = `${responseData.data.error}`;
+        valueCell.style.color = 'red';
+        valueCell.setAttribute('title', `Last updated: ${new Date(responseData.data.timestamp || Date.now()).toLocaleString()}`);
+      } else if ( responseData.data && typeof responseData.data === 'object' && responseData?.data?.value !== undefined ) {
+        // Handle successful response
+        let displayValue = responseData.data.value;
+        /*
+        // Try to preserve units if they exist in the current display
+        const currentValue = valueCell.textContent;
+        const unitsMatch = currentValue.match(/\s+([A-Za-z°%/]+)$/);
+        if (unitsMatch) {
+          displayValue += ' ' + unitsMatch[1];
+        }
+        */
+        valueCell.textContent = displayValue;
+        valueCell.style.color = ''; // Reset color
+        
+        valueCell.setAttribute('title', `Last updated: ${new Date(responseData?.data?.timestamp || Date.now()).toLocaleString()}`);
+        /*
+        // Visual feedback for successful update
+        valueCell.style.backgroundColor = '#d4edda';
+        setTimeout(() => {
+          valueCell.style.backgroundColor = '';
+        }, 2000);
+        */
+        console.log(`Updated resource ${resourcePath} value to:`, displayValue);
+      }
+    }
+    
+    function updateObservationButton(observing, objectId, instanceId, resourceId, responseData) {
+      // Find the resource row in the table
+      const resourcePath = `${objectId}/${instanceId}/${resourceId}`;
+      const tableRows = document.querySelectorAll(`#tbody-${objectId} tr`);
+      
+      let targetRow = null;
+      tableRows.forEach(row => {
+        const pathCell = row.querySelector('td:first-child code');
+        if (pathCell && pathCell.textContent === resourcePath) {
+          targetRow = row;
+        }
+      });
+      
+      if (!targetRow) {
+        console.warn(`Could not find UI row for resource ${resourcePath}`);
+        return;
+      }
+      
+      // Find the observation button in the actions column
+      const actionsCell = targetRow.querySelector('td:nth-child(4)');
+      if (!actionsCell) {
+        console.warn(`Could not find actions cell for resource ${resourcePath}`);
+        return;
+      }
+      
+      const observeButton = actionsCell.querySelector('button[onclick*="observeResource"]');
+      if (!observeButton) {
+        console.warn(`Could not find observe button for resource ${resourcePath}`);
+        return;
+      }
+      
+      // Check if we have token data indicating observation started
+      if (observing) {
+        // Switch to "Stop Observation" with token tooltip
+        observeButton.textContent = 'Stop Observation';
+        observeButton.setAttribute('onclick', `observeResource('${objectId}', '${instanceId}', '${resourceId}', 1)`);
+        observeButton.setAttribute('title', `Observation Token: ${responseData.data.token}`);
+        console.log(`Updated button to "Stop Observation" with token: ${responseData.data.token}`);
+      } else {
+        // Switch back to "Start Observation" (stop observation response or no token)
+        observeButton.textContent = 'Start Observation';
+        observeButton.setAttribute('onclick', `observeResource('${objectId}', '${instanceId}', '${resourceId}', 0)`);
+        observeButton.removeAttribute('title');
+        console.log(`Updated button to "Start Observation"`);
+      }
+      
+      // Update the resource value if present
+      /*
+      if (responseData.data && responseData.data.value !== undefined) {
+        const valueCell = targetRow.querySelector('td:nth-child(3) .tooltip-value');
+        if (valueCell) {
+          let displayValue = responseData.data.value;
+          
+          // Try to preserve units if they exist in the current display
+          const currentValue = valueCell.textContent;
+          const unitsMatch = currentValue.match(/\s+([A-Za-z°%/]+)$/);
+          if (unitsMatch) {
+            displayValue += ' ' + unitsMatch[1];
+          }
+          
+          valueCell.textContent = displayValue;
+          valueCell.style.color = ''; // Reset color
+          valueCell.setAttribute('title', `Last updated via observation: ${new Date(responseData.timestamp || Date.now()).toLocaleString()}`);
+          console.log(`Updated resource ${resourcePath} value via observation to:`, displayValue);
+        }
+      }
+      */
+    }
+    
+    function populateObjects(){
+      // Generate tabs and content
+      api.device.getLwm2mObjects(deviceID,(err,objects)=>{
+        if(err){
+          console.log(err)
+        }else if(objects?.length > 0){
+          
+          lwm2mObjects = [];
+          let counter = 1;
+          objects.forEach((object)=>{
+            const objectEntry = {
+              id: counter++,
+              objectId: object.objectId,
+              name: object?.description?.attributes.title
+            };
+            lwm2mObjects.push(objectEntry);
+          })
+          
+          generateLWM2MTabs();
+
+          if (lwm2mObjects.length > 0) {
+            $('#lwm2mTabs a:first').tab('show');
+          }
+        }
+      })
+    }
+
+    function generateLWM2MTabs() {
+      let tabsHtml = '';
+      let contentHtml = '';
+      
+      lwm2mObjects.forEach((obj, index) => {
+        let isActive = index === 0 ? 'active' : '';
+        
+        // Generate tab navigation
+        tabsHtml += `
+          <li class="nav-item" role="presentation">
+            <button class="nav-link ${isActive}" id="tab-${obj.objectId}" data-bs-toggle="tab" 
+                    data-bs-target="#content-${obj.objectId}" type="button" role="tab">
+              ${obj.name} (${obj.objectId})
+            </button>
+          </li>
+        `;
+        
+        // Generate tab content
+        contentHtml += `
+          <div class="tab-pane fade ${isActive ? 'show active' : ''}" id="content-${obj.objectId}" 
+               role="tabpanel" aria-labelledby="tab-${obj.objectId}">
+            <div class="lwm2m-tab-content">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6>Object ${obj.objectId}: ${obj.name}</h6>
+                <button class="btn btn-sm btn-primary" onclick="refreshObject('${obj.objectId}')">
+                  <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+              </div>
+              <table id="table-${obj.objectId}" class="table table-striped table-sm lwm2m-table">
+                <thead>
+                  <tr>
+                    <th>Path</th>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-${obj.objectId}">
+                  <tr>
+                    <td colspan="4" class="text-center">Loading...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      });
+      
+      $('#lwm2mTabs').html(tabsHtml);
+      $('#lwm2mTabContent').html(contentHtml);
+      
+      // Load resources for each object
+      lwm2mObjects.forEach(obj => {
+        loadObjectResources(obj.objectId);
+      });
+    }
+    
+    function loadObjectResources(objectId) {
+      api.device.getLwm2mResources(deviceID, objectId, (err, resources) => {
+
+        if (err) {
+          console.error('Error loading resources for object', objectId, err);
+          $(`#tbody-${objectId}`).html('<tr><td colspan="4" class="text-center text-danger">Error loading resources</td></tr>');
+          return;
+        }
+        
+        if (!resources || resources.length === 0) {
+          $(`#tbody-${objectId}`).html('<tr><td colspan="4" class="text-center text-muted">No resources found</td></tr>');
+          return;
+        }
+        
+        let rowsHtml = '';
+        resources.forEach(resource => {
+          let path = `${resource.objectId}/${resource.objectInstanceId}/${resource.resourceId}`;
+          let name = resource.description.attributes.title || 'Unknown';
+          let value = '';
+          let actions = '';
+          
+          // Format value with units - prioritize remoteData over localData
+          let hasError = false;
+          if(objectId == 0)
+            console.log(resource.remoteData);
+          if (resource.remoteData) {
+            if (resource.remoteData.error && resource.remoteData.error.trim() !== '') {
+              // Handle error case
+              hasError = true;
+              value = `<span class="error-label" style="color: red; cursor: help;" >${resource.remoteData.error}</span>`;
+            } else if (resource.remoteData.value !== undefined && resource.remoteData.value !== '') {
+              // Handle success case with remoteData
+              value = resource.remoteData.value;
+              if (resource.description.attributes.units) {
+                value += ' ' + resource.description.attributes.units;
+              }
+            } else if (resource.localData && resource.localData.value !== undefined) {
+              // Fallback to localData if remoteData value is empty/undefined
+              value = resource.localData.value;
+              if (resource.description.attributes.units) {
+                value += ' ' + resource.description.attributes.units;
+              }
+            } else {
+              value = 'N/A';
+            }
+          } else if (resource.localData && resource.localData.value !== undefined) {
+            // Fallback to localData if no remoteData
+            value = resource.localData.value;
+            if (resource.description.attributes.units) {
+              value += ' ' + resource.description.attributes.units;
+            }
+          } else {
+            value = 'N/A';
+          }
+          
+          // Generate action buttons
+          let actionButtons = [];
+          if (resource.description.attributes.readable) {
+            actionButtons.push(`<button class="btn btn-sm btn-outline-primary" onclick="readResource('${resource.objectId}', '${resource.objectInstanceId}', '${resource.resourceId}')">Read</button>`);
+          }
+          if (resource.description.attributes.observable) {
+            // Determine button text and action based on observing status
+            let buttonText, buttonAction, titleAttr = '';
+            
+            if (resource.observing) {
+              buttonText = 'Stop Observation';
+              buttonAction = `observeResource('${resource.objectId}', '${resource.objectInstanceId}', '${resource.resourceId}', 1)`;
+              if (resource.observationTkn) {
+                titleAttr = ` title="Observation Token: ${resource.observationTkn}"`;
+              }
+            } else {
+              buttonText = 'Start Observation';
+              buttonAction = `observeResource('${resource.objectId}', '${resource.objectInstanceId}', '${resource.resourceId}', 0)`;
+            }
+            
+            actionButtons.push(`<button class="btn btn-sm btn-outline-info" onclick="${buttonAction}"${titleAttr}>${buttonText}</button>`);
+          }
+          if (resource.description.attributes.writable) {
+            actionButtons.push(`<input type="text" class="form-control form-control-sm d-inline-block" style="width: auto; display: inline-block;" id="input-${resource.objectId}-${resource.objectInstanceId}-${resource.resourceId}" placeholder="New value">`);
+            actionButtons.push(`<button class="btn btn-sm btn-outline-success" onclick="writeResource('${resource.objectId}', '${resource.objectInstanceId}', '${resource.resourceId}')">Write</button>`);
+          }
+          actions = `<div class="action-buttons">${actionButtons.join(' ')}</div>`;
+          
+          // Determine tooltip based on data source
+          let tooltipText = '';
+          if (hasError) {
+            tooltipText = `Error occurred at: ${new Date(parseInt(resource.remoteData.timestamp)).toLocaleString()}`;
+          } else if (resource.remoteData && resource.remoteData.value !== undefined && resource.remoteData.value !== '') {
+            tooltipText = `Remote data updated: ${new Date(parseInt(resource.remoteData.timestamp)).toLocaleString()}`;
+          } else {
+            tooltipText = `Last updated: ${resource.updatedAt}`;
+          }
+          
+          rowsHtml += `
+            <tr>
+              <td><code>${path}</code></td>
+              <td>${name}</td>
+              <td><span class="tooltip-value" title="${tooltipText}">${value}</span></td>
+              <td>${actions}</td>
+            </tr>
+          `;
+        });
+        
+        $(`#tbody-${objectId}`).html(rowsHtml);
+        
+        // Initialize DataTable
+        $(`#table-${objectId}`).DataTable({
+          pageLength: 25,
+          responsive: true,
+          order: [[0, 'asc']] // Sort by path
+        });
+      });
+    }
+    
+    function refreshObject(objectId) {
+      // Destroy existing DataTable if it exists
+      if ($.fn.DataTable.isDataTable(`#table-${objectId}`)) {
+        $(`#table-${objectId}`).DataTable().destroy();
+      }
+      
+      // Show loading
+      $(`#tbody-${objectId}`).html('<tr><td colspan="4" class="text-center">Refreshing...</td></tr>');
+      
+      // Reload resources
+      loadObjectResources(objectId);
+    }
+    
+    function readResource(objectId, instanceId, resourceId) {
+      console.log(`Reading resource ${objectId}/${instanceId}/${resourceId}`);
+      // In real implementation, this would make an API call to read the resource
+      const topic = `/GET/${objectId}/${instanceId}/${resourceId}`
+      const format = getSelectedFormat();
+      let data = {
+        format: format,
+      }
+      sendRequest(topic,JSON.stringify(data));
+      //alert(`Reading resource ${objectId}/${instanceId}/${resourceId}`);
+    }
+    
+    function observeResource(objectId, instanceId, resourceId, observe) {
+      console.log(`${observe ? 'Stopping' : 'Starting'} observation for resource ${objectId}/${instanceId}/${resourceId}`);
+      let method = observe ? 'CANCEL-OBSERVE' : 'OBSERVE';
+
+      // In real implementation, this would make an API call to observe the resource
+      const topic = `/${method}/${objectId}/${instanceId}/${resourceId}`
+      const format = getSelectedFormat();
+      let data = {
+        format: format,
+        observe: observe
+      }
+      sendRequest(topic,JSON.stringify(data));
+      //alert(`${observe ? 'Starting' : 'Stopping'} observation for resource ${objectId}/${instanceId}/${resourceId}`);
+    }
+    
+    function writeResource(objectId, instanceId, resourceId) {
+      let inputId = `input-${objectId}-${instanceId}-${resourceId}`;
+      let newValue = document.getElementById(inputId).value;
+      
+      if (!newValue.trim()) {
+        alert('Please enter a value to write');
+        return;
+      }
+      
+      console.log(`Writing value "${newValue}" to resource ${objectId}/${instanceId}/${resourceId}`);
+      // In real implementation, this would make an API call to write the resource
+      const topic = `/PUT/${objectId}/${instanceId}/${resourceId}`
+      const format = getSelectedFormat();
+      let data = {
+        format: format,
+        payload: newValue
+      }
+      sendRequest(topic,JSON.stringify(data));
+      //alert(`Writing value "${newValue}" to resource ${objectId}/${instanceId}/${resourceId}`);
+      
+      // Clear the input
+      document.getElementById(inputId).value = '';
+    }
+    
+    // Badge notification system
+    function showNotificationBadge(message, type) {
+      const badgeContainer = document.getElementById('notificationBadges');
+      const badgeId = 'badge-' + Date.now();
+      
+      // Create badge element
+      const badge = document.createElement('div');
+      badge.id = badgeId;
+      badge.className = `notification-badge badge-${type}`;
+      badge.textContent = message;
+      
+      // Add to container
+      badgeContainer.appendChild(badge);
+      
+      // Show badge with animation
+      setTimeout(() => {
+        badge.classList.add('show');
+      }, 10);
+      
+      // Hide badge after 2 seconds
+      setTimeout(() => {
+        hideBadge(badgeId);
+      }, 2000);
+      
+      return badgeId;
+    }
+    
+    function hideBadge(badgeId) {
+      const badge = document.getElementById(badgeId);
+      if (badge) {
+        badge.classList.remove('show');
+        setTimeout(() => {
+          if (badge.parentNode) {
+            badge.parentNode.removeChild(badge);
+          }
+        }, 300);
+      }
+    }
+    
+    function hideAllBadges() {
+      const badgeContainer = document.getElementById('notificationBadges');
+      const badges = badgeContainer.querySelectorAll('.notification-badge');
+      badges.forEach(badge => {
+        hideBadge(badge.id);
+      });
+    }
+    
+    function sendRequest(topic, payload) {
+      if (client && client.isConnected()) {
+        // Hide any previous badges
+        hideAllBadges();
+        
+        // Check device status and handle accordingly
+        if (deviceStatus === 'online') {
+          // Send message normally for online devices
+          let message = new Paho.MQTT.Message(payload);
+          message.destinationName = `lwm2m/requests/${uid}${topic}`;
+          message.retained = false;
+          client.send(message);
+          showNotificationBadge('Message sent', 'success');
+        } else if (deviceStatus === 'idle') {
+          // Send message with retain flag for idle devices
+          let message = new Paho.MQTT.Message(payload);
+          message.destinationName = `lwm2m/requests/${uid}${topic}`;
+          message.retained = true;
+          client.send(message);
+          showNotificationBadge('Message queued', 'warning');
+        } else {
+          // Don't send message for offline devices
+          showNotificationBadge('Device is not registered', 'danger');
+        }
+      } else {
+        showNotificationBadge('MQTT not connected', 'danger');
+      }
+    }
+
+    function sendMessage(topic, payload) {
+      if (client && client.isConnected()) {
+        let message = new Paho.MQTT.Message(payload);
+        message.destinationName = project + "/" + uid + "/" + topic;
+        client.send(message);
+      }
+    }
+
+    function requestWellKnownCore() {
+      console.log('Requesting /.well-known/core');
+      const topic = `/GET/.well-known/core`;
+      const format = getSelectedFormat();
+      let data = {
+        format: format
+      };
+      sendRequest(topic, JSON.stringify(data));
+    }
+
+    function getSelectedFormat() {
+      const payloadFormatSelect = document.getElementById('payloadFormat');
+      const selectedValue = payloadFormatSelect.value;
+      
+      // Map numeric values to format strings
+      const formatMap = {
+        '0': 'text/plain',
+        '40': 'application/link-format',
+        '50': 'application/json',
+        '60': 'application/vnd.oma.lwm2m+tlv',
+        '61': 'application/vnd.oma.lwm2m+json',
+        '62': 'application/vnd.oma.lwm2m+cbor'
+      };
+      
+      return formatMap[selectedValue] || 'text/plain';
+    }
+
+  </script>
+</body>
+</html>
