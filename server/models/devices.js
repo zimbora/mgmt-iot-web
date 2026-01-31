@@ -59,6 +59,7 @@ var self = module.exports =  {
     })
   },
 
+  // lwm2m
   getObservations : async (deviceId,cb)=>{
 
     let query = `select id, device_id, objectId, objectInstanceId, resourceId, observing, observationTkn from lwm2m where device_id = ? and observing = true`;
@@ -73,9 +74,9 @@ var self = module.exports =  {
     .catch(error => {
       return cb(error,null);
     })
-
   },
 
+  // lwm2m
   getObservationStatus : async (deviceId,data,cb)=>{
 
     let query = `select id, observing, observationTkn from lwm2m where device_id = ? and objectId = ? and objectInstanceId = ? and resourceId = ?`;
@@ -93,9 +94,9 @@ var self = module.exports =  {
     .catch(error => {
       return cb(error,null);
     })
-
   },
 
+  // lwm2m
   updateObservationStatus : async (deviceId,data,cb)=>{
 
     let obj = {
@@ -143,7 +144,6 @@ var self = module.exports =  {
     .catch(error => {
       return cb(error,null);
     });
-
   },
 
   deleteClientPermission : async (deviceId,clientId,cb)=>{
@@ -367,8 +367,10 @@ var self = module.exports =  {
     })
   },
 
-  // not needed for now
+  // deprecated
   getModelTable : async (model) =>{
+
+    return reject("models table were deprecated");
 
     return new Promise( (resolve,reject)=>{
 
@@ -387,7 +389,10 @@ var self = module.exports =  {
     })
   },
 
+  // deprecated
   getModelTableById : async (modelId) =>{
+
+    return reject("models table were deprecated");
 
     return new Promise( (resolve,reject)=>{
 
@@ -406,6 +411,7 @@ var self = module.exports =  {
     })
   },
 
+  // work on it
   getProjectLogsTable : async (project) =>{
 
     return new Promise( (resolve,reject)=>{
@@ -425,6 +431,7 @@ var self = module.exports =  {
     })
   },
 
+  // no model logs table available, check logs_sensor
   getModelLogsTable : async (model) =>{
 
     return new Promise( (resolve,reject)=>{
@@ -519,7 +526,8 @@ var self = module.exports =  {
         res = await db.queryRow(query);
         if(res != null && res.length > 0){
           data["associated"] = res[0];
-
+          
+          /* deprecated
           let subModel = await self.getModel(data['device']?.associatedDevice);
           if(subModel){
             query = `SELECT * FROM ?? where device_id = ?;`
@@ -530,6 +538,7 @@ var self = module.exports =  {
               data["associated"][subModel] = res[0];
             }          
           }
+          */
         }
 
       }
@@ -541,6 +550,7 @@ var self = module.exports =  {
     return cb(null,data);
   },
 
+  // work on this logs!!
   getLogs : async (deviceId,sensor,cb)=>{
 
     let table = [];
@@ -608,7 +618,10 @@ var self = module.exports =  {
     })
   },
 
+  // deprecated
   getProjectLogs : async (deviceId,sensor,cb)=>{
+
+    return cb("deprecated, project has no logs",null);
 
     let project = await self.getProject(deviceId);
     if(project == null)
@@ -719,6 +732,25 @@ var self = module.exports =  {
       return cb(error,null);
     })
   },
+  
+  // get registered sensors for model
+  getSensors : async (deviceId,cb)=>{
+
+    let query = `SELECT * FROM ?? where device_id = ?`;
+    let table = ["sensors",deviceId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0)
+        return cb(null,null);
+      else
+        return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
 
   getSensorInfo : async (deviceId,cb)=>{
 
@@ -805,7 +837,9 @@ var self = module.exports =  {
     })
   },
 
+  // deprecated
   getModelLogs : async (deviceId,sensor,cb)=>{
+    return cb("deprecated, use sensor logs",null);
 
     let project = await self.getProject(deviceId);
     if(project == null)
@@ -847,30 +881,6 @@ var self = module.exports =  {
     })
     .catch(error => {
       console.error(error)
-      return cb(error,null);
-    })
-  },
-
-  // get registered sensors for model
-  getSensors : async (deviceId,modelId,cb)=>{
-
-    let model_table = await self.getModelTableById(modelId);
-
-    if(model_table == null)
-      return cb(null,null)
-
-    let query = `SELECT * FROM ?? where device_id = ?`;
-    let table = [model_table,deviceId];
-    query = mysql.format(query,table);
-
-    db.queryRow(query)
-    .then(rows => {
-      if(rows.length == 0)
-        return cb(null,null);
-      else
-        return cb(null,rows[0]);
-    })
-    .catch(error => {
       return cb(error,null);
     })
   },
@@ -919,7 +929,6 @@ var self = module.exports =  {
     .catch(error => {
       return cb(error,null);
     })
-
   },
 
   getLwm2mResources : async (deviceId,objectId,cb)=>{
@@ -949,10 +958,9 @@ var self = module.exports =  {
     .catch(error => {
       return cb(error,null);
     })
-
   },
 
-    // Add a new object
+  // Add a new object - lwm2m
   addObject: async (deviceId, objectId, description, defaultData, observe, readInterval, cb) => {
     let obj = {
       device_id: deviceId,
@@ -974,7 +982,7 @@ var self = module.exports =  {
     });
   },
 
-  // Add a new resource
+  // Add a new resource - lwm2m
   addResource: async (deviceId, objectId, objectInstanceId, resourceId, description, defaultData, observe, readInterval, cb) => {
     let obj = {
       device_id: deviceId,
@@ -1014,7 +1022,7 @@ var self = module.exports =  {
     })
   },
 
-  // Update an existing object
+  // Update an existing object - lwm2m
   updateEntry: async (entryId, updateData, cb) => {
     let obj = {
       updatedAt: moment().utc().format('YYYY-MM-DD HH:mm:ss')
@@ -1048,7 +1056,7 @@ var self = module.exports =  {
     });
   },
 
-  // Delete a resource
+  // Delete a resource - lwm2m
   deleteEntry: async (entryId, cb) => {
     let filter = {
       id: entryId
@@ -1247,20 +1255,24 @@ var self = module.exports =  {
   // hard delete
   delete : async (deviceId,cb)=>{
 
+    /* deprecated
     let project_table = await self.getProject(deviceId);
     let project_logs_table = await self.getProjectLogsTable(project_table);
+    */
 
-    let model = await self.getModel(deviceId);
+    let model = await self.getModel(deviceId); // not used
+
+    /* deprecated
     let model_table = await self.getModelTable(model);
     let model_logs_table = await self.getModelLogsTable(model);
-
+    */
 
     let filter = {
       device_id : deviceId,
     }
 
     try{
-
+      /* deprecated
       if(project_table != null){
         console.log(`deleting project_table ${project_table}`)
         if( await db.tableExists(project_table)){
@@ -1273,6 +1285,7 @@ var self = module.exports =  {
           await db.delete(project_logs_table,filter);
         }
       }
+      
       if(model_table != null){
         console.log(`deleting model_table ${model_table}`)
         if( await db.tableExists(model_table)){
@@ -1285,6 +1298,7 @@ var self = module.exports =  {
           await db.delete(model_logs_table,filter);
         }
       }
+      */
       await db.delete("permissions",filter);
       await db.delete("fw",filter);
       await db.delete("logs_fw",filter);
