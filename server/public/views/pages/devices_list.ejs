@@ -164,17 +164,11 @@
       const app = require('./app.mjs');
       t = $('#devices').DataTable();
 
-      // Store projects data globally for later use
-      let projectsData = [];
-
       api.getProjects((err, res) => {
         if (err) {
           console.error("Error fetching projects:", err);
           return;
         }
-
-        // Store projects data including prefix information
-        projectsData = res;
 
         const projectSelect = document.getElementById('projectSelect');
         
