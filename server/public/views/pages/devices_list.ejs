@@ -288,7 +288,7 @@
 
       // Get the project prefix from the selected option
       const selectedOption = projectSelect.options[projectSelect.selectedIndex];
-      const projectPrefix = selectedOption.getAttribute('data-prefix') || '';
+      const projectPrefix = selectedOption ? (selectedOption.getAttribute('data-prefix') || '') : '';
 
       // Check if the device UID includes the project prefix
       // If not, add the prefix to the UID
