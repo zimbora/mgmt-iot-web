@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Print current directory
+        shell: pwsh
+        run: Write-Host ("Current directory $PWD")
       - uses: actions/setup-node@v3
         with:
           node-version: 18.1
