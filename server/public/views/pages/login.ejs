@@ -143,24 +143,13 @@
   <div id="g_id_onload"
      data-client_id= <%= googleclientID %>
      data-callback="handleCredentialResponse">
-     <!--
-     <a id="signin" class="btn btn-default btn-round btn-lg btn-block mb-3">
-       <img width="20px" style="margin-bottom:3px; margin-right:5px" alt="Google sign-in" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png" />
-       Sign In/Authorize
-     </a>
-      -->
   </div>
 
 
   <script>
     $(document).ready(function() {
 
-      console.log($("#g_id_onload"));
-
       $("#submit").on("click",function(e){
-        console.log("login")
-        console.log(window.location.protocol)
-        console.log(window.location.hostname)
         let user=$("#user").val();
         let pass=$("#password").val();
         //$.post("http://"+window.location.hostname+":"+window.location.port+"/login",{user: user,password: pass}, function(data){
