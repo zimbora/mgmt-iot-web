@@ -14,6 +14,7 @@ var Display = {
         else console.log("format not supported");
       }else{
         console.log("no elements found");
+        $('#modalNoResults').modal('show');
       }
     })
   },
