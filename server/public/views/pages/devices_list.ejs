@@ -186,6 +186,8 @@
           const option = document.createElement('option');
           option.value = project.id;
           option.textContent = project.name;
+          // Store prefix as data attribute for easy access
+          option.setAttribute('data-prefix', project.uidPrefix || '');
           projectSelect.appendChild(option);
         });
       });
@@ -256,7 +258,7 @@
       const projectSelect = document.getElementById('projectSelect');
       const templateSelect = document.getElementById('templateSelect');
       const modelSelect = document.getElementById('modelSelect');
-      const deviceUID = document.getElementById('deviceUID').value.trim();
+      let deviceUID = document.getElementById('deviceUID').value.trim();
       const deviceName = document.getElementById('deviceName').value.trim();
       const psk = document.getElementById('psk').value.trim();
       
@@ -282,6 +284,16 @@
         $('#suggestion').text("Check project, model, uid and protocol");
         $('#modalError').modal('show');
         return;
+      }
+
+      // Get the project prefix from the selected option
+      const selectedOption = projectSelect.options[projectSelect.selectedIndex];
+      const projectPrefix = selectedOption ? (selectedOption.getAttribute('data-prefix') || '') : '';
+
+      // Check if the device UID includes the project prefix
+      // If not, add the prefix to the UID
+      if (projectPrefix && !deviceUID.startsWith(projectPrefix)) {
+        deviceUID = projectPrefix + deviceUID;
       }
 
       // Safely get template ID (optional field)
