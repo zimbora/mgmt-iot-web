@@ -93,6 +93,15 @@
     var t;
     var modelID = api.getModelID();
 
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     $(document).ready(function () {
 
       t = $('#firmwares').DataTable();
@@ -214,7 +223,7 @@
           <option value="prod">prod</option>
           <option value="critical">critical</option>
         </select>`,
-        `<a href="` + fileUrl + `" class="filename-link">` + filename + `</a>`]).draw(true);
+        `<a href="` + fileUrl + `" class="filename-link" title="` + escapeHtml(filename) + `">` + escapeHtml(filename) + `</a>`]).draw(true);
 
     }
 
