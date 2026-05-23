@@ -1943,10 +1943,11 @@ async function publishAndWaitForChunkedResponse(publishTopic, messagePayload, re
       chunks[parsed.c] = parsed.d;
       totalChunks = parsed.t;
 
-      // Check that all indices 0..totalChunks-1 have been received
+      // Check all indices 0..totalChunks-1 have been received using a Set for O(1) lookups
+      const receivedIndices = new Set(Object.keys(chunks).map(Number));
       let allReceived = true;
       for (let i = 0; i < totalChunks; i++) {
-        if (!(i in chunks)) { allReceived = false; break; }
+        if (!receivedIndices.has(i)) { allReceived = false; break; }
       }
       if (allReceived) {
         clearTimeout(timer);
