@@ -509,6 +509,34 @@ module.exports = {
     }
   },
 
+  sendMqttMessageChunked : (req,res,next)=>{
+
+    const val = Joi.object({
+      topic: Joi.string().required(),
+      payload: Joi.string().allow(''), // allows empty string or any string
+      qos: Joi.number().integer().min(0).max(2).required(),
+      retain: Joi.number().integer().min(0).max(1).required(),
+      timeout: Joi.number().integer().min(0).optional(),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.sendMqttMessageChunked(
+        req.params.device_id,
+        req.body.topic,
+        req.body.payload,
+        req.body.qos,
+        Number(req.body.retain),
+        (err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        },
+        req.body.timeout
+      );
+    }
+  },
+
   sendMqttMessage : (req,res,next)=>{
 
     const val = Joi.object({

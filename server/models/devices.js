@@ -1601,6 +1601,61 @@ var self = module.exports =  {
 
   },
 
+  sendMqttMessageChunked : async (deviceId,topic,payload,qos,retain,cb,timeout)=>{
+
+    let projectName = await self.getProject(deviceId);
+
+    if(projectName == null)
+      return cb(`no project found for deviceId ${deviceId}`,null)
+
+    let uid = await self.getUID(deviceId);
+    if(uid == null)
+      return cb(`no uid found for deviceId ${deviceId}`,null)
+
+    const modelName = await self.getModel(deviceId);
+
+    let mqtt_prefix = "";
+
+    if(modelName == "sniffer"){
+
+      const associatedUID = await self.getUID(device.associatedDevice);
+      const associatedProjectName = await self.getProject(device.associatedDevice);
+
+      if(associatedProjectName == null)
+        return cb(`no project found for deviceId ${deviceId}`,null)
+
+      mqtt_prefix = `${associatedProjectName}/${associatedUID}`;
+
+      associatedDevice = await self.getById(device.associatedDevice);
+      if (semver.gt(associatedDevice?.app_version, "1.0.5"))
+        mqtt_prefix += `/app/sniffer/${uid}`;
+      else
+        mqtt_prefix += `/app/sniffer`;
+    }
+    else{
+      mqtt_prefix = `${projectName}/${uid}`;
+    }
+
+    let publishTopic = `${mqtt_prefix}/${topic}`;
+
+    let responseTopic;
+    if(publishTopic.endsWith("get")){
+      // response comes without "get"
+      rcvTopic = publishTopic.split('/');
+      responseTopic = rcvTopic.slice(0,-1).join('/');
+    }else if(publishTopic.endsWith("set")){
+      responseTopic = publishTopic;
+    }
+
+    try{
+      let res = await publishAndWaitForChunkedResponse(publishTopic, payload, responseTopic, qos, retain, timeout);
+      return cb(null,res);
+    }catch(error){
+      return cb(error,null);
+    }
+
+  },
+
   sendMqttMessage : async (deviceId,topic,payload,qos,retain,cb)=>{
 
     let projectName = await self.getProject(deviceId);
@@ -1839,6 +1894,86 @@ var self = module.exports =  {
     return res;
   },
 };
+
+const MAX_CHUNKED_TIMEOUT = 30000;
+
+function mergeChunks(chunks) {
+  const merged = [];
+  const indices = Object.keys(chunks).map(Number).sort((a, b) => a - b);
+  for (const i of indices) {
+    if (Array.isArray(chunks[i])) {
+      merged.push(...chunks[i]);
+    }
+  }
+  return merged;
+}
+
+async function publishAndWaitForChunkedResponse(publishTopic, messagePayload, responseTopic, qos, retain, timeout = 1000) {
+  const safeTimeout = Math.min(timeout, MAX_CHUNKED_TIMEOUT);
+  return new Promise((resolve, reject) => {
+    const chunks = {};
+    let totalChunks = null;
+    let timer = null;
+
+    const finish = () => {
+      $.mqttClient.unsubscribe(responseTopic);
+      $.mqttClient.off('message', messageHandler);
+      resolve(mergeChunks(chunks));
+    };
+
+    const messageHandler = (topic, message) => {
+      if (topic !== responseTopic) return;
+
+      let parsed;
+      try {
+        parsed = JSON.parse(message.toString());
+      } catch (e) {
+        return;
+      }
+
+      // If no chunking fields present, treat as a single-message response
+      if (parsed.c === undefined || parsed.t === undefined) {
+        clearTimeout(timer);
+        $.mqttClient.unsubscribe(responseTopic);
+        $.mqttClient.off('message', messageHandler);
+        resolve(parsed);
+        return;
+      }
+
+      chunks[parsed.c] = parsed.d;
+      totalChunks = parsed.t;
+
+      // Check that all indices 0..totalChunks-1 have been received
+      let allReceived = true;
+      for (let i = 0; i < totalChunks; i++) {
+        if (!(i in chunks)) { allReceived = false; break; }
+      }
+      if (allReceived) {
+        clearTimeout(timer);
+        finish();
+      }
+    };
+
+    // Publish message
+    $.mqttClient.publish(publishTopic, messagePayload, { qos, retain });
+
+    // Subscribe to response topic
+    $.mqttClient.subscribe(responseTopic, { qos }, (err) => {
+      if (err) {
+        return reject(err);
+      }
+
+      $.mqttClient.on('message', messageHandler);
+
+      // Resolve with whatever was collected when timeout fires
+      timer = setTimeout(() => {
+        $.mqttClient.off('message', messageHandler);
+        $.mqttClient.unsubscribe(responseTopic);
+        resolve(mergeChunks(chunks));
+      }, safeTimeout);
+    });
+  });
+}
 
 async function publishAndWaitForResponse(publishTopic, messagePayload, responseTopic, qos, retain, timeout = 5000) {
   return new Promise((resolve, reject) => {

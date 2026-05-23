@@ -129,6 +129,9 @@ router.route("/:device_id/field")
 router.route("/:device_id/mqtt/message")
   .post(Device.sendMqttMessage)
 
+router.route("/:device_id/mqtt/message/chunked")
+  .post(Device.sendMqttMessageChunked)
+
 router.route('/:device_id/lwm2m/object')
   .post(Device.addObject);
 
