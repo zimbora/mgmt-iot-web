@@ -154,12 +154,6 @@
         $('#modalError').modal('show');
         return;
       }
-      if(!app_version) {
-        $('#error').text("App version is required");
-        $('#suggestion').text("Please enter an app version in format xx.yy.zz");
-        $('#modalError').modal('show');
-        return;
-      }
       if(!release) {
         $('#error').text("Release is required");
         $('#suggestion').text("Please select a release type");
@@ -181,7 +175,7 @@
         $('#modalError').modal('show');
         return;
       }
-      if(!filename.includes(app_version)) {
+      if(app_version && !filename.includes(app_version)) {
         $('#error').text("Filename validation failed");
         $('#suggestion').text("Filename must contain the app version: " + app_version);
         $('#modalError').modal('show');
