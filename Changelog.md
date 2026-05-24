@@ -1,5 +1,18 @@
 # Changelog
 
+## version 1.0.77
+  
+  web:
+    fix: release selector: adds unknown label
+    feat: Show full filename on hover in firmware list (#63)
+    feat: Display modal on empty sensor logs with actionable guidance (#60)
+    feat: Auto-prepend project prefix to device UID on creation (#58)
+    fix: Make app_version optional in firmware upload (#68)
+    feat: fotaTrigger: add version check, confirmation, and loading modal before FOTA dispatch (#66)
+
+  api:
+    feat: Add chunked MQTT message support with merge and timeout (#65)
+
 ## version 1.0.76
   fix device deletion
   
