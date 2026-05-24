@@ -599,6 +599,23 @@
         sendMessage("fw/settings/wifi/set",JSON.stringify(data));
       }else if(action == "set_lte"){
         sendMessage("fw/settings/modem/set",JSON.stringify(data));
+      }else if(action == "trigger_fota"){
+        // Show modal loading while FOTA trigger is in progress
+        $('#modalLoading').modal('show');
+        api.triggerFota(deviceID,(err,res)=>{
+          $('#modalLoading').modal('hide');
+          if(err){
+            $('#error').text("FOTA trigger failed");
+            if(err.hasOwnProperty("sqlMessage"))
+              $('#suggestion').text(err.sqlMessage);
+            else
+              $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }else{
+            $('#successMsg').text(res);
+            $('#modalSuccess').modal('show');
+          }
+        });
       }
       action = "";
     })
@@ -682,26 +699,37 @@
     });
 
     $("#fotaTrigger").click(()=>{
-      // enhancements
-      // check last version using api
-      // display model confirmation with version to update
-      // proceed with tigger fota
-      // show modal loading
-      api.triggerFota(deviceID,(err,res)=>{
-        if(err){
-          $('#error').text("FOTA trigger failed");
-          if(err.hasOwnProperty("sqlMessage"))
-            $('#suggestion').text(err.sqlMessage);
-          else
-            $('#suggestion').text(err);
-          $('#modalError').modal('show');
-        }else{
-          // Show success message - you could add a success modal or notification here
-          $('#successMsg').text(res);
-          $('#modalSuccess').modal('show');
-          //console.log("FOTA check triggered successfully:", res);
-        }
-      });
+      // Check last version using api
+      const defaultMsg = 'Trigger FOTA update check on this device?';
+      const showFotaConfirmation = (msg) => {
+        $('#modal_message').text(msg);
+        action = "trigger_fota";
+        $('#modalConfirmation').modal('show');
+      };
+      if (device && device.model_id && device.accept_release) {
+        $.ajax({
+          url: Settings.api + '/model/' + device.model_id + '/firmware/latest',
+          type: 'GET',
+          data: { accept_release: device.accept_release },
+          success: function(data) {
+            let versionInfo = '';
+            if (data && !data.Error && data.Result) {
+              const result = data.Result;
+              if (result.latest_version) versionInfo += `FW version: ${result.latest_version}`;
+              if (result.latest_app_version) versionInfo += (versionInfo ? ', ' : '') + `App version: ${result.latest_app_version}`;
+            }
+            // Display confirmation modal with version to update
+            const msg = versionInfo
+              ? `Trigger FOTA update to latest release (${versionInfo})?`
+              : defaultMsg;
+            showFotaConfirmation(msg);
+          },
+          error: function() { showFotaConfirmation(defaultMsg); },
+          dataType: 'JSON'
+        });
+      } else {
+        showFotaConfirmation(defaultMsg);
+      }
     });
 
     // called when the client connects
