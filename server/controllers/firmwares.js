@@ -26,9 +26,6 @@ module.exports = {
     if(version == null){
       return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"fw version not defined");
     }
-    if(app_version == null){
-      return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"app version not defined");
-    }
     if(release == null){
       return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"release not defined");
     }
