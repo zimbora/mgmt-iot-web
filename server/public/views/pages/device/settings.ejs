@@ -413,6 +413,13 @@
     var action = "";
     var data = {}
     var loading = $('#modalLoading');
+
+    // FOTA waiting state
+    var fotaWaitingForVersion = false;
+    var fotaPreviousVersion = null;
+    var fotaPreviousAppVersion = null;
+    var fotaTimeoutId = null;
+    const FOTA_TIMEOUT_MS = 120000; // 2 minutes
     var keepalive_arr = [
       {value:1,description:"1s"},
       {value:15,description:"15s"},
@@ -603,17 +610,36 @@
         // Show modal loading while FOTA trigger is in progress
         $('#modalLoading').modal('show');
         api.triggerFota(deviceID,(err,res)=>{
-          $('#modalLoading').modal('hide');
           if(err){
+            $('#modalLoading').modal('hide');
             $('#error').text("FOTA trigger failed");
             if(err.hasOwnProperty("sqlMessage"))
               $('#suggestion').text(err.sqlMessage);
             else
               $('#suggestion').text(err);
             $('#modalError').modal('show');
-          }else{
+          }else if(res === 'no new version available'){
+            $('#modalLoading').modal('hide');
             $('#successMsg').text(res);
             $('#modalSuccess').modal('show');
+          }else{
+            // FOTA triggered: keep loading modal and wait for device to report new version via MQTT
+            fotaWaitingForVersion = true;
+            fotaPreviousVersion = sensors?.version?.value || device?.version || null;
+            fotaPreviousAppVersion = sensors?.app_version?.value || device?.app_version || null;
+            $('#loadingMsg').text('Waiting for device to complete firmware update (up to 2 minutes)...').show();
+            // Set 2-minute timeout in case device doesn't respond
+            fotaTimeoutId = setTimeout(() => {
+              fotaWaitingForVersion = false;
+              fotaPreviousVersion = null;
+              fotaPreviousAppVersion = null;
+              fotaTimeoutId = null;
+              $('#loadingMsg').hide().text('');
+              $('#modalLoading').modal('hide');
+              $('#error').text("FOTA update timeout");
+              $('#suggestion').text("Device did not report a new version within 2 minutes. Check device status.");
+              $('#modalError').modal('show');
+            }, FOTA_TIMEOUT_MS);
           }
         });
       }
@@ -826,7 +852,11 @@
                 uptime.value = payload.uptime;
               }
             }catch(e){ console.log(e);}
-            $(document).trigger("closeModalLoading"); // set confirmation
+            if(fotaWaitingForVersion) {
+              checkFotaVersionUpdate(topic, payload);
+            } else {
+              $(document).trigger("closeModalLoading"); // set confirmation
+            }
             break;
           } 
         case "tech":
@@ -900,6 +930,93 @@
         if(payload == "" || payload == null || payload === 'undefined'){
           $(document).trigger("closeModalLoading"); // set confirmation
         }
+      }
+
+      // Check for FOTA version update on any topic
+      if(fotaWaitingForVersion) {
+        let parsedPayload = payload;
+        if(typeof payload === 'string') {
+          try { parsedPayload = JSON.parse(payload); } catch(e) {}
+        }
+        checkFotaVersionUpdate(topic, parsedPayload);
+      }
+    }
+
+    function compareVersions(v1, v2) {
+      if (!v1 || !v2) return 0;
+      const a = String(v1).split('.').map(Number);
+      const b = String(v2).split('.').map(Number);
+      for (let i = 0; i < Math.max(a.length, b.length); i++) {
+        const diff = (a[i] || 0) - (b[i] || 0);
+        if (diff !== 0) return diff;
+      }
+      return 0;
+    }
+
+    function checkFotaVersionUpdate(topic, data) {
+      if (!fotaWaitingForVersion) return;
+
+      const vSensor = sensors?.version;
+      const avSensor = sensors?.app_version;
+
+      let newVersion = null;
+      let newAppVersion = null;
+
+      // Check if topic matches version sensor ref
+      if (vSensor?.ref && topic === vSensor.ref) {
+        if (vSensor.property && typeof data === 'object' && data !== null) {
+          newVersion = data[vSensor.property] !== undefined ? String(data[vSensor.property]) : null;
+        } else if (typeof data === 'string' || typeof data === 'number') {
+          newVersion = String(data);
+        }
+      }
+
+      // Check if topic matches app_version sensor ref
+      if (avSensor?.ref && topic === avSensor.ref) {
+        if (avSensor.property && typeof data === 'object' && data !== null) {
+          newAppVersion = data[avSensor.property] !== undefined ? String(data[avSensor.property]) : null;
+        } else if (typeof data === 'string' || typeof data === 'number') {
+          newAppVersion = String(data);
+        }
+      }
+
+      if (newVersion === null && newAppVersion === null) return;
+
+      const prevVersion = fotaPreviousVersion;
+      const prevAppVersion = fotaPreviousAppVersion;
+
+      clearTimeout(fotaTimeoutId);
+      fotaWaitingForVersion = false;
+      fotaPreviousVersion = null;
+      fotaPreviousAppVersion = null;
+      fotaTimeoutId = null;
+
+      $('#loadingMsg').hide().text('');
+      $('#modalLoading').modal('hide');
+
+      // If prevVersion is unknown (null), treat any received version as a successful update
+      const versionUpdated = newVersion !== null &&
+        (prevVersion == null || compareVersions(newVersion, prevVersion) > 0);
+      const appVersionUpdated = newAppVersion !== null &&
+        (prevAppVersion == null || compareVersions(newAppVersion, prevAppVersion) > 0);
+
+      if (versionUpdated || appVersionUpdated) {
+        let msg = 'Device successfully updated';
+        if (newVersion && versionUpdated) msg += ` to version ${newVersion}`;
+        if (newAppVersion && appVersionUpdated) {
+          if (newVersion && versionUpdated) {
+            msg += `, app version ${newAppVersion}`;
+          } else {
+            msg += ` to app version ${newAppVersion}`;
+          }
+        }
+        $('#successMsg').text(msg);
+        $('#modalSuccess').modal('show');
+      } else {
+        $('#error').text('Device failed to update to newer version');
+        const receivedVersion = newVersion || newAppVersion;
+        $('#suggestion').text(`Received version: ${receivedVersion}`);
+        $('#modalError').modal('show');
       }
     }
 
