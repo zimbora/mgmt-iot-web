@@ -4,7 +4,17 @@
   "description": "web platform to configure and interact with iot devices using mqtt",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 0"
+    "test": "jest --runInBand",
+    "test:routes": "jest --runInBand test/routes",
+    "test:controllers": "jest --runInBand test/controllers",
+    "test:models": "jest --runInBand test/models",
+    "test:coverage": "jest --runInBand --coverage"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/*.test.js"
+    ]
   },
   "keywords": [
     "iot",
@@ -40,6 +50,10 @@
     "node-docker-api": "^1.1.22",
     "path": "^0.12.7",
     "serve-index": "^1.9.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.2.2"
   },
   "repository": {
     "type": "git",

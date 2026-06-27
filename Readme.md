@@ -155,3 +155,31 @@ for mqtt user and respective permissions.
 
 ### API
 check project [mgmt-iot-api](https://www.npmjs.com/package/mgmt-iot-api) to see available calls
+
+## Testing
+
+Run all tests:
+
+```
+npm test
+```
+
+Run full validation (tests + coverage):
+
+```
+npm test && npm run test:coverage
+```
+
+Run tests by area:
+
+```
+npm run test:routes
+npm run test:controllers
+npm run test:models
+```
+
+Run coverage report:
+
+```
+npm run test:coverage
+```
