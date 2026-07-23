@@ -117,6 +117,14 @@
                         <input type="text" readonly class="form-control-plaintext fw-bold" id="model" value="<%=model_name%>">
                       </div>
                     </div>
+                    <% if(variant_name){ %>
+                    <div class="mb-1 row">
+                      <label for="variant" class="col-4 col-form-label">Variant</label>
+                      <div class="col-6">
+                        <input type="text" readonly class="form-control-plaintext fw-bold" id="variant" value="<%=variant_name%>">
+                      </div>
+                    </div>
+                    <% } %>
                     <% if(device.template_id == null) { %>
                     <div class="btn-group">
                       <label class="input-group-text" for="inputGroupSelect21">Template:</label>

@@ -541,6 +541,7 @@ app.get('/device/:device_id/manage',(req,res)=>{
       res.render(path.join(__dirname, config.public_path+'/views/pages/device/lwm2m'),{
         project_name:data.project_name,
         model_name:data.model_name,
+        variant_name:data.variant_name,
         device:data.device,
         project:data.project,
         model:data.model,
@@ -556,6 +557,7 @@ app.get('/device/:device_id/manage',(req,res)=>{
       res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqtt'),{
         project_name:data.project_name,
         model_name:data.model_name,
+        variant_name:data.variant_name,
         device:data.device,
         project:data.project,
         model:data.model,
