@@ -1192,6 +1192,7 @@ var self = module.exports =  {
       project_id : projectId,
       template_id: templateId,
       model_id : modelId,
+      variant_id : device?.variant_id || null,
       protocol : device.protocol,
       psk : device?.psk,
       createdAt : timestamp,

@@ -107,6 +107,15 @@
           <div class="invalid-feedback">Please select a model.</div>
         </div>
 
+        <!-- Variant -->
+        <div class="mb-3">
+          <label for="variantSelect" class="form-label">Variant</label>
+          <select id="variantSelect" class="form-select">
+            <option value="">Select a model first</option>
+          </select>
+          <div class="invalid-feedback">Variant selection is optional.</div>
+        </div>
+
         <!-- Device ID -->
         <div class="mb-3">
           <label for="deviceUID" class="form-label">Device UID</label>
@@ -258,6 +267,7 @@
       const projectSelect = document.getElementById('projectSelect');
       const templateSelect = document.getElementById('templateSelect');
       const modelSelect = document.getElementById('modelSelect');
+      const variantSelect = document.getElementById('variantSelect');
       let deviceUID = document.getElementById('deviceUID').value.trim();
       const deviceName = document.getElementById('deviceName').value.trim();
       const psk = document.getElementById('psk').value.trim();
@@ -310,7 +320,8 @@
         uid: deviceUID,
         name: deviceName,
         protocol: selectedProtocol,
-        psk: psk
+        psk: psk,
+        variant_id: variantSelect.value ? parseInt(variantSelect.value) : null
       };
 
       // Only include templateId if a valid template is selected
@@ -387,6 +398,28 @@
                 opt.value = template.id;
                 opt.textContent = template.tag;
                 select.appendChild(opt);
+              });
+            }
+          });
+        }
+      });
+
+      const modelSelect = document.getElementById('modelSelect');
+      modelSelect.addEventListener('change', function() {
+        const modelId = this.value;
+        const variantSelect = document.getElementById('variantSelect');
+        variantSelect.innerHTML = '<option value="">No variant</option>';
+
+        if (modelId) {
+          api.getVariants(modelId, function(err, variants) {
+            if (err) {
+              console.error('Error fetching variants:', err);
+            } else if (variants && variants.length > 0) {
+              variants.forEach(variant => {
+                const opt = document.createElement('option');
+                opt.value = variant.id;
+                opt.textContent = variant.name;
+                variantSelect.appendChild(opt);
               });
             }
           });

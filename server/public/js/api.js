@@ -889,7 +889,8 @@ var api = {
         uid: deviceData.uid,
         name: deviceData?.name,
         protocol: deviceData.protocol,
-        psk: deviceData?.psk
+        psk: deviceData?.psk,
+        variant_id: deviceData?.variant_id || null
       })
     })
     .then(function (response) {
@@ -1337,6 +1338,64 @@ var api = {
     });
   },
 
+  // get variants for a model
+  getVariants : function(modelId,cb){
+    $.ajax({
+      url : Settings.api+'/model/'+modelId+'/variants',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
+  // add variant to a model
+  addVariant : (modelId, name, description, cb)=>{
+    fetch(Settings.api+"/model/"+modelId+"/variants", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: name,
+        model_id: parseInt(modelId),
+        description: description
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // remove variant
+  removeVariant : (modelId,variantId,cb)=>{
+    fetch(Settings.api+"/model/"+modelId+"/variant/"+variantId, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
   // list FW Model Permission
   listFWModelPermission : (model,cb)=>{
     fetch(Settings.api+"/model/"+model+"/permissions", {
@@ -1416,13 +1475,14 @@ var api = {
   },
 
   // add permission to client to access device
-  addFirmware : (modelID,file,fw_version,app_version,release,cb)=>{
+  addFirmware : (modelID,file,fw_version,app_version,release,variant_id,cb)=>{
 
     const formData = new FormData();
 
     formData.append('fw_version', fw_version);
     formData.append('app_version', app_version);
     formData.append('release', release);
+    if(variant_id) formData.append('variant_id', variant_id);
     formData.append('file', file);
 
     fetch(Settings.api+"/model/"+modelID+"/firmwares", {

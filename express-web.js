@@ -26,6 +26,7 @@ var User = require('./server/models/users');
 var Client = require('./server/models/clients');
 var Project = require('./server/models/projects');
 var Model = require('./server/models/models');
+var Variant = require('./server/models/variants');
 var Firmware = require('./server/models/firmwares');
 var Sensor = require('./server/models/sensors');
 var Templates = require('./server/models/templates');
@@ -417,6 +418,14 @@ app.get('/model/:model_id/sensors',(req,res)=>{
 app.get('/model/:model_id/firmwares',(req,res)=>{
   if(req.user.level >= 4 && req.model?.fw_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/model/firmwares'),{model:req.model,user:req.user,page:'Firmwares'});
+  }
+});
+
+app.get('/model/:model_id/variants',(req,res)=>{
+  if(req.user.level >= 4){
+    Variant.listByModel(req.params.model_id,(err,variants)=>{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/model/variants'),{model:req.model,variants:variants||[],user:req.user,page:'Variants'});
+    });
   }
 });
 

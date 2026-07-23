@@ -43,6 +43,7 @@
                             <th>fw version</th>
                             <th>app version</th>
                             <th>release</th>
+                            <th>variant</th>
                             <th>filename</th>
                         </tr>
                     </thead>
@@ -71,6 +72,12 @@
                           <option value="stage">stage</option>
                           <option value="prod">prod</option>
                           <option value="critical">critical</option>
+                        </select>
+                      </div>
+                      <div class="input-group py-2">
+                        <label class="input-group-text" for="variantSelect">Variant</label>
+                        <select class="form-select" id="_variant_">
+                          <option value="">None</option>
                         </select>
                       </div>
                       <div class="py-2">
@@ -115,7 +122,7 @@
         if(err) console.log("err:",err)
         else{
           res.forEach((item, i) => {
-            addRow(item.id,item.version,item?.app_version,item.build_release,item.originalname,item.token);
+            addRow(item.id,item.version,item?.app_version,item.build_release,item?.variant_name || '',item.originalname,item.token);
             if(i == res.length-1){
               $(".fwReleaseOption").change((event)=>{
                 let id = event.target.id;
@@ -138,12 +145,26 @@
         }
       });
 
+      // Load variants for the variant select dropdown
+      api.getVariants(modelID,(err,res)=>{
+        if(err) console.log("err:",err)
+        else if(res && res.length > 0){
+          res.forEach((item) => {
+            let opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.name;
+            document.getElementById('_variant_').appendChild(opt);
+          });
+        }
+      });
+
     });
 
     $("#submit_fw").click(()=>{
       let version = $("#_version_").val();
       let app_version = $("#_appversion_").val();
       let release = $("#_release_").val();
+      let variant_id = $("#_variant_").val() || null;
       var input = document.getElementById("formFile");
       var file = input.files[0];
       
@@ -188,7 +209,7 @@
         return;
       }
       
-      api.addFirmware(modelID,file,version,app_version,release,(err,res)=>{
+      api.addFirmware(modelID,file,version,app_version,release,variant_id,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           if(err.hasOwnProperty("sqlMessage"))
@@ -200,7 +221,7 @@
       });
     });
 
-    function addRow(id,version,app_version,release,filename,token){
+    function addRow(id,version,app_version,release,variant,filename,token){
 
       var hostname = window.location.protocol+"//"+window.location.hostname+":"+window.location.port;
       let fileUrl = hostname+"/api/firmware/"+filename+"/download?token="+token;
@@ -217,6 +238,7 @@
           <option value="prod">prod</option>
           <option value="critical">critical</option>
         </select>`,
+        variant,
         `<a href="` + fileUrl + `" class="filename-link" title="` + escapeHtml(filename) + `">` + escapeHtml(filename) + `</a>`]).draw(true);
 
     }
