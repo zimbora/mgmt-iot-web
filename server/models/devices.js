@@ -1255,10 +1255,10 @@ var self = module.exports =  {
   // hard delete
   delete : async (deviceId,cb)=>{
 
-    /* deprecated
+    
     let project_table = await self.getProject(deviceId);
     let project_logs_table = await self.getProjectLogsTable(project_table);
-    */
+    
 
     let model = await self.getModel(deviceId); // not used
 
@@ -1272,13 +1272,14 @@ var self = module.exports =  {
     }
 
     try{
-      /* deprecated
       if(project_table != null){
         console.log(`deleting project_table ${project_table}`)
         if( await db.tableExists(project_table)){
           await db.delete(project_table,filter);
         }
       }
+
+      
       if(project_logs_table != null){
         console.log(`deleting project_logs_table ${project_logs_table}`)
         if( await db.tableExists(project_logs_table)){
@@ -1286,6 +1287,7 @@ var self = module.exports =  {
         }
       }
       
+      /* deprecated
       if(model_table != null){
         console.log(`deleting model_table ${model_table}`)
         if( await db.tableExists(model_table)){
