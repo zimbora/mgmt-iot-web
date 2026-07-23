@@ -404,8 +404,8 @@
         }
       });
 
-      const modelSelect = document.getElementById('modelSelect');
-      modelSelect.addEventListener('change', function() {
+      const modelSelectEl = document.getElementById('modelSelect');
+      modelSelectEl.addEventListener('change', function() {
         const modelId = this.value;
         const variantSelect = document.getElementById('variantSelect');
         variantSelect.innerHTML = '<option value="">No variant</option>';
