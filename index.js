@@ -1,6 +1,5 @@
 $ = {}
 const mqtt = require('mqtt')
-const crc = require('crc');
 const fs = require('fs');
 const path = require('path');
 
