@@ -54,7 +54,7 @@ module.exports = {
       model_id: Joi.number().required()
     }).validate(req.params);
 
-    if(user.level != 5){
+    if(req.user.level != 5){
       return response.error(res,httpStatus.BAD_REQUEST,"You have no permission to delete the model");
     }
 
