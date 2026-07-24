@@ -18,7 +18,7 @@ function check_authentication(req, res, next) {
   let token = req.session.token;
 
   if (!token) {
-    const cookies = cookieLib.parse(req.headers.cookie || '');
+    const cookies = cookieLib.parse(req.headers?.cookie || '');
     token = cookies[COOKIE_NAME];
   }
 
