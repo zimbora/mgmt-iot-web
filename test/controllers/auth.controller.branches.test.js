@@ -57,6 +57,7 @@ describe('server/controllers/auth branch coverage', () => {
       session: {},
       user: { user_id: 1, type: 'admin', level: 5, client_id: 1, nick: 'n', name: 'N', avatar: '' },
       ip: '127.0.0.1',
+      secure: false,
       get: jest.fn(() => 'test-agent')
     };
     const res = { cookie: jest.fn() };
@@ -65,7 +66,11 @@ describe('server/controllers/auth branch coverage', () => {
     authCtrl.generateToken(req, res, next);
 
     expect(req.session.token).toBe('signed-token');
-    expect(res.cookie).toHaveBeenCalledWith('jwt_token', 'signed-token', expect.objectContaining({ httpOnly: true }));
+    expect(res.cookie).toHaveBeenCalledWith('jwt_token', 'signed-token', expect.objectContaining({
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    }));
     expect(next).toHaveBeenCalled();
   });
 
