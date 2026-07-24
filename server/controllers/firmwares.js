@@ -22,6 +22,7 @@ module.exports = {
     const version = req.body?.version || req.body?.fw_version;
     const app_version = req.body?.app_version;
     const release = req.body?.release;
+    const variant_id = req.body?.variant_id || null;
 
     if(version == null){
       return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"fw version not defined");
@@ -39,7 +40,7 @@ module.exports = {
     if(!firmware.hasOwnProperty("originalname"))
       return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"originalname not defined");
 
-    Firmware.add(firmware.filename,firmware.originalname,version,app_version,release,req.params.model_id,(err,rows)=>{
+    Firmware.add(firmware.filename,firmware.originalname,version,app_version,release,req.params.model_id,variant_id,(err,rows)=>{
       if(!err) return response.send(res,rows);
       else return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
     })

@@ -32,6 +32,15 @@ jest.mock('../../server/controllers/sensorsTemplate', () => ({
   propagate: (req, res) => res.status(200).json({ route: 'sensorTemplate.propagate', guards: req.guards })
 }));
 
+jest.mock('../../server/controllers/variants', () => ({
+  get: (req, res) => res.status(200).json({ route: 'variant.get', guards: req.guards }),
+  add: (req, res) => res.status(201).json({ route: 'variant.add', guards: req.guards }),
+  delete: (req, res) => res.status(200).json({ route: 'variant.delete', guards: req.guards }),
+  update: (req, res) => res.status(200).json({ route: 'variant.update', guards: req.guards }),
+  list: (req, res) => res.status(200).json({ route: 'variant.list', guards: req.guards }),
+  listByModel: (req, res) => res.status(200).json({ route: 'variant.listByModel', guards: req.guards })
+}));
+
 describe('server/routes/models', () => {
   let app;
 

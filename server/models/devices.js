@@ -468,6 +468,7 @@ var self = module.exports =  {
 
     data["project_name"] = project;
     data["model_name"] = model;
+    data["variant_name"] = "";
 
     /*
     let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,
@@ -486,6 +487,15 @@ var self = module.exports =  {
       if(res != null && res.length > 0)
         data['device'] = res[0];
 
+      if(data['device']?.variant_id){
+        query = `SELECT name FROM ?? where id = ?;`
+        table = ["variants",data['device'].variant_id]
+        query = mysql.format(query,table);
+        res = await db.queryRow(query);
+        if(res != null && res.length > 0){
+          data["variant_name"] = res[0].name;
+        }
+      }
 
       query = `SELECT * FROM ?? where device_id = ?;`
       table = [project,deviceId]
@@ -1192,6 +1202,7 @@ var self = module.exports =  {
       project_id : projectId,
       template_id: templateId,
       model_id : modelId,
+      variant_id : device?.variant_id || null,
       protocol : device.protocol,
       psk : device?.psk,
       createdAt : timestamp,

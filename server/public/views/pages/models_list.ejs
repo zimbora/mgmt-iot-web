@@ -49,6 +49,7 @@
                             <th></th>
                             <th>model</th>
                             <th>description</th>
+                            <th>variants</th>
                         </tr>
                     </thead>
                   </table>
@@ -197,7 +198,8 @@
       t.row.add([
         buttonHtml,
         `<a href="./model/`+id+`/devices">`+model+`</a>`,
-        description]).draw(true);
+        description,
+        `<a href="./model/`+id+`/variants">view</a>`]).draw(true);
     }
 
     // Handle new model form submission

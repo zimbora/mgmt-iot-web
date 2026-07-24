@@ -54,8 +54,8 @@ module.exports =  {
 
   listByModel : (modelId,cb)=>{
 
-    var query = `select * from ?? where model_id = ?`;
-    var table = ["firmwares",modelId];
+    var query = `select f.*, v.name as variant_name from firmwares f left join variants v on f.variant_id = v.id where f.model_id = ?`;
+    var table = [modelId];
     query = mysql.format(query,table);
 
     db.queryRow(query)
@@ -69,9 +69,10 @@ module.exports =  {
 
   listByModelWithClientPermission : (clientId, modelId,cb)=>{
 
-    var query = ` SELECT f.*
+    var query = ` SELECT f.*, v.name as variant_name
     FROM firmwares AS f
     INNER JOIN modelPermissions AS mp ON mp.model_id = f.model_id
+    LEFT JOIN variants AS v ON f.variant_id = v.id
     WHERE mp.client_id = ? AND f.model_id = ?`;
 
     var table = [clientId,modelId];
@@ -86,7 +87,7 @@ module.exports =  {
     })
   },
 
-  add : async (filename,originalname,version,app_version,release,modelId,cb)=>{
+  add : async (filename,originalname,version,app_version,release,modelId,variantId,cb)=>{
 
     let query = "select * from ?? where ?? = ? and ?? = ? and ?? = ? and ?? = ?";
     let table = ["firmwares","version",version,"app_version",app_version,"build_release",release,"model_id",modelId];
@@ -111,6 +112,7 @@ module.exports =  {
           app_version : app_version,
           build_release : release,
           model_id : modelId,
+          variant_id : variantId || null,
           token : token,
           createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
           updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')

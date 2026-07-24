@@ -26,6 +26,7 @@ var User = require('./server/models/users');
 var Client = require('./server/models/clients');
 var Project = require('./server/models/projects');
 var Model = require('./server/models/models');
+var Variant = require('./server/models/variants');
 var Firmware = require('./server/models/firmwares');
 var Sensor = require('./server/models/sensors');
 var Templates = require('./server/models/templates');
@@ -336,9 +337,7 @@ app.get('/project/:project_id/templates',(req,res)=>{
 app.get('/templates/:template_id/edit',(req,res)=>{
   
   Templates.getById(req.params?.template_id,(err,template)=>{
-    console.log(template);
     Project.getById(template.project_id,(err,projectData) => {
-      console.log(projectData)
       if(projectData.name === "lwm2m"){
         res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
           project:projectData,
@@ -417,6 +416,14 @@ app.get('/model/:model_id/sensors',(req,res)=>{
 app.get('/model/:model_id/firmwares',(req,res)=>{
   if(req.user.level >= 4 && req.model?.fw_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/model/firmwares'),{model:req.model,user:req.user,page:'Firmwares'});
+  }
+});
+
+app.get('/model/:model_id/variants',(req,res)=>{
+  if(req.user.level >= 4){
+    Variant.listByModel(req.params.model_id,(err,variants)=>{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/model/variants'),{model:req.model,variants:variants||[],user:req.user,page:'Variants'});
+    });
   }
 });
 
@@ -532,6 +539,7 @@ app.get('/device/:device_id/manage',(req,res)=>{
       res.render(path.join(__dirname, config.public_path+'/views/pages/device/lwm2m'),{
         project_name:data.project_name,
         model_name:data.model_name,
+        variant_name:data.variant_name,
         device:data.device,
         project:data.project,
         model:data.model,
@@ -547,6 +555,7 @@ app.get('/device/:device_id/manage',(req,res)=>{
       res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqtt'),{
         project_name:data.project_name,
         model_name:data.model_name,
+        variant_name:data.variant_name,
         device:data.device,
         project:data.project,
         model:data.model,
@@ -676,6 +685,7 @@ function collectData(req,callback){
   let data ={
     project_name:null,
     model_name:null,
+    variant_name:null,
     device:null,
     project:null,
     model:null,
@@ -692,6 +702,7 @@ function collectData(req,callback){
       Device.getInfo(req.params.device_id,(err,row)=>{
         data.project_name = row?.project_name != null ? row.project_name : "";
         data.model_name = row?.model_name != null ? row.model_name : "";
+        data.variant_name = row?.variant_name != null ? row.variant_name : "";
         data.device = row?.device != null ? row.device : {};
         data.project = row?.project != null ? row.project : {};
         data.model = row?.model != null ? row.model : {};
