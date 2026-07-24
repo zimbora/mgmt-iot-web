@@ -84,7 +84,7 @@
   $(document).ready(()=>{
 
     devices.forEach((item, i) => {
-      if(item.status == "online")
+      if(item.status === "online")
         online_count++;
       else
         offline_count++;
