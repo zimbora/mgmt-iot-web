@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+<%- include('../../partials/model/scripts.ejs') %>
+  <%- include('../../partials/model/navbar.ejs') %>
+
+  <div class="container-fluid">
+    <div class="row flex-nowrap">
+      <%- include('../../partials/model/sidebar.ejs') %>
+      <div class="col py-3">
+        <div class="content-header">
+          <h3><%= model.name %> - Dashboard</h3>
+        </div>
+        <div class="row">
+          <div class="row" style="margin-top:2%">
+            <div class="col-sm-3 mb-3 mb-sm-0">
+            </div>
+            <div class="col-sm-2 mb-3 mb-sm-0">
+              <div class="card text-white bg-primary mb-3" style="min-height: 10rem">
+                <br>
+                <h6 class="card-title" style="margin-left:5%">Registered devices:</h6>
+                <br>
+                <h2 id="registeredDevices" style="margin-left:30%" class="card-text"><b></b></h2>
+              </div>
+            </div>
+            <div class="col-sm-2 mb-3 mb-sm-0">
+              <div class="card text-white bg-success mb-3" style="min-height: 10rem">
+                <br>
+                <h6 class="card-title" style="margin-left:5%">Online devices:</h6>
+                <br>
+                <h2 id="onlineDevices" style="margin-left:30%" class="card-text"><b></b></h2>
+              </div>
+            </div>
+            <div class="col-sm-2 mb-3 mb-sm-0">
+              <div class="card text-white bg-warning mb-3" style="min-height: 10rem">
+                <br>
+                <h6 class="card-title" style="margin-left:5%">Offline devices:</h6>
+                <br>
+                <h2 id="offlineDevices" style="margin-left:30%" class="card-text"><b></b></h2>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row py-3">
+          <div class="row">
+            <div class="col-sm-6 mb-3 mb-sm-0 mx-auto d-flex align-items-center" style="max-height:30rem; max-width:30rem;">
+              <canvas id="myChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./assets/js/chart.js"></script>
+
+  <script>
+
+  var ctx = document.getElementById('myChart');
+  var online_count = 0;
+  var offline_count = 0;
+
+  const Utils = {
+    CHART_COLORS : {
+      red: 'rgb(255, 99, 132)',
+      orange: 'rgb(255, 159, 64)',
+      yellow: 'rgb(255, 205, 86)',
+      green: 'rgb(75, 192, 192)',
+      blue: 'rgb(54, 162, 235)',
+      purple: 'rgb(153, 102, 255)',
+      grey: 'rgb(201, 203, 207)'
+    }
+  }
+
+  let devices = <%- JSON.stringify(devices) %>;
+
+  $(document).ready(()=>{
+
+    devices.forEach((item, i) => {
+      if(item.status == "online")
+        online_count++;
+      else
+        offline_count++;
+    });
+
+    document.getElementById('registeredDevices').innerHTML = devices.length;
+    document.getElementById('onlineDevices').innerHTML = online_count;
+    document.getElementById('offlineDevices').innerHTML = offline_count;
+
+    const data = {
+      labels: [
+        'Online',
+        'Offline'
+      ],
+      datasets: [{
+        label: 'Devices Status',
+        data: [online_count, offline_count],
+        backgroundColor: [
+          Utils.CHART_COLORS.blue,
+          Utils.CHART_COLORS.orange
+        ],
+        hoverOffset: 4
+      }]
+    };
+
+    const config = {
+      type: 'doughnut',
+      data: data,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Devices Statistics'
+          }
+        }
+      },
+    };
+
+    new Chart(ctx, config);
+
+  });
+
+  </script>
+</body>
+</html>
