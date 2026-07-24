@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <%- include('../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../partials/scripts.ejs') %>
+
+  <%- include('../partials/navbar.ejs') %>
+
+  <%- include('../partials/modal/error.ejs') %>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../partials/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="row">
+              <div class="col-sm-6 mb-3 mb-sm-0">
+                <div class="content-header">
+                  <h5>Profile</h5>
+                </div>
+                <div class="card">
+                  <div class="card-body">
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">Name</span>
+                      <input type="text" id="_name_" class="form-control" placeholder="Name">
+                    </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">Email</span>
+                      <input type="text" id="_email_" class="form-control" placeholder="Email">
+                    </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">API Token</span>
+                      <input type="password" id="_api_token_" class="form-control" placeholder="API Token" readonly>
+                      <button class="btn btn-outline-secondary" type="button" id="toggleApiToken" title="Show/Hide">
+                        <i class="bi bi-eye" id="apiTokenEyeIcon"></i>
+                      </button>
+                      <button class="btn btn-outline-secondary" type="button" id="copyApiToken" title="Copy">
+                        <i class="bi bi-clipboard"></i>
+                      </button>
+                      <button class="btn btn-outline-warning" type="button" id="regenerateApiToken" title="Regenerate">
+                        <i class="bi bi-arrow-clockwise"></i> Regenerate
+                      </button>
+                    </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">MQTT Password</span>
+                      <input type="password" id="_mqtt_password_" class="form-control" placeholder="MQTT Password" readonly>
+                      <button class="btn btn-outline-secondary" type="button" id="toggleMqttPassword" title="Show/Hide">
+                        <i class="bi bi-eye" id="mqttPasswordEyeIcon"></i>
+                      </button>
+                      <button class="btn btn-outline-secondary" type="button" id="copyMqttPassword" title="Copy">
+                        <i class="bi bi-clipboard"></i>
+                      </button>
+                    </div>
+                    <button id="saveProfile" type="button" class="btn btn-primary btn-sm">Save</button>
+                    <span id="saveStatus" class="ms-2 text-success" style="display:none">Saved!</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script type="module" src="./app.mjs"></script>
+
+  <script>
+    $(document).ready(()=>{
+
+      api.getProfile((err,res)=>{
+        if(err){
+          console.log(err);
+        }else if(res){
+          $("#_name_").val(res.name || "");
+          $("#_email_").val(res.gmail || "");
+          $("#_api_token_").val(res.api_token || "");
+          $("#_mqtt_password_").val(res.mqtt_password || "");
+        }
+      });
+
+    });
+
+    // Toggle API Token visibility
+    $("#toggleApiToken").click(()=>{
+      let input = $("#_api_token_");
+      let icon = $("#apiTokenEyeIcon");
+      if(input.attr("type") === "password"){
+        input.attr("type","text");
+        icon.removeClass("bi-eye").addClass("bi-eye-slash");
+      }else{
+        input.attr("type","password");
+        icon.removeClass("bi-eye-slash").addClass("bi-eye");
+      }
+    });
+
+    // Toggle MQTT Password visibility
+    $("#toggleMqttPassword").click(()=>{
+      let input = $("#_mqtt_password_");
+      let icon = $("#mqttPasswordEyeIcon");
+      if(input.attr("type") === "password"){
+        input.attr("type","text");
+        icon.removeClass("bi-eye").addClass("bi-eye-slash");
+      }else{
+        input.attr("type","password");
+        icon.removeClass("bi-eye-slash").addClass("bi-eye");
+      }
+    });
+
+    // Copy API Token
+    $("#copyApiToken").click(()=>{
+      let val = $("#_api_token_").val();
+      navigator.clipboard.writeText(val).then(()=>{
+        $("#copyApiToken i").removeClass("bi-clipboard").addClass("bi-clipboard-check");
+        setTimeout(()=>{
+          $("#copyApiToken i").removeClass("bi-clipboard-check").addClass("bi-clipboard");
+        },1500);
+      });
+    });
+
+    // Copy MQTT Password
+    $("#copyMqttPassword").click(()=>{
+      let val = $("#_mqtt_password_").val();
+      navigator.clipboard.writeText(val).then(()=>{
+        $("#copyMqttPassword i").removeClass("bi-clipboard").addClass("bi-clipboard-check");
+        setTimeout(()=>{
+          $("#copyMqttPassword i").removeClass("bi-clipboard-check").addClass("bi-clipboard");
+        },1500);
+      });
+    });
+
+    // Regenerate API Token
+    $("#regenerateApiToken").click(()=>{
+      if(!confirm("Are you sure you want to regenerate your API token? The old token will no longer work."))
+        return;
+
+      api.regenerateApiToken((err,res)=>{
+        if(err){
+          $('#error').text("Failed to regenerate API token");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else if(res){
+          $("#_api_token_").val(res.api_token);
+        }
+      });
+    });
+
+    // Save profile
+    $("#saveProfile").click(()=>{
+      let name = $("#_name_").val();
+      let email = $("#_email_").val();
+
+      api.updateProfile(name,email,(err,res)=>{
+        if(err){
+          $('#error').text("Failed to save profile");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          $("#saveStatus").show();
+          setTimeout(()=>{ $("#saveStatus").hide(); },2000);
+        }
+      });
+    });
+
+  </script>
+
+</body>
+</html>

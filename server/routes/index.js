@@ -119,6 +119,13 @@ router.use('/auth', authRoutes);
 router.route('/mqtt/credentials')
   .get(Client.getMqttCredentials);
 
+router.route('/profile')
+  .get(Client.getProfile)
+  .put(Client.updateProfile);
+
+router.route('/profile/regenerate-token')
+  .post(Client.regenerateApiToken);
+
 router.route('/db/load')
   .get(Database.getLoad);
 

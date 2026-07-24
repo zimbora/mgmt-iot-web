@@ -1945,8 +1945,71 @@ var api = {
 
     },
   },
-  
 
+  // --- profile ---
+
+  // get current user profile
+  getProfile : (cb)=>{
+    fetch(Settings.api+"/profile", {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // update current user profile
+  updateProfile : (name,gmail,cb)=>{
+    fetch(Settings.api+"/profile", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: name,
+        gmail: gmail
+      })
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // regenerate api token
+  regenerateApiToken : (cb)=>{
+    fetch(Settings.api+"/profile/regenerate-token", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  // --- ----- ---
 
 };
 
