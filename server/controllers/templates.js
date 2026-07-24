@@ -199,7 +199,7 @@ module.exports = {
         description: Joi.object({
           attributes: Joi.object({
             type: Joi.string()
-              .valid('string', 'integer', 'float', 'boolean', 'execute', 'time') // Allowed values
+              .valid('string', 'integer', 'float', 'boolean', 'execute', 'time', 'opaque') // Allowed values
               .required(), // 'type' is required
             title: Joi.string().required(), // 'title' is required and must be a string
             readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
@@ -301,7 +301,7 @@ module.exports = {
         description: Joi.object({
           attributes: Joi.object({
             type: Joi.string()
-              .valid('string', 'integer', 'float', 'boolean') // Allowed values
+              .valid('string', 'integer', 'float', 'boolean', 'execute', 'time', 'opaque') // Allowed values
               .required(), // 'type' is required
             title: Joi.string().required(), // 'title' is required and must be a string
             readable: Joi.boolean().required(), // 'readable' is required and must be a boolean
