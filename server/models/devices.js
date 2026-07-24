@@ -497,7 +497,6 @@ var self = module.exports =  {
         }
       }
 
-
       query = `SELECT * FROM ?? where device_id = ?;`
       table = [project,deviceId]
       query = mysql.format(query,table);

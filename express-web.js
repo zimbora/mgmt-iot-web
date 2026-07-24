@@ -337,9 +337,7 @@ app.get('/project/:project_id/templates',(req,res)=>{
 app.get('/templates/:template_id/edit',(req,res)=>{
   
   Templates.getById(req.params?.template_id,(err,template)=>{
-    console.log(template);
     Project.getById(template.project_id,(err,projectData) => {
-      console.log(projectData)
       if(projectData.name === "lwm2m"){
         res.render(path.join(__dirname, config.public_path+'/views/pages/template/lwm2mEdit'),{
           project:projectData,
@@ -687,6 +685,7 @@ function collectData(req,callback){
   let data ={
     project_name:null,
     model_name:null,
+    variant_name:null,
     device:null,
     project:null,
     model:null,
@@ -703,6 +702,7 @@ function collectData(req,callback){
       Device.getInfo(req.params.device_id,(err,row)=>{
         data.project_name = row?.project_name != null ? row.project_name : "";
         data.model_name = row?.model_name != null ? row.model_name : "";
+        data.variant_name = row?.variant_name != null ? row.variant_name : "";
         data.device = row?.device != null ? row.device : {};
         data.project = row?.project != null ? row.project : {};
         data.model = row?.model != null ? row.model : {};
