@@ -1,6 +1,5 @@
 $ = {}
 const mqtt = require('mqtt')
-const FtpSrv = require('ftp-srv');
 const crc = require('crc');
 const fs = require('fs');
 const path = require('path');
@@ -17,8 +16,6 @@ mgmt_iot_version = "";
 const {Docker} = require('node-docker-api');
 
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
-
-const ftpPath = './server/public/'
 
 module.exports = {
 
@@ -153,87 +150,7 @@ module.exports = {
     $.mqttClient.on('close', function () {
       console.log("mqtt closed")
     })
-
-    // --- FTP Server ---
     
-    // Init ftp server
-    const ftpServer = new FtpSrv({
-      url: "ftp://127.0.0.1:" + settings?.ftp?.port,
-      anonymous: false,
-      blacklist: ['STOR'],
-      tls: false,
-      pasv_url: settings?.ftp?.pasv_url,
-      pasv_min: settings?.ftp?.pasv_min,
-      pasv_max: settings?.ftp?.pasv_max,
-    });
-
-    if( settings?.ftp && settings?.ftp?.enabled ){
-      ftpServer.listen().then(() => { 
-        console.log(`FTP Server is running on port: ${settings?.ftp?.port}`);
-      });
-    }
-    
-    ftpServer.on('login', ({ ftpConnection, username, password }, resolve, reject) => {
-      // You can implement your own user authentication here
-      console.log('username:',username);
-      console.log('password:',password);
-
-      if(username !== settings?.ftp?.user_default && settings?.ftp?.pwd_default !== 'anonymous'){
-        return reject(new errors.GeneralError('Invalid username or password', 401));
-      }
-
-      resolve({ root: path.join(__dirname, './server/public/') });
-    });
-
-    if( settings?.ftp?.upload){
-      ftpServer.on('STOR', async (conn) => {
-          const filePath = path.join(__dirname, './server/public/', conn.args[0]);
-          const fileStream = fs.createWriteStream(filePath);
-          conn.stream.pipe(fileStream);
-
-          fileStream.on('finish', () => {
-              console.log(`File uploaded: ${filePath}`);
-          });
-          
-          conn.stream.on('data', (chunk) => {
-              const crcValue = crc.crc16xmodem(chunk);
-              console.log(`CRC16 for the received chunk: ${crcValue.toString(16)}`);
-          });
-      });
-    }
-
-    if( settings?.ftp?.download){
-      ftpServer.on('RETR', async (conn) => {
-          const filePath = path.join(__dirname, ftpPath, conn.args[0]);
-          const fileStream = fs.createReadStream(filePath);
-        
-          // Calculate CRC16 for the file content
-          let fileCRC = crc.crc16xmodem();
-          fileStream.on('data', (chunk) => {
-              fileCRC.update(chunk);
-          });
-
-          fileStream.on('end', () => {
-              console.log(`CRC16 for the file ${conn.args[0]}: ${fileCRC.digest().toString('hex')}`);
-          });
-
-          conn.stream.pipe(fileStream);
-      });
-    }
-
-    ftpServer.on('client-error', ({connection, context, error}) => { 
-      console.log("client error: ",error);
-    });
-
-    ftpServer.on('server-error', ({error}) => { 
-      console.log("server error: ",error);
-    });
-
-    ftpServer.on('disconnect', ({connection, id, newConnectionCount}) => { 
-      console.log("disconnected id: ",id);
-    });
-    
-    // --- ----- ---
   },
 
   path : ()=>{
