@@ -322,7 +322,7 @@
 
     $(document).ready(() => {
 
-      if(sensors.hasOwnProperty("status")){
+      if(sensors.hasOwnProperty("status") && sensors["status"]?.value != null){
         changeDeviceStatus(sensors["status"]?.value);
       }
 
@@ -367,7 +367,11 @@
       let button = document.querySelector('#mqtt_status');
       button.classList.remove("btn-secondary");
       button.classList.add("btn-success");
-      client.subscribe(`${project_name}/${associated?.uid}/#`);
+      if(model_name === "sniffer" && associated?.uid){
+        client.subscribe(`${project_name}/${associated.uid}/#`);
+      } else {
+        client.subscribe(`${project_name}/${uid}/#`);
+      }
     }
     
     function onConnectionLost(responseObject) {
@@ -798,7 +802,7 @@
       if (device.template_id && currentTemplateEl) {
         const template = templates.find(t => t.id == device.template_id);
         if (template) {
-          currentTemplateEl.textContent = `${template.tag} - ${template.name}`;
+          currentTemplateEl.textContent = template.tag;
         }
       }
     }

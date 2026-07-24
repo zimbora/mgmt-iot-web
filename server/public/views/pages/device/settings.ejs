@@ -979,7 +979,7 @@
       if (device.template_id && currentTemplateEl) {
         const template = templates.find(t => t.id == device.template_id);
         if (template) {
-          currentTemplateEl.textContent = `${template.tag} - ${template.name}`;
+          currentTemplateEl.textContent = template.tag;
         }
       }
     }
