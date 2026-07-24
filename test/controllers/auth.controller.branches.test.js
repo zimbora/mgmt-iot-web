@@ -29,6 +29,7 @@ jest.mock('../../server/models/firmwares', () => ({
 
 const authCtrl = require('../../server/controllers/auth');
 const response = require('../../server/controllers/response');
+const Auth = require('../../server/models/auth');
 const httpStatus = require('http-status-codes');
 
 describe('server/controllers/auth branch coverage', () => {
@@ -51,6 +52,23 @@ describe('server/controllers/auth branch coverage', () => {
     expect(next).toHaveBeenCalled();
   });
 
+  it('generateToken() sets session token and cookie when req.user present', () => {
+    const req = {
+      session: {},
+      user: { user_id: 1, type: 'admin', level: 5, client_id: 1, nick: 'n', name: 'N', avatar: '' },
+      ip: '127.0.0.1',
+      get: jest.fn(() => 'test-agent')
+    };
+    const res = { cookie: jest.fn() };
+    const next = jest.fn();
+
+    authCtrl.generateToken(req, res, next);
+
+    expect(req.session.token).toBe('signed-token');
+    expect(res.cookie).toHaveBeenCalledWith('jwt_token', 'signed-token', expect.objectContaining({ httpOnly: true }));
+    expect(next).toHaveBeenCalled();
+  });
+
   it('fw_check_token() returns bad request when token missing', () => {
     const req = { headers: {}, query: {}, params: { fwId: 1 } };
     const res = {};
@@ -68,5 +86,38 @@ describe('server/controllers/auth branch coverage', () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ message: 'Success', token: 'signed-token' });
+  });
+
+  it('check_authentication() falls back to cookie token when session token is missing', (done) => {
+    Auth.check_authentication.mockImplementationOnce((token, cb) => {
+      cb(true, { agent: 'ua', ip: '1.2.3.4' });
+    });
+
+    const req = {
+      session: {},
+      headers: { cookie: 'jwt_token=cookie-jwt' },
+      ip: '1.2.3.4',
+      get: jest.fn(() => 'ua')
+    };
+    const res = {};
+    const next = jest.fn(() => {
+      expect(Auth.check_authentication).toHaveBeenCalledWith('cookie-jwt', expect.any(Function));
+      expect(req.session.token).toBe('cookie-jwt');
+      done();
+    });
+
+    authCtrl.check_authentication(req, res, next);
+  });
+
+  it('deauth() clears session token and cookie', () => {
+    const req = { session: { token: 'some-token' } };
+    const res = { clearCookie: jest.fn(), redirect: jest.fn() };
+    const cb = jest.fn();
+
+    authCtrl.deauth(req, res, cb);
+
+    expect(req.session.token).toBeNull();
+    expect(res.clearCookie).toHaveBeenCalledWith('jwt_token');
+    expect(cb).toHaveBeenCalledWith(res, res);
   });
 });

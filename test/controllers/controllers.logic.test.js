@@ -72,7 +72,9 @@ const makeReqRes = () => {
     send: jest.fn().mockReturnThis(),
     set: jest.fn().mockReturnThis(),
     sendFile: jest.fn().mockReturnThis(),
-    redirect: jest.fn().mockReturnThis()
+    redirect: jest.fn().mockReturnThis(),
+    cookie: jest.fn().mockReturnThis(),
+    clearCookie: jest.fn().mockReturnThis()
   };
 
   const next = jest.fn();
