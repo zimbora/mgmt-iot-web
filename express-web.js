@@ -381,6 +381,21 @@ app.use('/model/:model_id',(req,res,next)=>{
 
 })
 
+app.get('/model/:model_id/dashboard',(req,res)=>{
+  if(req.user.level >= 2){
+    const clientId = req.user.level >= 4 ? null : req.user.client_id;
+    Device.list(req.params.model_id, clientId, (err, devices)=>{
+      if(err){
+        log.error(err);
+        return res.redirect(req.protocol + '://' + req.get('host') + "/models");
+      }
+      res.render(path.join(__dirname, config.public_path+'/views/pages/model/dashboard'),{model:req.model,devices:devices||[],user:req.user,page:'Dashboard'});
+    });
+  }else{
+    res.redirect(req.protocol + '://' + req.get('host') + "/home");
+  }
+});
+
 app.get('/model/:model_id/devices',(req,res)=>{
   if(req.user.level >= 2){
     if(req.user.level >= 4){
