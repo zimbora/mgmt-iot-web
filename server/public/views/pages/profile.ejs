@@ -70,14 +70,14 @@
   <script>
     $(document).ready(()=>{
 
-      api.getProfile((err,res)=>{
+      api.getProfile((err,data)=>{
         if(err){
           console.log(err);
-        }else if(res){
-          $("#_name_").val(res.name || "");
-          $("#_email_").val(res.gmail || "");
-          $("#_api_token_").val(res.api_token || "");
-          $("#_mqtt_password_").val(res.mqtt_password || "");
+        }else if(data){
+          $("#_name_").val(data.name || "");
+          $("#_email_").val(data.gmail || "");
+          $("#_api_token_").val(data.api_token || "");
+          $("#_mqtt_password_").val(data.mqtt_password || "");
         }
       });
 
@@ -117,6 +117,10 @@
         setTimeout(()=>{
           $("#copyApiToken i").removeClass("bi-clipboard-check").addClass("bi-clipboard");
         },1500);
+      }).catch(()=>{
+        $('#error').text("Failed to copy API token");
+        $('#suggestion').text("Please copy it manually.");
+        $('#modalError').modal('show');
       });
     });
 
@@ -128,6 +132,10 @@
         setTimeout(()=>{
           $("#copyMqttPassword i").removeClass("bi-clipboard-check").addClass("bi-clipboard");
         },1500);
+      }).catch(()=>{
+        $('#error').text("Failed to copy MQTT password");
+        $('#suggestion').text("Please copy it manually.");
+        $('#modalError').modal('show');
       });
     });
 
