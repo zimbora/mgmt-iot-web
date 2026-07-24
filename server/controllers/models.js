@@ -178,13 +178,14 @@ module.exports = {
     try {
       const modelId = req.params.model_id;
       const acceptRelease = req.query.accept_release || 'prod'; // Default to 'prod' if not specified
+      const variantId = req.query.variant_id ?? null;
       
       // Import Firmware model
       const Firmware = require('../models/firmwares');
       
       // Get latest versions using existing functions
-      const latestVersion = await Firmware.getLatestVersion(modelId, acceptRelease);
-      const latestAppVersion = await Firmware.getLatestAppVersion(modelId, acceptRelease);
+      const latestVersion = await Firmware.getLatestVersion(modelId, acceptRelease, variantId);
+      const latestAppVersion = await Firmware.getLatestAppVersion(modelId, acceptRelease, variantId);
       
       const result = {
         latest_version: latestVersion ? latestVersion.version : null,
