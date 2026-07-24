@@ -1,5 +1,21 @@
 # Changelog
 
+## version 1.1.0
+  feat: adds test coverage (#71)
+    All files: 81.4% statements, 66.75% branches, 88.43% functions, 81.7% lines
+      - server/controllers: 80.1% statements
+      - server/models: 81.82% statements
+      - server/routes: 87.42% statements
+  fix(models/devices): device
+    - project_table and project_logs_table are still used
+  feat!: add variant support for models, devices, and firmwares (#73)
+  fix: FOTA modal stalling indefinitely after firmware update trigger (#70)
+  fix: Add `opaque` type support to LWM2M resource validators (#74)
+  ci: run test coverage on PRs and master (#76)
+  Fix:  models delete `user.level` → `req.user.level` in controller (#78)
+  fix: manage page wrong status button and template name display (#80)
+  feat: Add dashboard view to model pages (#82)
+
 ## version 1.0.77
   
   web:
