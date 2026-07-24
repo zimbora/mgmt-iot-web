@@ -117,6 +117,14 @@
                         <input type="text" readonly class="form-control-plaintext fw-bold" id="model" value="<%=model_name%>">
                       </div>
                     </div>
+                    <% if(variant_name){ %>
+                    <div class="mb-1 row">
+                      <label for="variant" class="col-4 col-form-label">Variant</label>
+                      <div class="col-6">
+                        <input type="text" readonly class="form-control-plaintext fw-bold" id="variant" value="<%=variant_name%>">
+                      </div>
+                    </div>
+                    <% } %>
                     <% if(device.template_id == null) { %>
                     <div class="btn-group">
                       <label class="input-group-text" for="inputGroupSelect21">Template:</label>
@@ -259,6 +267,7 @@
     const mqtt = <%- JSON.stringify(mqtt) %>;
     const project_name = <%- JSON.stringify(project_name) %>;
     const model_name = <%- JSON.stringify(model_name) %>;
+    const variant_name = <%- JSON.stringify(variant_name) %>;
     const sensors = <%- JSON.stringify(sensors) %>;
     const associated = <%- JSON.stringify(associated) %>;
     const fw = <%- JSON.stringify(fw) %>;
@@ -270,6 +279,7 @@
     /*
     console.log(project_name);
     console.log(model_name);
+    console.log(variant_name);
     //console.log(mqtt);
     console.log(device);
     console.log(sensors);

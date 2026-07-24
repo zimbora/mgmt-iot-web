@@ -18,6 +18,7 @@ var Client = require('../controllers/clients');
 var Device = require('../controllers/devices');
 var Project = require('../controllers/projects');
 var Model = require('../controllers/models');
+var Variant = require('../controllers/variants');
 var Firmware = require('../controllers/firmwares');
 var Database = require('../controllers/db');
 var Template = require('../controllers/templates');
@@ -95,6 +96,9 @@ router.use('/model', models);
 router.route('/models')
   .get(Model.list)
   .post(Model.add)
+
+router.route('/variants')
+  .get(Variant.list)
 
 router.route('/templates')
   .get(Template.list)

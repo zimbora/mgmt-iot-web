@@ -99,6 +99,15 @@
                   class="nav-link px-0"> <span class="d-none d-sm-inline">Firmwares</span></a>
                 </li>
                 <%}%>
+                <% if(user.level >= 4){%>
+                <li class="w-100">
+                  <a href="./variants"
+                  <% if(page == "Variants"){%>
+                    class="active"
+                  <% } %>
+                  class="nav-link px-0"> <span class="d-none d-sm-inline">Variants</span></a>
+                </li>
+                <%}%>
               </ul>
             </li>
             <% } %>

@@ -468,6 +468,7 @@ var self = module.exports =  {
 
     data["project_name"] = project;
     data["model_name"] = model;
+    data["variant_name"] = "";
 
     /*
     let query = `SELECT d.uid as uid, d.status as status, d.model_id as model_id,d.tech as tech,
@@ -486,6 +487,15 @@ var self = module.exports =  {
       if(res != null && res.length > 0)
         data['device'] = res[0];
 
+      if(data['device']?.variant_id){
+        query = `SELECT name FROM ?? where id = ?;`
+        table = ["variants",data['device'].variant_id]
+        query = mysql.format(query,table);
+        res = await db.queryRow(query);
+        if(res != null && res.length > 0){
+          data["variant_name"] = res[0].name;
+        }
+      }
 
       query = `SELECT * FROM ?? where device_id = ?;`
       table = [project,deviceId]
@@ -1192,6 +1202,7 @@ var self = module.exports =  {
       project_id : projectId,
       template_id: templateId,
       model_id : modelId,
+      variant_id : device?.variant_id || null,
       protocol : device.protocol,
       psk : device?.psk,
       createdAt : timestamp,
@@ -1255,10 +1266,10 @@ var self = module.exports =  {
   // hard delete
   delete : async (deviceId,cb)=>{
 
-    /* deprecated
+    
     let project_table = await self.getProject(deviceId);
     let project_logs_table = await self.getProjectLogsTable(project_table);
-    */
+    
 
     let model = await self.getModel(deviceId); // not used
 
@@ -1272,13 +1283,14 @@ var self = module.exports =  {
     }
 
     try{
-      /* deprecated
       if(project_table != null){
         console.log(`deleting project_table ${project_table}`)
         if( await db.tableExists(project_table)){
           await db.delete(project_table,filter);
         }
       }
+
+      
       if(project_logs_table != null){
         console.log(`deleting project_logs_table ${project_logs_table}`)
         if( await db.tableExists(project_logs_table)){
@@ -1286,6 +1298,7 @@ var self = module.exports =  {
         }
       }
       
+      /* deprecated
       if(model_table != null){
         console.log(`deleting model_table ${model_table}`)
         if( await db.tableExists(model_table)){

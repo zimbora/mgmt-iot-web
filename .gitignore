@@ -37,6 +37,7 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+coverage/
 
 # config
 config/env/keys.js

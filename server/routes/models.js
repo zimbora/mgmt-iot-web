@@ -4,6 +4,7 @@ var express = require('express');
 var Model = require('../controllers/models');
 var Firmware = require('../controllers/firmwares');
 var SensorTemplate = require('../controllers/sensorsTemplate');
+var Variant = require('../controllers/variants');
 
 // send file
 var filePath = "";
@@ -112,5 +113,14 @@ router.route('/:model_id/sensor/propagate')
 
 router.route('/:model_id/option')
   .put(Model.updateOption)
+
+router.route('/:model_id/variants')
+  .get(Variant.listByModel)
+  .post(Variant.add)
+
+router.route('/:model_id/variant/:variant_id')
+  .get(Variant.get)
+  .delete(Variant.delete)
+  .put(Variant.update)
 
 module.exports =  router;
