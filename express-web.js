@@ -254,6 +254,12 @@ app.get('/users',(req,res)=>{
 });
 // --- ----- ---
 
+// --- profile ---
+app.get('/profile',(req,res)=>{
+  res.render(path.join(__dirname, config.public_path+'/views/pages/profile'),{user:req.user,page:'Profile'});
+});
+// --- ----- ---
+
 // --- mqtt clients ---
 app.get('/clients',(req,res)=>{
   if(req.user.level >= 4)

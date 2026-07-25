@@ -184,6 +184,37 @@ module.exports = {
     });
   },
 
+  getProfile : (req,res,next)=>{
+    Client.getProfile(req.user.client_id,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
+  updateProfile : (req,res,next)=>{
+
+    const val = Joi.object({
+      name: Joi.string().required().allow(""),
+      gmail: Joi.string().required().allow(""),
+    }).validate(req.body);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      Client.updateProfile(req.user.client_id,req.body.name,req.body.gmail,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
+  regenerateApiToken : (req,res,next)=>{
+    Client.regenerateApiToken(req.user.client_id,(err,api_token)=>{
+      if(!err) response.send(res,{ api_token });
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+  },
+
   findGoogleClient : (req,res,next)=>{
 
     const val = Joi.object({
