@@ -84,13 +84,13 @@
   <script src="./assets/js/ace.js"></script>
   <script type="module" src="./app.mjs"></script>
 
-  <script src="lib/markdown.js"></script>
+  <script src="lib/marked.js"></script>
 
   <script>
     var t;
     var id;
 
-    privelleges.innerHTML = markdown.toHTML(
+    privelleges.innerHTML = marked.parse(
     `#### Users Privelleges:
 
     Users listed on this section are the only ones available to access mqtt broker.
@@ -103,7 +103,7 @@
     Check below tables to choose users type level on its creation.`);
 
 
-    mqtt_users_table.innerHTML = markdown.toHTML(`
+    mqtt_users_table.innerHTML = marked.parse(`
 ##### Platform permissions
     |       |      users      |              clients              |     devices     | firmwares |
     | level | create | delete | create | delete | associate device| list   | edit   |  manage   |
