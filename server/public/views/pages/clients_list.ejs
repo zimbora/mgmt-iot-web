@@ -84,13 +84,13 @@
   <%- include('../partials/modal/error.ejs') %>
   <%- include('../partials/modal/editClient.ejs') %>
 
-  <script src="lib/markdown.js"></script>
+  <script src="lib/marked.js"></script>
 
   <script>
     var t;
     var id;
 
-    privelleges.innerHTML = markdown.toHTML(
+    privelleges.innerHTML = marked.parse(
     `#### Clients Privelleges:
 
     Only clients listed on this section are available to access mqtt broker.

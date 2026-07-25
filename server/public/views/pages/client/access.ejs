@@ -77,14 +77,14 @@
   <%- include('../../partials/modal/confirmation.ejs') %>
   <%- include('../../partials/modal/error.ejs') %>
 
-  <script src="lib/markdown.js"></script>
+  <script src="lib/marked.js"></script>
 
   <script>
     var t;
     var clientID = "";
     var deviceId;
 
-    privelleges.innerHTML = markdown.toHTML(
+    privelleges.innerHTML = marked.parse(
     `#### Clients Privelleges
 
     Use this tab to associate a device to a client and set it's permission

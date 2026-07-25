@@ -82,7 +82,7 @@
       </div>
   </div>
 
-  <script src="lib/markdown.js"></script>
+  <script src="lib/marked.js"></script>
 
   <script>
 
@@ -99,7 +99,7 @@ function foo(items) {
       deviceID = api.getDeviceID();
 
       //new Editor($("text-input"), $("preview"));
-      base.innerHTML = markdown.toHTML(`#####C API imported to JS (Default):
+      base.innerHTML = marked.parse(`#####C API imported to JS (Default):
       - gpio.mode(pin, mode) set pin mode
       - gpio.write(pin, value) set pin state
       - gpio.read(pin) read pin state
@@ -111,7 +111,7 @@ function foo(items) {
       - mqtt.send(topic,payload,retain) send messages to mqtt broker
       `);
 
-      proprietary.innerHTML = markdown.toHTML(`#####C API imported to JS (Proprietary):
+      proprietary.innerHTML = marked.parse(`#####C API imported to JS (Proprietary):
       - sensor.read(ref) get last value of sensor mapped with ref id string
       - sensor.read_rs485(unit_id,fc,address,len) real time reads directly from bus
       - sensor.write_rs485(unit_id,fc,address,len,data_str) real time reads directly from bus
@@ -119,14 +119,14 @@ function foo(items) {
       - sensor.ea_read() update cloud with last energy analyzer values
       `);
 
-      callbacks.innerHTML = markdown.toHTML(`#####C API callbacks:
+      callbacks.innerHTML = marked.parse(`#####C API callbacks:
         - event.onReadSensor(ref,value) called on read sensor
         - event.onAlarmSensor(ref,value) called on alarm check
         - event.onAlarmTrigger(ref,value) called on alarm trigger
       `);
 
       <% if(true){ %>
-      device.innerHTML = markdown.toHTML(`#####C API device:
+      device.innerHTML = marked.parse(`#####C API device:
         ! Add doc for dedicated device
 
         MEA_GW
@@ -142,7 +142,7 @@ function foo(items) {
       `);
       <% } %>
 
-      examples.innerHTML = markdown.toHTML(`
+      examples.innerHTML = marked.parse(`
 #####Example 1:
 - let led = { pin: 26, on: 0 };  // LED state
 - gpio.mode(led.pin, 2);         // Set LED pin to output mode
