@@ -868,7 +868,7 @@
         $.ajax({
           url: Settings.api + '/model/' + device.model_id + '/firmware/latest',
           type: 'GET',
-          data: { accept_release: device.accept_release },
+          data: { accept_release: device.accept_release, variant_id: device.variant_id },
           success: function(data) {
             let versionInfo = '';
             if (data && !data.Error && data.Result) {
@@ -955,7 +955,8 @@
           url: Settings.api + '/model/' + device.model_id + '/firmware/latest',
           type: 'GET',
           data: {
-            accept_release: device.accept_release
+            accept_release: device.accept_release,
+            variant_id: device.variant_id
           },
           success: function(data, status, xhr) {
             if (data && !data.Error) {

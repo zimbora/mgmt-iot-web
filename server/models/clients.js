@@ -343,6 +343,69 @@ var self = module.exports =  {
     })
   },
 
+  getProfile : async (clientId,cb)=>{
+
+    let query = `SELECT name, gmail, api_token, mqtt_password FROM clients WHERE id = ?`;
+    let table = [clientId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length > 0) return cb(null, rows[0]);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  updateProfile : async (clientId,name,gmail,cb)=>{
+
+    let obj = {
+      name : name,
+      gmail : gmail,
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    let filter = {
+      id : clientId
+    };
+
+    db.update("clients",obj,filter)
+    .then(rows => {
+      if(rows.affectedRows > 0) return cb(null,rows);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
+  regenerateApiToken : async (clientId,cb)=>{
+
+    let message = clientId + "_regen_" + Date.now();
+    let key = String(Date.now()/3621);
+    let api_token = CryptoJS.HmacSHA256(message, key).toString();
+
+    let obj = {
+      api_token : api_token,
+      updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    let filter = {
+      id : clientId
+    };
+
+    db.update("clients",obj,filter)
+    .then(rows => {
+      if(rows.affectedRows > 0) return cb(null, api_token);
+      else return cb(null,null);
+    })
+    .catch(error => {
+      return cb(error,null);
+    });
+  },
+
   isAdmin : (level)=>{
     if(level >= 4)
       return true;

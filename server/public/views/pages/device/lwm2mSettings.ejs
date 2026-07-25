@@ -102,8 +102,59 @@
         <div class="content-header">
           <div class="d-flex justify-content-between align-items-center">
             <h3><%= project?.name %> - Edit device: <%= device?.name || 'Unknown' %></h3>
+            <% if (device?.psk) { %>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#pskModal" title="Show PSK">
+              <i class="bi bi-key"></i>
+            </button>
+            <% } %>
           </div>
         </div>
+
+        <!-- PSK Modal -->
+        <% if (device?.psk) { %>
+        <div class="modal fade" id="pskModal" tabindex="-1" aria-labelledby="pskModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="pskModalLabel"><i class="bi bi-key"></i> Pre-Shared Key</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="input-group">
+                  <input type="password" id="pskValue" class="form-control font-monospace" value="<%= device.psk %>" readonly>
+                  <button class="btn btn-outline-secondary" type="button" id="togglePsk" title="Show/hide PSK">
+                    <i class="bi bi-eye" id="togglePskIcon"></i>
+                  </button>
+                  <button class="btn btn-outline-secondary" type="button" id="copyPsk" title="Copy PSK">
+                    <i class="bi bi-clipboard" id="copyPskIcon"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+          document.getElementById('togglePsk')?.addEventListener('click', function() {
+            var input = document.getElementById('pskValue');
+            var icon = document.getElementById('togglePskIcon');
+            if (input.type === 'password') {
+              input.type = 'text';
+              icon.className = 'bi bi-eye-slash';
+            } else {
+              input.type = 'password';
+              icon.className = 'bi bi-eye';
+            }
+          });
+          document.getElementById('copyPsk')?.addEventListener('click', function() {
+            var input = document.getElementById('pskValue');
+            navigator.clipboard.writeText(input.value).then(function() {
+              var icon = document.getElementById('copyPskIcon');
+              icon.className = 'bi bi-clipboard-check';
+              setTimeout(function() { icon.className = 'bi bi-clipboard'; }, 1500);
+            });
+          });
+        </script>
+        <% } %>
 
         <!-- LWM2M Template Objects and Resources Section -->
         <div class="row mt-4">
