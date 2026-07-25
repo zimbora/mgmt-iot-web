@@ -1,6 +1,7 @@
 var jwt = require('jsonwebtoken');
 var httpStatus = require('http-status-codes');
 const { OAuth2Client } = require('google-auth-library'); // gauth
+var cookieLib = require('cookie');
 
 var response = require('./response');
 var config = require('../../config/env');
@@ -9,12 +10,25 @@ var Client = require('../models/clients');
 var Auth = require('../models/auth');
 var Firmware = require('../models/firmwares');
 
+const COOKIE_NAME = 'jwt_token';
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+
 function check_authentication(req, res, next) {
 
-  Auth.check_authentication(req.session.token,(authenticated,user)=>{
+  let token = req.session.token;
+
+  if (!token) {
+    const cookies = cookieLib.parse(req.headers?.cookie || '');
+    token = cookies[COOKIE_NAME];
+  }
+
+  Auth.check_authentication(token,(authenticated,user)=>{
     if(user && user.agent == req.get('User-Agent') && user.ip==req.ip){
       if(authenticated) {
         req.user = user;
+        if (!req.session.token && token) {
+          req.session.token = token;
+        }
       }
     }
     next()
@@ -133,6 +147,7 @@ async function authenticate_google(req,res,next){
 
 function deauth(req, res, cb) {
   req.session.token = null;
+  res.clearCookie(COOKIE_NAME);
   cb(res,res);
 }
 
@@ -156,6 +171,12 @@ function generateToken(req, res, next) {
   const secret = config.jwtSecret;
 
   req.session.token = jwt.sign(jwtPayload, secret, jwtData);
+  res.cookie(COOKIE_NAME, req.session.token, {
+    httpOnly: true,
+    secure: req.secure,
+    sameSite: 'lax',
+    maxAge: COOKIE_MAX_AGE
+  });
 
   //User.updateWsToken(req.user.client_id,req.session.token.substr(req.session.token.length-20,req.session.token.length),(error,res)=>{log.debug(error,res)});
 
