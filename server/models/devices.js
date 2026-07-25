@@ -3,6 +3,7 @@ var db = require('../controllers/db');
 var firmwares = require('./firmwares');
 var Project = require('./projects');
 var Model = require('./models');
+const crypto = require('crypto');
 
 const semver = require('semver');
 const moment = require('moment');
@@ -1195,7 +1196,27 @@ var self = module.exports =  {
     
     // Convert empty string or undefined template_id to null to avoid MySQL error
     const templateId = device?.templateId || null;
-    
+
+    // Use provided PSK or generate a cryptographically secure random one (9-char alphanumeric)
+    let psk = device?.psk || null;
+    if (!psk) {
+      const pskChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      const maxUnbiased = 256 - (256 % pskChars.length);
+      psk = '';
+      let buf = crypto.randomBytes(32);
+      let bufPos = 0;
+      while (psk.length < 9) {
+        if (bufPos >= buf.length) {
+          buf = crypto.randomBytes(32);
+          bufPos = 0;
+        }
+        const randomByte = buf[bufPos++];
+        if (randomByte < maxUnbiased) {
+          psk += pskChars[randomByte % pskChars.length];
+        }
+      }
+    }
+
     const obj = {
       uid : device.uid,
       name : device?.name,
@@ -1204,7 +1225,7 @@ var self = module.exports =  {
       model_id : modelId,
       variant_id : device?.variant_id || null,
       protocol : device.protocol,
-      psk : device?.psk,
+      psk : psk,
       createdAt : timestamp,
       updatedAt : timestamp
     }
@@ -1253,7 +1274,7 @@ var self = module.exports =  {
           console.error('Error associating sensors template:', sensorsTemplateError);
         }
 
-        return cb(null, res[0]);
+        return cb(null, { id: res.insertId, uid: device.uid, psk: psk });
       }else{
         return cb('Error adding device', null);
       }
