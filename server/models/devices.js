@@ -1197,23 +1197,26 @@ var self = module.exports =  {
     // Convert empty string or undefined template_id to null to avoid MySQL error
     const templateId = device?.templateId || null;
 
-    // Generate a cryptographically secure random PSK of length 9 using rejection sampling
-    const pskChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const maxUnbiased = 256 - (256 % pskChars.length);
-    let psk = '';
-    let buf = crypto.randomBytes(32);
-    let bufPos = 0;
-    while (psk.length < 9) {
-      if (bufPos >= buf.length) {
-        buf = crypto.randomBytes(32);
-        bufPos = 0;
-      }
-      const randomByte = buf[bufPos++];
-      if (randomByte < maxUnbiased) {
-        psk += pskChars[randomByte % pskChars.length];
+    // Use provided PSK or generate a cryptographically secure random one (9-char alphanumeric)
+    let psk = device?.psk || null;
+    if (!psk) {
+      const pskChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      const maxUnbiased = 256 - (256 % pskChars.length);
+      psk = '';
+      let buf = crypto.randomBytes(32);
+      let bufPos = 0;
+      while (psk.length < 9) {
+        if (bufPos >= buf.length) {
+          buf = crypto.randomBytes(32);
+          bufPos = 0;
+        }
+        const randomByte = buf[bufPos++];
+        if (randomByte < maxUnbiased) {
+          psk += pskChars[randomByte % pskChars.length];
+        }
       }
     }
-    
+
     const obj = {
       uid : device.uid,
       name : device?.name,

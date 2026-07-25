@@ -98,8 +98,30 @@
         <div class="content-header">
           <div class="d-flex justify-content-between align-items-center">
             <h4>Edit device: <%= device?.name || device?.uid %></h3>
+            <% if (device?.psk) { %>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#pskModal" title="Show PSK">
+              <i class="bi bi-key"></i>
+            </button>
+            <% } %>
           </div>
         </div>
+
+        <!-- PSK Modal -->
+        <% if (device?.psk) { %>
+        <div class="modal fade" id="pskModal" tabindex="-1" aria-labelledby="pskModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="pskModalLabel"><i class="bi bi-key"></i> Pre-Shared Key</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body text-center">
+                <code id="pskValue" class="fs-5"><%= device.psk %></code>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } %>
 
         <!-- MQTT Topics Section -->
         <div class="row mt-4">

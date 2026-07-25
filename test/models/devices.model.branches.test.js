@@ -184,4 +184,35 @@ describe('server/models/devices deep branches', () => {
       });
     });
   });
+
+  it('add() uses the provided psk when given and returns it', async () => {
+    const devices = require('../../server/models/devices');
+
+    jest.spyOn(require('../../server/models/projects'), 'getId').mockResolvedValue(1);
+    jest.spyOn(require('../../server/models/models'), 'getId').mockResolvedValue(2);
+    jest.spyOn(devices, 'addClientPermission').mockImplementation((deviceId, clientId, level, cb) => cb(null, {}));
+    jest.spyOn(devices, 'associateSensorsTemplateToDevice').mockResolvedValue([]);
+    jest.spyOn(devices, 'associateLwm2mTemplateToDevice').mockResolvedValue([]);
+    jest.spyOn(devices, 'associateMqttTemplateToDevice').mockResolvedValue([]);
+
+    mockDb.insert.mockResolvedValueOnce({ insertId: 7, affectedRows: 1 });
+
+    const deviceData = {
+      projectName: 'testProject',
+      modelName: 'testModel',
+      uid: 'device-uid-003',
+      protocol: 'MQTT',
+      psk: 'myCustomPSK'
+    };
+
+    await new Promise((resolve) => {
+      devices.add(deviceData, (err, result) => {
+        expect(err).toBeNull();
+        expect(result).toHaveProperty('psk', 'myCustomPSK');
+        const insertedObj = mockDb.insert.mock.calls[0][1];
+        expect(insertedObj.psk).toBe('myCustomPSK');
+        resolve();
+      });
+    });
+  });
 });
