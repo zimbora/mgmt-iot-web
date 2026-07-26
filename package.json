@@ -14,7 +14,8 @@
     "testEnvironment": "node",
     "testMatch": [
       "**/*.test.js"
-    ]
+    ],
+    "transform": {}
   },
   "keywords": [
     "iot",
