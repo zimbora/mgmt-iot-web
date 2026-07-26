@@ -42,7 +42,7 @@
     "joi": "^17.7.0",
     "marked": "^18.0.7",
     "moment": "^2.29.4",
-    "mqtt": "^4.3.7",
+    "mqtt": "^5.10.0",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.2.0",
     "node-docker-api": "^1.1.22",
@@ -60,5 +60,8 @@
   "bugs": {
     "url": "https://github.com/zimbora/mgmt-iot-web/issues"
   },
-  "homepage": "iot.inloc.cloud"
+  "homepage": "iot.inloc.cloud",
+  "overrides": {
+    "brace-expansion": "^5.0.8"
+  }
 }
