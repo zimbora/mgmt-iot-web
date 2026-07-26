@@ -1,5 +1,15 @@
 # Changelog
 
+## version 1.1.1
+  fix: replace unused googleapis with google-auth-library to eliminate moderate CVEs (#91)
+  fota: filter latest firmware by variant_id (#97)
+  feat: persist user login across server restarts via JWT cookie (#93)
+  feat: generate and persist PSK on device creation, return id/uid/psk (#87)
+  feat: Add user profile page with editable fields and API token management (#89)
+  fix: Remove ftp-srv and replace markdown for marked. high-risk dependencies (#84)
+  fix: resolve npm vulnerabilities (brace-expansion DoS, minimatch ReDoS) (#99)
+  ci: Disable babel-jest transform — project needs no transpilation (#101)
+  
 ## version 1.1.0
   feat: adds test coverage (#71)
     All files: 81.4% statements, 66.75% branches, 88.43% functions, 81.7% lines

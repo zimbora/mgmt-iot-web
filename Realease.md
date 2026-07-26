@@ -9,6 +9,7 @@
 	- Add changes to Changelog.md file
 	- increase version of package.json file
 	- run npm update
+	- run npm audit (check for vulnerabilities)
 
 ## 2nd step
 	
