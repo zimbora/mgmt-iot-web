@@ -1913,13 +1913,15 @@ var self = module.exports =  {
     
     // 2. Insert each template into lwm2m with device_id
     for (const sensor of sensors) {
-      // Remove the primary key (if it exists), createdAt and updatedAt
-      const { id, createdAt, updatedAt, ...rest } = sensor;
       const data = {
+        model_id: sensor.model_id || deviceModelId,
         device_id: deviceId,
+        ref: sensor.ref,
+        name: sensor.name,
+        type: sensor.type,
+        property: sensor.property ? sensor.property : '',
         createdAt: timestamp,
-        updatedAt: timestamp,
-        ...rest
+        updatedAt: timestamp
       };
       const insertRes = await db.insert('sensors', data);
       res.push(insertRes);

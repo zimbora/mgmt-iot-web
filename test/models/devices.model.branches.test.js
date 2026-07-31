@@ -113,12 +113,30 @@ describe('server/models/devices deep branches', () => {
 
   it('associateSensorsTemplateToDevice() copies templates into sensors', async () => {
     const devices = require('../../server/models/devices');
-    mockDb.queryRow.mockResolvedValueOnce([{ id: 1, model_id: 9, ref: 'r', createdAt: 'x', updatedAt: 'x' }]);
+    mockDb.queryRow.mockResolvedValueOnce([{
+      id: 1,
+      model_id: 9,
+      ref: 'r',
+      name: 'temperature',
+      type: 'float',
+      property: null,
+      active: true,
+      createdAt: 'x',
+      updatedAt: 'x'
+    }]);
 
     const out = await devices.associateSensorsTemplateToDevice(1, 9);
 
     expect(Array.isArray(out)).toBe(true);
-    expect(mockDb.insert).toHaveBeenCalled();
+    expect(mockDb.insert).toHaveBeenCalledWith('sensors', expect.objectContaining({
+      model_id: 9,
+      device_id: 1,
+      ref: 'r',
+      name: 'temperature',
+      type: 'float',
+      property: ''
+    }));
+    expect(mockDb.insert.mock.calls[0][1]).not.toHaveProperty('active');
   });
 
   it('add() generates a 9-character psk and returns id, uid, psk', async () => {
