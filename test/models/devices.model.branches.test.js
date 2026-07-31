@@ -134,7 +134,8 @@ describe('server/models/devices deep branches', () => {
       ref: 'r',
       name: 'temperature',
       type: 'float',
-      property: ''
+      property: '',
+      active: true,
     }));
     expect(mockDb.insert.mock.calls[0][1]).not.toHaveProperty('active');
   });
