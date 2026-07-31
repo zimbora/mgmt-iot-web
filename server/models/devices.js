@@ -1915,6 +1915,7 @@ var self = module.exports =  {
     for (const sensor of sensors) {
       const data = {
         model_id: sensor.model_id || deviceModelId,
+        active: sensor.active,
         device_id: deviceId,
         ref: sensor.ref,
         name: sensor.name,
