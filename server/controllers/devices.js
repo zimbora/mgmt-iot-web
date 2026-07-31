@@ -331,16 +331,33 @@ module.exports = {
   getSensorLogs : (req, res, next)=>{
 
     const val = Joi.object({
-      device_id: Joi.number().required(),
-    }).validate(req.params);
+      name: Joi.string().optional(),
+      sensor: Joi.number().optional(),
+      sensorId: Joi.number().optional(),
+      hours: Joi.number().optional(),
+    }).validate(req.query);
 
     if(val.error){
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
-      device.getSensorLogs(req.params?.device_id,req.query?.sensor,(err,rows)=>{
-        if(!err) response.send(res,rows);
-        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
-      });
+      if(!req.query?.hours)
+        req.query['hours'] = 1;
+      if(req.query.hours > 24)
+        req.query.hours = 24
+      if(req.query?.name){
+          device.getSensorLogsByName(req.params?.device_id,req.query?.name,req.query?.hours,(err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }else if(req.query?.sensor || req.query?.sensorId){ // keep compatibility, should be sensorId
+        let sensorId = req.query?.sensor ? req.query?.sensor : req.query?.sensorId
+        device.getSensorLogs(req.params?.device_id,sensorId,req.query?.hours,(err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }else{
+        response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"no args defined.. Add sensorId or name to your query!!");
+      }
     }
   },
 
