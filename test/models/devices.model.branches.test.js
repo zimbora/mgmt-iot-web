@@ -137,7 +137,7 @@ describe('server/models/devices deep branches', () => {
       property: '',
       active: true,
     }));
-    expect(mockDb.insert.mock.calls[0][1]).not.toHaveProperty('active');
+    expect(mockDb.insert.mock.calls[0][1]).toHaveProperty('active');
   });
 
   it('add() generates a 9-character psk and returns id, uid, psk', async () => {
