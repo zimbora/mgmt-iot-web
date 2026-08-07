@@ -191,9 +191,10 @@ var self = module.exports =  {
 
   getDevices : async (clientId,cb)=>{
 
-    let query = `select d.*,p.name as project,m.name as model from devices as d
+    let query = `select d.*,p.name as project,m.name as model,v.name as variant from devices as d
                 inner join projects as p on p.id = d.project_id
                 inner join models as m on m.id = d.model_id
+                left join variants as v on v.id = d.variant_id
                 inner join permissions where permissions.client_id = ? and permissions.device_id = d.id
                 and permissions.level > 3`;
     let table = [clientId];
