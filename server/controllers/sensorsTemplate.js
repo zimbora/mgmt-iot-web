@@ -139,7 +139,8 @@ module.exports = {
               sensorT.ref,
               sensorT.name,
               sensorT.type,
-              sensorT.property
+              sensorT.property,
+              sensorT.active
             );
             return rows?.[0] ?? null;
           }

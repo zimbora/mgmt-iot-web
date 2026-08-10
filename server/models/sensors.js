@@ -33,7 +33,11 @@ var self = module.exports = {
     })    
   },
 
-  add : async(model_id,device_id,ref,name,type,property,cb)=>{
+  add : async(model_id,device_id,ref,name,type,property,active,cb)=>{
+    if (typeof active === 'function') {
+      cb = active;
+      active = undefined;
+    }
 
     let obj = {
       model_id : model_id,
@@ -44,6 +48,9 @@ var self = module.exports = {
       property: property ? property : '',
       createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    }
+    if (active !== undefined) {
+      obj.active = active;
     }
 
     db.insert(Table,obj)
