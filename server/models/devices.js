@@ -200,9 +200,10 @@ var self = module.exports =  {
   // list all devices matching modelId which client as access
   list : async (modelId, clientId, cb)=>{
     
-    let query = `select d.*,p.name as project,m.name as model from devices as d
+    let query = `select d.*,p.name as project,m.name as model,v.name as variant from devices as d
                 inner join projects as p on p.id = d.project_id
-                inner join models as m on m.id = d.model_id`;
+                inner join models as m on m.id = d.model_id
+                left join variants as v on v.id = d.variant_id`;
     let table = [];
 
     if(clientId != null)

@@ -49,6 +49,7 @@
                   <th></th>
                   <th>uid</th>
                   <th>project</th>
+                  <th>variant</th>
                   <th>status</th>
                   <th>version</th>
                   <th>versionApp</th>
@@ -77,11 +78,11 @@
 
       devices.forEach((item, i) => {
         addRow(item.id,item.uid,item.project,item.model,item.model_id,moment(item.createdAt).format('YY/MM/DD LT'),
-          item.status,item?.version,item?.app_version,moment(item.updatedAt).format('YY/MM/DD LT'));
+          item.status,item?.version,item?.app_version,moment(item.updatedAt).format('YY/MM/DD LT'),item.variant);
       });
     });
 
-    function addRow(id,uid,project,model,model_id,created,status,version,versionApp,updated){
+    function addRow(id,uid,project,model,model_id,created,status,version,versionApp,updated,variant){
 
       if(uid.startsWith("uid:")){
         uid = uid.substring(4);
@@ -93,7 +94,7 @@
           </button>
         </div>`,
         `<a href="../../../device/`+id+`">`+uid+`</a>`,
-        project,status,version,versionApp,created,updated]).draw(true);
+        project,variant||'',status,version,versionApp,created,updated]).draw(true);
     }
 
     function deleteDevice(device_id){
