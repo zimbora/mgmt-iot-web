@@ -1,4 +1,5 @@
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/712aa53501d74511a661e5ec65c7e873)](https://app.codacy.com/gh/zimbora/mgmt-iot-web/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/712aa53501d74511a661e5ec65c7e873)](https://app.codacy.com/gh/zimbora/mgmt-iot-web/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 # mgmt-iot IoT device management platform
 
 mgmt-iot is a module to enable a web platform to configure and interact with IoT devices.
