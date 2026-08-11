@@ -33,10 +33,14 @@ var self = module.exports = {
     })    
   },
 
-  add : async(model_id,device_id,ref,name,type,property,active,cb)=>{
+  add : async(model_id,device_id,ref,name,type,property,active,graph,cb)=>{
     if (typeof active === 'function') {
       cb = active;
       active = undefined;
+    }
+    if (typeof graph === 'function') {
+      cb = graph;
+      graph = undefined;
     }
 
     let obj = {
@@ -51,6 +55,10 @@ var self = module.exports = {
     }
     if (active !== undefined) {
       obj.active = active;
+    }
+
+    if (graph !== undefined) {
+      obj.graph = graph;
     }
 
     db.insert(Table,obj)

@@ -124,11 +124,12 @@ module.exports = {
             // !!!!!!
             // update is not working !!
             let obj = {
-              active: sensorT.active,
               ref: sensorT.ref,
               name: sensorT.name,
               type: sensorT.type,
-              property: sensorT.property
+              property: sensorT.property,
+              active: sensorT.active,
+              graph: sensorT.graph,
             }
             const rows = await updateSensor(sensor.id, obj);
             return rows?.[0] ?? null;
@@ -140,7 +141,8 @@ module.exports = {
               sensorT.name,
               sensorT.type,
               sensorT.property,
-              sensorT.active
+              sensorT.active,
+              sensorT.graph,
             );
             return rows?.[0] ?? null;
           }
