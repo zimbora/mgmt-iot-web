@@ -200,9 +200,10 @@ var self = module.exports =  {
   // list all devices matching modelId which client as access
   list : async (modelId, clientId, cb)=>{
     
-    let query = `select d.*,p.name as project,m.name as model from devices as d
+    let query = `select d.*,p.name as project,m.name as model,v.name as variant from devices as d
                 inner join projects as p on p.id = d.project_id
-                inner join models as m on m.id = d.model_id`;
+                inner join models as m on m.id = d.model_id
+                left join variants as v on v.id = d.variant_id`;
     let table = [];
 
     if(clientId != null)
@@ -793,18 +794,53 @@ var self = module.exports =  {
     })
   },
 
-  getSensorLogs : async (deviceId,sensorId,cb)=>{
+  getSensorLogs : async (deviceId,sensorId,hours,cb)=>{
 
-    let table = [];
+    const params = [sensorId,deviceId,hours];
 
-    let query = `SELECT value,createdAt,updatedAt FROM ?? WHERE sensor_id = ? and device_id = ? `;
-    table.push("logs_sensor");
-    table.push(sensorId);
-    table.push(deviceId);
+    let query = `
+      SELECT value, createdAt, remoteUnixTs
+      FROM logs_sensor
+      WHERE sensor_id = ?
+        AND device_id = ?
+        AND createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)
+      ORDER BY createdAt DESC
+      LIMIT 2000
+    `;
+    
+    query = mysql.format(query,params);
 
-    query += `ORDER BY createdAt DESC LIMIT 20;`
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
 
-    query = mysql.format(query,table);
+      return cb(null,rows);
+    })
+    .catch(error => {
+      console.error(error)
+      return cb(error,null);
+    })
+  },
+
+  getSensorLogsByName : async (deviceId,ref,hours,cb)=>{
+
+
+    const params = [ref, deviceId, hours];
+
+    let query = `
+      SELECT ls.value,ls.createdAt,ls.remoteUnixTs
+      FROM logs_sensor AS ls
+      INNER JOIN sensors AS s ON ls.sensor_id = s.id
+      WHERE s.name = ?
+        AND ls.device_id = ?
+        AND ls.createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)
+      ORDER BY ls.createdAt DESC
+      LIMIT 2000
+    `;
+
+    query = mysql.format(query, params);
 
     db.queryRow(query)
     .then(rows => {
@@ -1913,13 +1949,16 @@ var self = module.exports =  {
     
     // 2. Insert each template into lwm2m with device_id
     for (const sensor of sensors) {
-      // Remove the primary key (if it exists), createdAt and updatedAt
-      const { id, createdAt, updatedAt, ...rest } = sensor;
       const data = {
+        model_id: sensor.model_id || deviceModelId,
+        active: sensor.active,
         device_id: deviceId,
+        ref: sensor.ref,
+        name: sensor.name,
+        type: sensor.type,
+        property: sensor.property ? sensor.property : '',
         createdAt: timestamp,
-        updatedAt: timestamp,
-        ...rest
+        updatedAt: timestamp
       };
       const insertRes = await db.insert('sensors', data);
       res.push(insertRes);

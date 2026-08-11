@@ -705,12 +705,30 @@ var api = {
     });
   },
 
-  getSensorLogs : function(deviceID,sensor,cb){
+  getSensorLogs : function(deviceID,sensorId,cb){
 
     $.ajax({
       url : Settings.api+'/device/'+deviceID+'/sensor/logs',type: 'GET',
       data : {
-        sensor:sensor
+        sensorId:sensorId
+      },
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
+  getSensorLogsByName : function(deviceID,name,hours,cb){
+
+    $.ajax({
+      url : Settings.api+'/device/'+deviceID+'/sensor/logs',type: 'GET',
+      data : {
+        name:name,
+        hours:hours
       },
       success: function(data,status,xhr){
         parseResponse(data,cb);

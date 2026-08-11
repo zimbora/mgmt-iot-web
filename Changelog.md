@@ -1,6 +1,7 @@
 # Changelog
 
 ## version 1.1.1
+  test: Increase test coverage for low-coverage controller and route files (#103)
   fix: replace unused googleapis with google-auth-library to eliminate moderate CVEs (#91)
   fota: filter latest firmware by variant_id (#97)
   feat: persist user login across server restarts via JWT cookie (#93)
