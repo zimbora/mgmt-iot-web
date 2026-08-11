@@ -121,8 +121,6 @@ module.exports = {
 
           if (sensors?.length) {
             const sensor = sensors[0];
-            // !!!!!!
-            // update is not working !!
             let obj = {
               ref: sensorT.ref,
               name: sensorT.name,
