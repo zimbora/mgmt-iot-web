@@ -1,5 +1,13 @@
 # Changelog
 
+## version 1.1.2
+  Fix device sensor creation from sensor templates (#107)
+  fix(pages/device/mqtt): fix link syntax
+  feat: Add variant column to device list pages (#109)
+  fix: Propagate model sensor `active` and `graph` state (#111)
+  ci: add Codacy coverage reporting workflow (#105)
+  fix: npm vulnerabilities
+
 ## version 1.1.1
   test: Increase test coverage for low-coverage controller and route files (#103)
   fix: replace unused googleapis with google-auth-library to eliminate moderate CVEs (#91)
