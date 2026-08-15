@@ -312,6 +312,36 @@ module.exports = {
     }
   },
 
+  getFotaLogs : (req, res, next)=>{
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getFotaLogs(req.params?.device_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
+  resetFotaAttempts : (req, res, next)=>{
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.resetFotaAttempts(req.params?.device_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
   getSensorInfo : (req, res, next)=>{
 
     const val = Joi.object({

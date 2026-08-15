@@ -744,6 +744,34 @@ var self = module.exports =  {
       return cb(error,null);
     })
   },
+
+  getFotaLogs : async (deviceId,cb)=>{
+    let query = `SELECT * FROM ?? WHERE device_id = ? ORDER BY createdAt DESC LIMIT 50;`
+    let table = ["logs_fota",deviceId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,[]);
+      }
+      return cb(null,rows);
+    })
+    .catch(error => {
+      console.error(error)
+      return cb(error,null);
+    })
+  },
+
+  resetFotaAttempts : async (deviceId,cb)=>{
+    try{
+      const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+      const rows = await db.update("fota",{nAttempts: 0, updatedAt: timestamp},{device_id: deviceId});
+      return cb(null,rows);
+    }catch(error){
+      return cb(error,null);
+    }
+  },
   
   // get registered sensors for model
   getSensors : async (deviceId,cb)=>{
@@ -1609,6 +1637,7 @@ var self = module.exports =  {
 
   triggerFota : async(deviceId,version,app_version,cb)=>{
 
+    let device = null;
     try{
       let query = `SELECT * FROM ?? where id = ?;`
       let table = ["devices",deviceId]
@@ -1616,13 +1645,41 @@ var self = module.exports =  {
       let res = await db.queryRow(query)
       if(res != null && res.length > 0)
         device = res[0];
+      else
+        return cb(`device ${deviceId} not found`,null);
 
     }catch(error){
       return cb(error,null)
     }
 
-    lVersion = await firmwares.getLatestVersion(device.model_id, device.accept_release, device.variant_id);
-    lAppVersion = await firmwares.getLatestAppVersion(device.model_id, device.accept_release, device.variant_id);
+    try{
+      let query = `SELECT value FROM ?? WHERE device_id = ? AND name = ? LIMIT 1;`
+      let table = ["sensors",deviceId,"status"];
+      query = mysql.format(query,table);
+      const statusRows = await db.queryRow(query);
+      const status = statusRows?.[0]?.value;
+      if(typeof status === "string" && status.toLowerCase() === "offline"){
+        return cb("device is offline",null);
+      }
+    }catch(error){
+      return cb(error,null);
+    }
+
+    try{
+      let query = `SELECT nAttempts FROM ?? WHERE device_id = ? ORDER BY updatedAt DESC LIMIT 1;`
+      let table = ["fota",deviceId];
+      query = mysql.format(query,table);
+      const attemptsRows = await db.queryRow(query);
+      const attempts = Number(attemptsRows?.[0]?.nAttempts || 0);
+      if(attempts >= 3){
+        return cb("max fota attempts reached (3). Please reset attempts before retrying.",null);
+      }
+    }catch(error){
+      return cb(error,null);
+    }
+
+    let lVersion = await firmwares.getLatestVersion(device.model_id, device.accept_release, device.variant_id);
+    let lAppVersion = await firmwares.getLatestAppVersion(device.model_id, device.accept_release, device.variant_id);
 
     let firmware = null;
     if(lAppVersion?.version && lAppVersion?.app_version != device.app_version){
@@ -1650,6 +1707,7 @@ var self = module.exports =  {
       const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
       obj = {
         device_id : device.id,
+        model_id : device.model_id,
         local_version : device.version,
         local_app_version : device.app_version,
         target_version : lVersion.version,

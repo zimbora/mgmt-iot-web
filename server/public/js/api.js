@@ -705,6 +705,21 @@ var api = {
     });
   },
 
+  getFotaLogs : function(deviceID,cb){
+
+    $.ajax({
+      url : Settings.api+'/device/'+deviceID+'/fota/logs',type: 'GET',
+      data : {},
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
   getSensorLogs : function(deviceID,sensorId,cb){
 
     $.ajax({
@@ -813,6 +828,24 @@ var api = {
 
   triggerFota : (deviceID, cb)=>{
     fetch(Settings.api+"/device/"+deviceID+"/trigger/fota", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      return parseResponse(data,cb);
+    })
+    .catch(function (error) {
+      return parseError(error,cb);
+    });
+  },
+
+  resetFotaAttempts : (deviceID, cb)=>{
+    fetch(Settings.api+"/device/"+deviceID+"/fota/reset-attempts", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
