@@ -7,6 +7,7 @@ const crypto = require('crypto');
 
 const semver = require('semver');
 const moment = require('moment');
+const MAX_FOTA_ATTEMPTS = 3;
 
 var self = module.exports =  {
 
@@ -1671,15 +1672,21 @@ var self = module.exports =  {
       query = mysql.format(query,table);
       const attemptsRows = await db.queryRow(query);
       const attempts = Number(attemptsRows?.[0]?.nAttempts || 0);
-      if(attempts >= 3){
-        return cb("max fota attempts reached (3). Please reset attempts before retrying.",null);
+      if(attempts >= MAX_FOTA_ATTEMPTS){
+        return cb(`max fota attempts reached (${MAX_FOTA_ATTEMPTS}). Please reset attempts before retrying.`,null);
       }
     }catch(error){
       return cb(error,null);
     }
 
-    let lVersion = await firmwares.getLatestVersion(device.model_id, device.accept_release, device.variant_id);
-    let lAppVersion = await firmwares.getLatestAppVersion(device.model_id, device.accept_release, device.variant_id);
+    let lVersion = null;
+    let lAppVersion = null;
+    try{
+      lVersion = await firmwares.getLatestVersion(device.model_id, device.accept_release, device.variant_id);
+      lAppVersion = await firmwares.getLatestAppVersion(device.model_id, device.accept_release, device.variant_id);
+    }catch(error){
+      return cb(error,null);
+    }
 
     let firmware = null;
     if(lAppVersion?.version && lAppVersion?.app_version != device.app_version){

@@ -893,6 +893,8 @@
     // ---- ----- ----
 
     // --- fota management functions ---
+    const getErrorText = (err) => err?.sqlMessage || err?.message || String(err || 'Unknown error');
+
     $("#fotaTrigger").click(()=>{
       if (deviceStatus === 'offline') {
         $('#error').text("FOTA trigger failed");
@@ -938,10 +940,7 @@
       api.getFotaLogs(deviceID,(err,rows)=>{
         if(err){
           $('#error').text("Unable to load FOTA logs");
-          if(err?.hasOwnProperty?.("sqlMessage"))
-            $('#suggestion').text(err.sqlMessage);
-          else
-            $('#suggestion').text(err);
+          $('#suggestion').text(getErrorText(err));
           $('#modalError').modal('show');
           return;
         }
@@ -962,7 +961,7 @@
               `${row.target_version || '-'} / ${row.target_app_version || '-'}`,
               row.target_file || '-',
               row.nAttempt ?? '-',
-              row.success ? 'yes' : 'no',
+              row.success == null ? '-' : (row.success ? 'yes' : 'no'),
               row.error || '-'
             ];
             values.forEach((value) => {
@@ -987,17 +986,17 @@
     $("#modalProceed").click(()=>{
       if(action == "trigger_fota"){
         // Show modal loading while FOTA trigger is in progress
+        $('#modalConfirmation').modal('hide');
         $('#modalLoading').modal('show');
         api.triggerFota(deviceID,(err,res)=>{
           if(err){
+            $('#modalConfirmation').modal('hide');
             $('#modalLoading').modal('hide');
             $('#error').text("FOTA trigger failed");
-            if(err.hasOwnProperty("sqlMessage"))
-              $('#suggestion').text(err.sqlMessage);
-            else
-              $('#suggestion').text(err);
+            $('#suggestion').text(getErrorText(err));
             $('#modalError').modal('show');
           }else if(res === 'no new version available'){
+            $('#modalConfirmation').modal('hide');
             $('#modalLoading').modal('hide');
             $('#successMsg').text(res);
             $('#modalSuccess').modal('show');
@@ -1020,6 +1019,7 @@
               $('#modalError').modal('show');
             }, FOTA_TIMEOUT_MS);
           }else{
+            $('#modalConfirmation').modal('hide');
             $('#modalLoading').modal('hide');
             $('#successMsg').text(res || "FOTA request processed");
             $('#modalSuccess').modal('show');
@@ -1028,13 +1028,12 @@
       }else if(action == "reset_fota_attempts"){
         api.resetFotaAttempts(deviceID,(err,res)=>{
           if(err){
+            $('#modalConfirmation').modal('hide');
             $('#error').text("Failed to reset FOTA attempts");
-            if(err?.hasOwnProperty?.("sqlMessage"))
-              $('#suggestion').text(err.sqlMessage);
-            else
-              $('#suggestion').text(err);
+            $('#suggestion').text(getErrorText(err));
             $('#modalError').modal('show');
           }else{
+            $('#modalConfirmation').modal('hide');
             $('#successMsg').text("FOTA attempts were reset");
             $('#modalSuccess').modal('show');
           }
