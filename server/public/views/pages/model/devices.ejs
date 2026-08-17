@@ -76,10 +76,12 @@
     $(document).ready(function () {
       t = $('#devices').DataTable();
 
-      devices.forEach((item, i) => {
+      if(devices?.length > 0){
+        devices.forEach((item, i) => {
         addRow(item.id,item.uid,item.project,item.model,item.model_id,moment(item.createdAt).format('YY/MM/DD LT'),
           item.status,item?.version,item?.app_version,moment(item.updatedAt).format('YY/MM/DD LT'),item.variant);
-      });
+        });
+      }
     });
 
     function addRow(id,uid,project,model,model_id,created,status,version,versionApp,updated,variant){
