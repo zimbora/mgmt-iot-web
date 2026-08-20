@@ -542,11 +542,6 @@
         }
         $('#successMsg').text(msg);
         $('#modalSuccess').modal('show');
-      } else {
-        $('#error').text('Device failed to update to newer version');
-        const receivedVersion = newVersion || newAppVersion;
-        $('#suggestion').text(`Received version: ${receivedVersion}`);
-        $('#modalError').modal('show');
       }
     }
 
