@@ -1,8 +1,8 @@
 
 <div class="col-auto col-md-2 col-xl-2 px-sm-2 px-0 bg-dark">
-    <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
+    <div class="d-flex flex-column align-items-start px-3 pt-2 text-white min-vh-100">
         <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-            <span class="fs-5 d-none d-sm-inline">Device Manager</span>
+            <span class="fs-5 d-inline">Device Manager</span>
         </a>
         <div class="dropdown pb-4">
             <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
@@ -15,10 +15,10 @@
                 <li><a class="dropdown-item" href="#">Sign out</a></li>
             </ul>
         </div>
-        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-start" id="menu">
             <li class="nav-item">
                 <a href="../../home" class="nav-link align-middle px-0">
-                    <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+                    <i class="fs-4 bi-house"></i> <span class="ms-1 d-inline">Dashboard</span>
                 </a>
             </li>
             <% if(user.level >= 4){%>
@@ -28,13 +28,13 @@
                   class="active"
                 <% } %>
                 class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-people"></i> <span class="ms-1 d-none d-sm-inline">Users</span></a>
+                    <i class="fs-4 bi-people"></i> <span class="ms-1 d-inline">Users</span></a>
             </li>
             <% } %>
             <% if(user.level >= 4){%>
             <li>
                 <a href="../../clients" class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-person-lines-fill"></i> <span class="ms-1 d-none d-sm-inline">Clients</span></a>
+                    <i class="fs-4 bi-person-lines-fill"></i> <span class="ms-1 d-inline">Clients</span></a>
             </li>
             <% } %>
             <% if(user.level >= 3){%>
@@ -44,7 +44,7 @@
                 class="active"
               <% } %>
               class="nav-link px-0 align-middle">
-              <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Projects</span></a>
+              <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-inline">Projects</span></a>
             </li>
             <% } %>
             <% if(user.level >= 3){%>
@@ -54,48 +54,48 @@
                 class="active"
               <% } %>
               class="nav-link px-0 align-middle">
-              <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Models</span></a>
+              <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-inline">Models</span></a>
             </li>
             <% } %>
             <li>
                 <!--<a href="#submenu1" data-bs-toggle="collapse" class="nav-link px-0 align-middle">-->
                 <a href="../../devices" class="nav-link px-0 align-middle">
-                <i class="fs-4 bi-phone"></i> <span class="ms-1 d-none d-sm-inline">Devices</span> </a>
+                <i class="fs-4 bi-phone"></i> <span class="ms-1 d-inline">Devices</span> </a>
                 <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
                   <li class="w-100">
                     <a href="./dashboard"
                     <% if(page == "Dashboard"){%>
                       class="active"
                     <% } %>
-                    class="nav-link px-0"> <span class="d-none d-sm-inline">Dashboard</span></a>
+                    class="nav-link px-0"> <span class="d-inline">Dashboard</span></a>
                   </li>
                   <li class="w-100">
                     <a href="./manage"
                     <% if(page == "Manage"){%>
                       class="active"
                     <% } %>
-                    class="nav-link px-0"> <span class="d-none d-sm-inline">Manage</span></a>
+                    class="nav-link px-0"> <span class="d-inline">Manage</span></a>
                   </li>
                   <li class="w-100">
                     <a href="./settings"
                     <% if(page == "Settings"){%>
                       class="active"
                     <% } %>
-                    class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
+                    class="nav-link px-0"> <span class="d-inline">Settings</span></a>
                   </li>
                   <li class="w-100">
                     <a href="./sensors"
                     <% if(page == "Sensors"){%>
                       class="active"
                     <% } %>
-                    class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
+                    class="nav-link px-0"> <span class="d-inline">Sensors</span></a>
                   </li>
                   <li>
                       <a href="./access"
                       <% if(page == "Access"){%>
                         class="active"
                       <% } %>
-                      class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
+                      class="nav-link px-0"> <span class="d-inline">Access</span></a>
                   </li>
                   <% if(modelFeat?.ar_enabled){ %>
                   <li>
@@ -103,7 +103,7 @@
                       <% if(page == "Autorequests"){%>
                         class="active"
                       <% } %>
-                      class="nav-link px-0"> <span class="d-none d-sm-inline">Autorequests</span></a>
+                      class="nav-link px-0"> <span class="d-inline">Autorequests</span></a>
                   </li>
                   <%}%>
                   <% if(modelFeat?.alarms_enabled){ %>
@@ -112,7 +112,7 @@
                     <% if(page == "Alarms"){%>
                       class="active"
                     <% } %>
-                    class="nav-link px-0"> <span class="d-none d-sm-inline">Alarms</span></a>
+                    class="nav-link px-0"> <span class="d-inline">Alarms</span></a>
                   </li>
                   <%}%>
                   <% if(modelFeat?.js_code_enabled){ %>
@@ -121,7 +121,7 @@
                       <% if(page == "JSCODE"){%>
                         class="active"
                       <% } %>
-                      class="nav-link px-0"> <span class="d-none d-sm-inline">JScode</span></a>
+                      class="nav-link px-0"> <span class="d-inline">JScode</span></a>
                   </li>
                   <%}%>
                 </ul>
@@ -129,13 +129,13 @@
             <!--
             <li>
                 <a href="#submenu2" data-bs-toggle="collapse" class="nav-link px-0 align-middle ">
-                    <i class="fs-4 bi-bootstrap"></i> <span class="ms-1 d-none d-sm-inline">Bootstrap</span></a>
+                    <i class="fs-4 bi-bootstrap"></i> <span class="ms-1 d-inline">Bootstrap</span></a>
                 <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
                     <li class="w-100">
-                        <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Item</span> 1</a>
+                        <a href="#" class="nav-link px-0"> <span class="d-inline">Item</span> 1</a>
                     </li>
                     <li>
-                        <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Item</span> 2</a>
+                        <a href="#" class="nav-link px-0"> <span class="d-inline">Item</span> 2</a>
                     </li>
                 </ul>
             </li>
@@ -143,7 +143,7 @@
             <!--
             <li>
                 <a href="#" class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-people"></i> <span class="ms-1 d-none d-sm-inline">Customers</span> </a>
+                    <i class="fs-4 bi-people"></i> <span class="ms-1 d-inline">Customers</span> </a>
             </li>
             -->
         </ul>
@@ -151,7 +151,7 @@
         <div class="dropdown pb-4">
             <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
               <img src=<%= user.avatar %> alt="hugenerd" width="30" height="30" class="rounded-circle">
-              <span class="d-none d-sm-inline mx-1"><%= user.name %></span>
+              <span class="d-inline mx-1"><%= user.name %></span>
             </a>
             <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
                 <li><a class="dropdown-item" href="../../profile">Profile</a></li>

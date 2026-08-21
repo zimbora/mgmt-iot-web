@@ -1,9 +1,9 @@
 <!--https://dev.to/codeply/bootstrap-5-sidebar-examples-38pb-->
 
 <div class="col-auto col-md-2 col-xl-2 px-sm-2 px-0 bg-dark">
-    <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
+    <div class="d-flex flex-column align-items-start px-3 pt-2 text-white min-vh-100">
         <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-            <span class="fs-5 d-none d-sm-inline">Device Manager</span>
+            <span class="fs-5 d-inline">Device Manager</span>
         </a>
         <% if(user.mgmt_iot_version != ""){%>
         <%= user.mgmt_iot_version %>
@@ -20,14 +20,14 @@
                 <li><a class="dropdown-item" href="#">Sign out</a></li>
             </ul>
         </div>
-        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-start" id="menu">
             <li class="nav-item">
                 <a href="../dashboard"
                 <% if(page == "Dashboard"){%>
                   class="active"
                 <% } %>
                   class="nav-link align-middle px-0">
-                    <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+                    <i class="fs-4 bi-house"></i> <span class="ms-1 d-inline">Dashboard</span>
                 </a>
             </li>
            <% if(user.level >= 4){%>
@@ -37,7 +37,7 @@
                   class="active"
                 <% } %>
                 class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-people"></i> <span class="ms-1 d-none d-sm-inline">Users</span></a>
+                    <i class="fs-4 bi-people"></i> <span class="ms-1 d-inline">Users</span></a>
             </li>
             <% } %>
             <% if(user.level >= 4){%>
@@ -47,7 +47,7 @@
                   class="active"
                 <% } %>
                 class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-person-lines-fill"></i> <span class="ms-1 d-none d-sm-inline">Clients</span></a>
+                    <i class="fs-4 bi-person-lines-fill"></i> <span class="ms-1 d-inline">Clients</span></a>
             </li>
             <% } %>
             <% if(user.level >= 3){%>
@@ -57,7 +57,7 @@
                   class="active"
                 <% } %>
                 class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Projects</span></a>
+                    <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-inline">Projects</span></a>
             </li>
             <% } %>
             <% if(user.level >= 3){%>
@@ -67,7 +67,7 @@
                   class="active"
                 <% } %>
                 class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-none d-sm-inline">Models</span></a>
+                    <i class="fs-4 bi-cpu"></i> <span class="ms-1 d-inline">Models</span></a>
             </li>
             <% } %>
             <li>
@@ -76,7 +76,7 @@
                   class="active"
                 <% } %>
                 class="nav-link px-0 align-middle">
-                    <i class="fs-4 bi-phone"></i> <span class="ms-1 d-none d-sm-inline">Devices</span>
+                    <i class="fs-4 bi-phone"></i> <span class="ms-1 d-inline">Devices</span>
                 </a>
             </li>
         </ul>
@@ -85,7 +85,7 @@
             <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                 <!--<img src="../assets/avatar/avatar.png" alt="hugenerd" width="30" height="30" class="rounded-circle">-->
                 <img src=<%= user.avatar %> alt="hugenerd" width="30" height="30" class="rounded-circle">
-                <span class="d-none d-sm-inline mx-1"><%= user.name %></span>
+                <span class="d-inline mx-1"><%= user.name %></span>
             </a>
             <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
                 <li><a class="dropdown-item" href="../profile">Profile</a></li>
