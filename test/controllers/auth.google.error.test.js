@@ -8,6 +8,7 @@ jest.mock('google-auth-library', () => ({
 
 jest.mock('../../server/models/users', () => ({
   getId: jest.fn(async () => 1),
+  add: jest.fn((type, pwd, level, cb) => cb(null, { insertId: 42 })),
   findUserByEmail: jest.fn((e, p, cb) => cb(null, null))
 }));
 
