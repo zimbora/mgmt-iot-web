@@ -102,7 +102,10 @@ var Display = {
     };
 
     ctx.setOption(option)
-    ctx.resize();
+
+    $('#modalChartLogs').one('shown.bs.modal', function () {
+      ctx.resize();
+    });
 
     $('#modalChartLogs').modal('show');
   },
