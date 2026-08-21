@@ -51,7 +51,7 @@
                   <% if(page == "Models"){%>
                     class="active"
                   <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Models</span></a>
+                  class="nav-link px-0"> <span class="d-sm-none">Mo</span><span class="d-none d-sm-inline">Models</span></a>
                 </li>
                 <% if(user.level >= 4){%>
                 <li class="w-100">
@@ -59,7 +59,7 @@
                   <% if(page == "Settings"){%>
                     class="active"
                   <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
+                  class="nav-link px-0"> <span class="d-sm-none">Se</span><span class="d-none d-sm-inline">Settings</span></a>
                 </li>
                 <%}%>
                 <% if(user.level >= 4){%>
@@ -68,7 +68,7 @@
                   <% if(page == "Sensors"){%>
                     class="active"
                   <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
+                  class="nav-link px-0"> <span class="d-sm-none">Se</span><span class="d-none d-sm-inline">Sensors</span></a>
                 </li>
                 <%}%>
                 <% if(user.level >= 4){%>
@@ -77,7 +77,7 @@
                   <% if(page == "Access"){%>
                     class="active"
                   <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
+                  class="nav-link px-0"> <span class="d-sm-none">Ac</span><span class="d-none d-sm-inline">Access</span></a>
                 </li>
                 <%}%>
               </ul>
@@ -94,14 +94,14 @@
               <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
                 <li class="w-100">
                   <a href="./dashboard"
-                  class="nav-link px-0<% if(page == 'Dashboard'){%> active<% } %>"> <span class="d-none d-sm-inline">Dashboard</span></a>
+                  class="nav-link px-0<% if(page == 'Dashboard'){%> active<% } %>"> <span class="d-sm-none">Da</span><span class="d-none d-sm-inline">Dashboard</span></a>
                 </li>
                 <li class="w-100">
                   <a href="./devices"
                   <% if(page == "Devices"){%>
                     class="active"
                   <% } %>
-                class="nav-link px-0"> <span class="d-none d-sm-inline">Devices</span></a>
+                class="nav-link px-0"> <span class="d-sm-none">De</span><span class="d-none d-sm-inline">Devices</span></a>
                 </li>
                 <% if(user.level >= 4){%>
                 <li class="w-100">
@@ -109,7 +109,7 @@
                   <% if(page == "Settings"){%>
                     class="active"
                   <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Settings</span></a>
+                  class="nav-link px-0"> <span class="d-sm-none">Se</span><span class="d-none d-sm-inline">Settings</span></a>
                 </li>
                 <%}%>
                 <% if(user.level >= 4){%>
@@ -118,7 +118,7 @@
                   <% if(page == "Sensors"){%>
                     class="active"
                   <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Sensors</span></a>
+                  class="nav-link px-0"> <span class="d-sm-none">Se</span><span class="d-none d-sm-inline">Sensors</span></a>
                 </li>
                 <%}%>
                 <% if(user.level >= 4){%>
@@ -127,7 +127,7 @@
                   <% if(page == "Access"){%>
                     class="active"
                   <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Access</span></a>
+                  class="nav-link px-0"> <span class="d-sm-none">Ac</span><span class="d-none d-sm-inline">Access</span></a>
                 </li>
                 <%}%>
                 <% if(user.level >= 4 && model.fw_enabled){%>
@@ -136,7 +136,7 @@
                   <% if(page == "Firmwares"){%>
                     class="active"
                   <% } %>
-                  class="nav-link px-0"> <span class="d-none d-sm-inline">Firmwares</span></a>
+                  class="nav-link px-0"> <span class="d-sm-none">Fi</span><span class="d-none d-sm-inline">Firmwares</span></a>
                 </li>
                 <%}%>
               </ul>
@@ -153,10 +153,10 @@
                     <i class="fs-4 bi-bootstrap"></i> <span class="ms-1 d-none d-sm-inline">Bootstrap</span></a>
                 <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
                     <li class="w-100">
-                        <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Item</span> 1</a>
+                        <a href="#" class="nav-link px-0"> <span class="d-sm-none">It</span><span class="d-none d-sm-inline">Item</span> 1</a>
                     </li>
                     <li>
-                        <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Item</span> 2</a>
+                        <a href="#" class="nav-link px-0"> <span class="d-sm-none">It</span><span class="d-none d-sm-inline">Item</span> 2</a>
                     </li>
                 </ul>
             </li>

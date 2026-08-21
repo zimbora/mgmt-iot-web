@@ -102,7 +102,10 @@ var Display = {
     };
 
     ctx.setOption(option)
-    ctx.resize();
+
+    $('#modalChartLogs').one('shown.bs.modal', function () {
+      ctx.resize();
+    });
 
     $('#modalChartLogs').modal('show');
   },
@@ -127,16 +130,16 @@ var Display = {
 	calculateTimeDifference : (data)=>{
 
     data.slice(1).map((item, i) => {
-      // convert both current and previous timestamps to milliseconds
-      let current = moment(item.createdAt).unix();
-      let previous = moment(data[i].createdAt).unix();
+      // data is newest-first; data[i] is newer, item is older
+      let current = moment(data[i].createdAt).unix();
+      let previous = moment(item.createdAt).unix();
 
-      data[i].duration = Display.getDifference(current,previous);
+      item.duration = Display.getDifference(current,previous);
       return;
     });
-    let previous = moment(data[data.length-1].createdAt).unix();
+    let previous = moment(data[0].createdAt).unix();
     let current = moment().unix();
-    data[data.length-1].duration = Display.getDifference(current,previous);
+    data[0].duration = Display.getDifference(current,previous);
   },
 
 	getDifference : (current, previous)=>{

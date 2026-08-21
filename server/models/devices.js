@@ -1689,9 +1689,9 @@ var self = module.exports =  {
     }
 
     let firmware = null;
-    if(lAppVersion?.version && lAppVersion?.app_version != device.app_version){
+    if(lAppVersion?.app_version && lAppVersion?.app_version !== device.app_version){
       firmware = lAppVersion;
-    }else if(lVersion?.version && lVersion.version != device.version){
+    }else if(lVersion?.version && lVersion.version !== device.version){
       firmware = lVersion;
     }
 

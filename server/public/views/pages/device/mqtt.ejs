@@ -344,7 +344,9 @@
     var fotaPreviousAppVersion = null;
     var fotaTimeoutId = null;
     const FOTA_TIMEOUT_MS = 120000; // 2 minutes
-
+    let newVersion = null;
+    let newAppVersion = null;
+      
     let mqttStartedTime = 0;
 
     var release_arr = [
@@ -482,6 +484,7 @@
     }
 
     function checkFotaVersionUpdate(topic, data) {
+
       if (!fotaWaitingForVersion) return;
 
       // Normalize topic for sniffer devices (strip app/sniffer/{uid}/ prefix)
@@ -491,16 +494,40 @@
         let index = deviceUid ? topic.indexOf(deviceUid) : -1;
         if (index > 0) {
           normalizedTopic = topic.substring(index + deviceUid.length + 1);
+          if(normalizedTopic === "firmware"){
+            if(data,hasOwnProperty("version")){
+              normalizedTopic = "version"
+              data = data["version"] ;
+            }
+          }
         } else {
           return;
         }
       }
 
+      if(normalizedTopic === "fw/fota/update/status"){
+        clearTimeout(fotaTimeoutId);
+        fotaWaitingForVersion = false;
+        fotaPreviousVersion = null;
+        fotaPreviousAppVersion = null;
+        fotaTimeoutId = null;
+
+        $('#loadingMsg').hide().text('');
+        $('#modalLoading').modal('hide');
+
+        $('#error').text('Device failed to update to newer version');
+        const receivedVersion = newVersion || newAppVersion;
+        $('#suggestion').text(`${data}`);
+        $('#modalError').modal('show');
+
+        return;
+      }
+
+      if(normalizedTopic !== "version" && normalizedTopic != "app_version")
+        return;
+
       const vSensor = sensors?.version;
       const avSensor = sensors?.app_version;
-
-      let newVersion = null;
-      let newAppVersion = null;
 
       // Check if topic matches version sensor ref
       if (vSensor?.ref && normalizedTopic === vSensor.ref) {
@@ -552,11 +579,6 @@
         }
         $('#successMsg').text(msg);
         $('#modalSuccess').modal('show');
-      } else {
-        $('#error').text('Device failed to update to newer version');
-        const receivedVersion = newVersion || newAppVersion;
-        $('#suggestion').text(`Received version: ${receivedVersion}`);
-        $('#modalError').modal('show');
       }
     }
 
@@ -988,6 +1010,9 @@
         // Show modal loading while FOTA trigger is in progress
         $('#modalConfirmation').modal('hide');
         $('#modalLoading').modal('show');
+        fotaWaitingForVersion = true;
+        fotaPreviousVersion = sensors?.version?.value || device?.version || null;
+        fotaPreviousAppVersion = sensors?.app_version?.value || device?.app_version || null;
         api.triggerFota(deviceID,(err,res)=>{
           if(err){
             $('#modalConfirmation').modal('hide');

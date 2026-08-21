@@ -284,6 +284,7 @@
     var deviceId = device.id;
     var projectId = device.project_id;
     var deviceTopics = [];
+    let templates = {};
 
     $(document).ready(function () {
       // Validate that we have the required IDs
@@ -315,12 +316,13 @@
               <table id="topics-table" class="display table" style="width: 100%;">
                 <thead>
                   <tr>
-                    <th style="width: 20px;">Edit</th>
+                    <th style="width: 40px;">Edit</th>
                     <th style="width: 40px;">Path</th>
-                    <th style="width: 80px;">Name</th>
+                    <th style="width: 40px;">Name</th>
                     <th style="width: 40px;">Template</th>
                     <th style="width: 40px;" title="default data" >default</th>
                     <th style="width: 40px;" title="local data" >local</th>
+                    <th style="width: 40px;" title="remote data" >remote</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -330,154 +332,193 @@
           </div>
         `);
 
-      api.device.getMqttTopics(deviceId, (err, topics) => {
-        $('#loading-topics').hide();
-        if (err) {
-          console.error('Error loading MQTT topics:', err);
-          $('#loading').html('<div class="alert alert-danger">Error loading MQTT topics: ' + err + '</div>');
+      api.template.list(projectId,(err,res)=>{
+        if(err)
           return;
-        }
 
-        if (!topics || topics.length === 0) {
-          $('#loading').html('<div class="alert alert-info">No MQTT topics found.</div>');
-          return;
-        }
+        res.forEach((template) => {
+          templates[template.id] = template.tag
+        })
 
-        deviceTopics = topics;
-        const loadingEl = $(`#loading-topics`);
-        const tableEl = $(`#topics-table`);
-        
-        loadingEl.hide();
+        api.device.getMqttTopics(deviceId, (err, topics) => {
+          $('#loading-topics').hide();
+          if (err) {
+            console.error('Error loading MQTT topics:', err);
+            $('#loading').html('<div class="alert alert-danger">Error loading MQTT topics: ' + err + '</div>');
+            return;
+          }
 
-        // Initialize DataTable
-        const table = tableEl.DataTable({
-          data: topics,
-          columns: [
-            {
-              data: null,
-              render: function(data, type, row) {
-                const entryId = row.id;
-                const isInSynch = row?.synch ? true : false;
-                const showSynch = row?.synch ? '' : 'd-none';
+          if (!topics || topics.length === 0) {
+            $('#loading').html('<div class="alert alert-info">No MQTT topics found.</div>');
+            return;
+          }
 
-                const isSynched = row?.synched ? true : false;
-                const statusClass = isSynched ? 'bg-success' : 'bg-danger';
-                const statusTitle = isSynched ? 'Synched with device' : 'Not synched';
-                const statusText = isSynched ? 'Synched' : 'Not synched';
+          deviceTopics = topics;
+          const loadingEl = $(`#loading-topics`);
+          const tableEl = $(`#topics-table`);
+          
+          loadingEl.hide();
 
-                return `
-                  <div class="d-flex align-items-center">
-                    <button class="btn btn-danger small-btn me-1" 
-                      data-topic='${JSON.stringify(data)}' 
-                      onclick="deleteTopic('${entryId}', this)">
-                      <span class="icon small-icon">&times;</span>
-                    </button>
-                    <button class="btn btn-primary small-btn" 
-                      data-topic='${JSON.stringify(data)}' 
-                      onclick="editTopic('${entryId}', this)">
-                      <i class="fas fa-pencil-alt small-icon"></i>
-                    </button>
-                    <span class="badge rounded-pill ${statusClass} me-2" title="${statusTitle}">${statusText}</span>
-                    <span class="badge rounded-pill bg-info me-2 ${showSynch}" title="synching">synching</span>
-                  </div>
-                    `;
-              }
-            },
-            {
-              data: null,
-              render: function(data, type, row) {
-                // Safely access row.description.attributes.title
-                if(row.topic)
-                  return row.topic;
-                else
-                  return ``;
-              }
-            },
-            {
-              data: null,
-              render: function(data, type, row) {
-                // Safely access row.description.attributes.title
-                return row.description?.attributes?.title || 'No Title';
-              }
-            },
-            {
-              data: null,
-              render: function(data, type, row) {
-                // Render template tag as green badge if it exists
-                if (row.template_tag) {
-                  return `<span class="badge bg-success">${row.template_tag}</span>`;
-                } else {
-                  return '';
+          // Initialize DataTable
+          const table = tableEl.DataTable({
+            data: topics,
+            columns: [
+              {
+                data: null,
+                render: function(data, type, row) {
+                  const entryId = row.id;
+                  const isInSynch = row?.synch ? true : false;
+                  const showSynch = row?.synch ? '' : 'd-none';
+
+                  const isSynched = row?.synched ? true : false;
+                  const statusClass = isSynched ? 'bg-success' : 'bg-danger';
+                  const statusTitle = isSynched ? 'Synched with device' : 'Not synched';
+                  const statusText = isSynched ? 'Synched' : 'Not synched';
+
+                  return `
+                    <div class="d-flex align-items-center">
+                      <button class="btn btn-danger small-btn me-1" 
+                        data-topic='${JSON.stringify(data)}' 
+                        onclick="deleteTopic('${entryId}', this)">
+                        <span class="icon small-icon">&times;</span>
+                      </button>
+                      <button class="btn btn-primary small-btn" 
+                        data-topic='${JSON.stringify(data)}' 
+                        onclick="editTopic('${entryId}', this)">
+                        <i class="fas fa-pencil-alt small-icon"></i>
+                      </button>
+                      <span class="badge rounded-pill ${statusClass} me-2" title="${statusTitle}">${statusText}</span>
+                      <span class="badge rounded-pill bg-info me-2 ${showSynch}" title="synching">synching</span>
+                    </div>
+                      `;
                 }
-              }
-            },
-            {
-              data: null,
-              render: function (data, type, row) {
-                const val = row?.defaultData?.value;
-
-                // For sort/filter, return plain text (not HTML)
-                if (type !== 'display') {
-                  if (val == null) return '';
-                  return (val !== null && typeof val === 'object') ? JSON.stringify(val) : String(val);
-                }
-
-                if (val == null) return '';
-
-                const isObject = (v) => v !== null && typeof v === 'object';
-                const text = isObject(val) ? JSON.stringify(val) : String(val);
-
-                const escapeAttr = (s) =>
-                  String(s)
-                    .replace(/&/g, '&amp;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
-
-                const escaped = escapeAttr(text);
-
-                // readonly => non-editable but selectable; use disabled if you prefer non-focusable
-                return `<input type="text" class="form-control form-control-sm" style="width:100%;" value="${escaped}" readonly />`;
               },
-            },
-            {
-              data: null,
-              render: function (data, type, row) {
-                const val = row?.localData?.value;
-                
-                // For sort/filter, return plain text (not HTML)
-                if (type !== 'display') {
-                  if (val == null) return '';
-                  return (val !== null && typeof val === 'object') ? JSON.stringify(val) : String(val);
+              {
+                data: null,
+                render: function(data, type, row) {
+                  // Safely access row.description.attributes.title
+                  if(row.topic)
+                    return row.topic;
+                  else
+                    return ``;
                 }
-
-                if (val == null) return '';
-
-                const isObject = (v) => v !== null && typeof v === 'object';
-                const text = isObject(val) ? JSON.stringify(val) : String(val);
-
-                const escapeAttr = (s) =>
-                  String(s)
-                    .replace(/&/g, '&amp;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
-
-                const escaped = escapeAttr(text);
-
-                // readonly => non-editable but selectable; use disabled if you prefer non-focusable
-                return `<input type="text" class="form-control form-control-sm" style="width:100%;" value="${escaped}" readonly />`;
               },
-            },
-          ],
-          pageLength: 10,
-          searching: true,
-          ordering: true,
-          order: [], // Disable initial automatic ordering
+              {
+                data: null,
+                render: function(data, type, row) {
+                  // Safely access row.description.attributes.title
+                  return row.description?.attributes?.title || 'No Title';
+                }
+              },
+              {
+                data: null,
+                render: function(data, type, row) {
+                  // Render template tag as green badge if it exists
+                  if (row.template_id) {
+                    return `<span class="badge bg-success">${templates[row.template_id]}</span>`;
+                  } else {
+                    return '';
+                  }
+                }
+              },
+              {
+                data: null,
+                render: function (data, type, row) {
+                  const val = row?.defaultData?.value;
+
+                  // For sort/filter, return plain text (not HTML)
+                  if (type !== 'display') {
+                    if (val == null) return '';
+                    return (val !== null && typeof val === 'object') ? JSON.stringify(val) : String(val);
+                  }
+
+                  if (val == null) return '';
+
+                  const isObject = (v) => v !== null && typeof v === 'object';
+                  const text = isObject(val) ? JSON.stringify(val) : String(val);
+
+                  const escapeAttr = (s) =>
+                    String(s)
+                      .replace(/&/g, '&amp;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;');
+
+                  const escaped = escapeAttr(text);
+
+                  // readonly => non-editable but selectable; use disabled if you prefer non-focusable
+                  return `<input type="text" class="form-control form-control-sm" style="width:100%;" value="${escaped}" title="${escaped}" readonly />`;
+                },
+              },
+              {
+                data: null,
+                render: function (data, type, row) {
+                  const val = row?.localData?.value;
+                  
+                  // For sort/filter, return plain text (not HTML)
+                  if (type !== 'display') {
+                    if (val == null) return '';
+                    return (val !== null && typeof val === 'object') ? JSON.stringify(val) : String(val);
+                  }
+
+                  if (val == null) return '';
+
+                  const isObject = (v) => v !== null && typeof v === 'object';
+                  const text = isObject(val) ? JSON.stringify(val) : String(val);
+
+                  const escapeAttr = (s) =>
+                    String(s)
+                      .replace(/&/g, '&amp;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;');
+
+                  const escaped = escapeAttr(text);
+
+                  // readonly => non-editable but selectable; use disabled if you prefer non-focusable
+                  return `<input type="text" class="form-control form-control-sm" style="width:100%;" value="${escaped}" title="${escaped}" readonly />`;
+                },
+              },
+              {
+                data: null,
+                render: function (data, type, row) {
+                  const val = row?.remoteData?.value;
+                  
+                  // For sort/filter, return plain text (not HTML)
+                  if (type !== 'display') {
+                    if (val == null) return '';
+                    return (val !== null && typeof val === 'object') ? JSON.stringify(val) : String(val);
+                  }
+
+                  if (val == null) return '';
+
+                  const isObject = (v) => v !== null && typeof v === 'object';
+                  const text = isObject(val) ? JSON.stringify(val) : String(val);
+
+                  const escapeAttr = (s) =>
+                    String(s)
+                      .replace(/&/g, '&amp;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;');
+
+                  const escaped = escapeAttr(text);
+
+                  // readonly => non-editable but selectable; use disabled if you prefer non-focusable
+                  return `<input type="text" class="form-control form-control-sm" style="width:100%;" value="${escaped}" title="${escaped}" readonly />`;
+                },
+              },
+            ],
+            pageLength: 10,
+            searching: true,
+            ordering: true,
+            order: [], // Disable initial automatic ordering
+          });
+
+          tableEl.show();
         });
+      })
 
-        tableEl.show();
-      });
     }
 
     function deleteTopic(entryId, element) {

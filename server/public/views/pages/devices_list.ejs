@@ -180,6 +180,11 @@
           return;
         }
 
+        if(res == null || res?.length == 0){
+          console.error("Error: no projects available");
+          return;
+        }
+
         const projectSelect = document.getElementById('projectSelect');
         
         // Clear any existing options
@@ -208,6 +213,11 @@
           return;
         }
 
+        if(res == null || res?.length == 0){
+          console.error("Error: no models available");
+          return;
+        }
+
         const modelSelect = document.getElementById('modelSelect');
         
         // Clear existing options
@@ -229,13 +239,21 @@
       });
 
       api.getDevices((err,res)=>{
-        if(err) console.log("err:",err)
-        else{
-          res.forEach((item, i) => {
-            addRow(item.id,item.uid,item.project,item.model,item.model_id,moment(item.createdAt).format('MM/DD/YY LT'),item.status,
-            item.version,item.app_version,moment(item.updatedAt).format('MM/DD/YY LT'),item.variant);
-          });
+        if(err){
+          console.log("err:",err)
+          return;
+        } 
+
+        if(res == null || res?.length == 0){
+          console.error("Error: no devices available");
+          return;
         }
+
+        res.forEach((item, i) => {
+          addRow(item.id,item.uid,item.project,item.model,item.model_id,moment(item.createdAt).format('MM/DD/YY LT'),item.status,
+          item.version,item.app_version,moment(item.updatedAt).format('MM/DD/YY LT'),item.variant);
+        });
+          
       });
 
     });

@@ -1,5 +1,9 @@
 # Changelog
 
+## version 1.1.3
+  fix(fota): wrong comparison between app_version
+  perf: devices list
+
 ## version 1.1.2
   Fix device sensor creation from sensor templates (#107)
   fix(pages/device/mqtt): fix link syntax
