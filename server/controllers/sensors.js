@@ -19,6 +19,7 @@ module.exports = {
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
       Sensor.add(
+        null, // no model_id for device-level sensor creation
         req.params.device_id,
         req.body.ref,
         req.body.name,
