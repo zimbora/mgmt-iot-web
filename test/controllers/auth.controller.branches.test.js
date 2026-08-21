@@ -9,7 +9,8 @@ jest.mock('jsonwebtoken', () => ({
 
 jest.mock('../../server/models/users', () => ({
   findUserByEmail: jest.fn((email, password, cb) => cb(null, { id: 1 })),
-  getId: jest.fn(async () => 1)
+  getId: jest.fn(async () => 1),
+  add: jest.fn((type, pwd, level, cb) => cb(null, { insertId: 42 }))
 }));
 
 jest.mock('../../server/models/clients', () => ({
