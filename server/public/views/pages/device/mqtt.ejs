@@ -82,6 +82,37 @@
   <!-- Notification Badges -->
   <div class="notification-badges" id="notificationBadges"></div>
 
+  <!-- FOTA logs modal -->
+  <div class="modal fade" id="modalFotaLogs" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">FOTA Logs</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped" id="fotaLogsTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Model</th>
+                  <th>Local FW/App</th>
+                  <th>Target FW/App</th>
+                  <th>File</th>
+                  <th>Attempt</th>
+                  <th>Success</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody id="fotaLogsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="./assets/js/jquery.min.js"></script>
   <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></link>
   <script src="./assets/js/jquery.dataTables.min.js"></script>
@@ -213,6 +244,12 @@
                       </select>
                       <button id="fotaTrigger" class="btn btn-warning btn-sm" type="button" title="Trigger manual FOTA update check">
                         <i class="bi bi-download"></i> FOTA
+                      </button>
+                      <button id="fotaLogsBtn" class="btn btn-outline-primary btn-sm" type="button" title="View FOTA logs">
+                        <i class="bi bi-list"></i>
+                      </button>
+                      <button id="fotaResetAttemptsBtn" class="btn btn-outline-danger btn-sm" type="button" title="Reset FOTA attempts">
+                        <i class="bi bi-arrow-counterclockwise"></i>
                       </button>
                     </div>
                   </div>
@@ -878,7 +915,16 @@
     // ---- ----- ----
 
     // --- fota management functions ---
+    const getErrorText = (err) => err?.sqlMessage || err?.message || String(err || 'Unknown error');
+
     $("#fotaTrigger").click(()=>{
+      if (deviceStatus === 'offline') {
+        $('#error').text("FOTA trigger failed");
+        $('#suggestion').text("Device is offline. Bring the device online before triggering FOTA.");
+        $('#modalError').modal('show');
+        return;
+      }
+
       // Check last version using api
       const defaultMsg = 'Trigger FOTA update check on this device?';
       const showFotaConfirmation = (msg) => {
@@ -912,29 +958,79 @@
       }
     });
 
+    $("#fotaLogsBtn").click(()=>{
+      api.getFotaLogs(deviceID,(err,rows)=>{
+        if(err){
+          $('#error').text("Unable to load FOTA logs");
+          $('#suggestion').text(getErrorText(err));
+          $('#modalError').modal('show');
+          return;
+        }
+
+        const tbody = document.getElementById('fotaLogsBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (!rows || rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No FOTA logs found</td></tr>';
+        } else {
+          rows.forEach((row) => {
+            const tr = document.createElement('tr');
+            const values = [
+              row.createdAt || '-',
+              row.model_id || '-',
+              `${row.local_version || '-'} / ${row.local_app_version || '-'}`,
+              `${row.target_version || '-'} / ${row.target_app_version || '-'}`,
+              row.target_file || '-',
+              row.nAttempt ?? '-',
+              row.success == null ? '-' : (row.success ? 'yes' : 'no'),
+              row.error || '-'
+            ];
+            values.forEach((value) => {
+              const td = document.createElement('td');
+              td.textContent = String(value);
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+        }
+
+        $('#modalFotaLogs').modal('show');
+      });
+    });
+
+    $("#fotaResetAttemptsBtn").click(()=>{
+      $('#modal_message').text("Reset FOTA attempts for this device?");
+      action = "reset_fota_attempts";
+      $('#modalConfirmation').modal('show');
+    });
+
     $("#modalProceed").click(()=>{
       if(action == "trigger_fota"){
         // Show modal loading while FOTA trigger is in progress
+        $('#modalConfirmation').modal('hide');
         $('#modalLoading').modal('show');
         fotaWaitingForVersion = true;
         fotaPreviousVersion = sensors?.version?.value || device?.version || null;
         fotaPreviousAppVersion = sensors?.app_version?.value || device?.app_version || null;
         api.triggerFota(deviceID,(err,res)=>{
           if(err){
+            $('#modalConfirmation').modal('hide');
             $('#modalLoading').modal('hide');
             $('#error').text("FOTA trigger failed");
-            if(err.hasOwnProperty("sqlMessage"))
-              $('#suggestion').text(err.sqlMessage);
-            else
-              $('#suggestion').text(err);
+            $('#suggestion').text(getErrorText(err));
             $('#modalError').modal('show');
           }else if(res === 'no new version available'){
+            $('#modalConfirmation').modal('hide');
             $('#modalLoading').modal('hide');
             $('#successMsg').text(res);
             $('#modalSuccess').modal('show');
-          }else{
-            console.log("FOTA triggered: keep loading modal and wait for device to report new version via MQTT");
-            $('#loadingMsg').text(res +'\nWaiting for device to complete firmware update (up to 2 minutes)...').show();
+          }else if(typeof res === 'string' && res.toLowerCase().startsWith('updating fw to')){
+            // FOTA triggered: keep loading modal and wait for device to report new version via MQTT
+            fotaWaitingForVersion = true;
+            fotaPreviousVersion = sensors?.version?.value || device?.version || null;
+            fotaPreviousAppVersion = sensors?.app_version?.value || device?.app_version || null;
+            $('#loadingMsg').text('Waiting for device to complete firmware update (up to 2 minutes)...').show();
             // Set 2-minute timeout in case device doesn't respond
             fotaTimeoutId = setTimeout(() => {
               fotaWaitingForVersion = false;
@@ -947,6 +1043,24 @@
               $('#suggestion').text("Device did not report a new version within 2 minutes. Check device status.");
               $('#modalError').modal('show');
             }, FOTA_TIMEOUT_MS);
+          }else{
+            $('#modalConfirmation').modal('hide');
+            $('#modalLoading').modal('hide');
+            $('#successMsg').text(res || "FOTA request processed");
+            $('#modalSuccess').modal('show');
+          }
+        });
+      }else if(action == "reset_fota_attempts"){
+        api.resetFotaAttempts(deviceID,(err,res)=>{
+          if(err){
+            $('#modalConfirmation').modal('hide');
+            $('#error').text("Failed to reset FOTA attempts");
+            $('#suggestion').text(getErrorText(err));
+            $('#modalError').modal('show');
+          }else{
+            $('#modalConfirmation').modal('hide');
+            $('#successMsg').text("FOTA attempts were reset");
+            $('#modalSuccess').modal('show');
           }
         });
       }

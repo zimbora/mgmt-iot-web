@@ -234,4 +234,133 @@ describe('server/models/devices deep branches', () => {
       });
     });
   });
+
+  it('triggerFota() rejects when device is offline', async () => {
+    const devices = require('../../server/models/devices');
+
+    mockDb.queryRow
+      .mockResolvedValueOnce([{
+        id: 1,
+        model_id: 2,
+        accept_release: 'prod',
+        variant_id: 3,
+        version: '1.0.0',
+        app_version: '1.0.0',
+        nAttempts: 0
+      }])
+      .mockResolvedValueOnce([{ value: 'offline' }]);
+
+    await new Promise((resolve) => {
+      devices.triggerFota(1, null, null, (err, res) => {
+        expect(err).toBe('device is offline');
+        expect(res).toBeNull();
+        resolve();
+      });
+    });
+  });
+
+  it('triggerFota() rejects when max attempts is reached', async () => {
+    const devices = require('../../server/models/devices');
+
+    mockDb.queryRow
+      .mockResolvedValueOnce([{
+        id: 1,
+        model_id: 2,
+        accept_release: 'prod',
+        variant_id: 3,
+        version: '1.0.0',
+        app_version: '1.0.0',
+        nAttempts: 3
+      }])
+      .mockResolvedValueOnce([{ value: 'online' }])
+      .mockResolvedValueOnce([{ nAttempts: 3 }]);
+
+    await new Promise((resolve) => {
+      devices.triggerFota(1, null, null, (err, res) => {
+        expect(err).toContain('max fota attempts reached');
+        expect(res).toBeNull();
+        resolve();
+      });
+    });
+  });
+
+  it('triggerFota() logs model_id when update is triggered', async () => {
+    const devices = require('../../server/models/devices');
+    const firmwares = require('../../server/models/firmwares');
+
+    jest.spyOn(firmwares, 'getLatestVersion').mockResolvedValue({
+      version: '1.0.1',
+      filename: 'fw.bin',
+      token: 'abc'
+    });
+    jest.spyOn(firmwares, 'getLatestAppVersion').mockResolvedValue({
+      version: '1.0.1',
+      app_version: '1.0.1',
+      filename: 'app.bin',
+      token: 'def'
+    });
+    jest.spyOn(devices, 'getModel').mockResolvedValue('normal');
+    jest.spyOn(devices, 'sendMqttMessage').mockImplementation(async (deviceId, topic, payload, qos, retain, cb) => {
+      cb(null, 'ok');
+      return Promise.resolve();
+    });
+
+    mockDb.queryRow
+      .mockResolvedValueOnce([{
+        id: 1,
+        model_id: 2,
+        accept_release: 'prod',
+        variant_id: 3,
+        version: '1.0.0',
+        app_version: '1.0.0',
+        nAttempts: 1
+      }])
+      .mockResolvedValueOnce([{ value: 'online' }])
+      .mockResolvedValueOnce([{ nAttempts: 1 }]);
+
+    await new Promise((resolve) => {
+      devices.triggerFota(1, null, null, (err, res) => {
+        expect(err).toBeNull();
+        expect(res).toContain('updating fw to');
+        resolve();
+      });
+    });
+
+    expect(mockDb.insert).toHaveBeenCalledWith('logs_fota', expect.objectContaining({
+      device_id: 1,
+      model_id: 2
+    }));
+  });
+
+  it('getFotaLogs() returns empty list when no rows exist', async () => {
+    const devices = require('../../server/models/devices');
+    mockDb.queryRow.mockResolvedValueOnce([]);
+
+    await new Promise((resolve) => {
+      devices.getFotaLogs(1, (err, rows) => {
+        expect(err).toBeNull();
+        expect(rows).toEqual([]);
+        resolve();
+      });
+    });
+  });
+
+  it('resetFotaAttempts() updates fota.nAttempts to zero', async () => {
+    const devices = require('../../server/models/devices');
+    mockDb.update.mockResolvedValueOnce({ affectedRows: 1 });
+
+    await new Promise((resolve) => {
+      devices.resetFotaAttempts(1, (err, rows) => {
+        expect(err).toBeNull();
+        expect(rows).toEqual({ affectedRows: 1 });
+        resolve();
+      });
+    });
+
+    expect(mockDb.update).toHaveBeenCalledWith(
+      'fota',
+      expect.objectContaining({ nAttempts: 0 }),
+      { device_id: 1 }
+    );
+  });
 });

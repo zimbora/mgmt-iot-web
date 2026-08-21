@@ -72,6 +72,10 @@ router.route("/:device_id/fw/logs")
 
   .get(Device.getFwLogs)
 
+router.route("/:device_id/fota/logs")
+
+  .get(Device.getFotaLogs)
+
 router.route("/:device_id/sensor")
   .post(Sensor.add)
   .put(Sensor.update)
@@ -116,6 +120,9 @@ router.route("/:device_id/release")
 
 router.route("/:device_id/trigger/fota")
   .post(Device.triggerFota)
+
+router.route("/:device_id/fota/reset-attempts")
+  .post(Device.resetFotaAttempts)
 
 router.route("/:device_id/settings")
   .put(Device.updateDeviceSettings)
