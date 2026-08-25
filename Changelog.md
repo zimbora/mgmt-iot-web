@@ -1,5 +1,14 @@
 # Changelog
 
+## version 1.1.4
+  fix: assign template, show title on mouse hover for json text
+  fix: duration display showing -1:-1:00 and chart legend overflowing modal (#115)
+  fix: unhandled promise rejection in device sensor creation (#117)
+  fix: sidebar text hidden on mobile (phone view) (#119)
+  fix: table overflow: keep tables within container bounds with scroll (#123)
+
+  feat: Harden MQTT FOTA flow: offline gating, attempt reset, and logs_fota visibility (#113)
+
 ## version 1.1.3
   fix(fota): wrong comparison between app_version
   perf: devices list
