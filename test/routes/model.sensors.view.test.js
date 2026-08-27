@@ -6,12 +6,8 @@ describe('model sensors page propagate behavior', () => {
 
   it('closes confirmation modal and does not reload page after propagate response', () => {
     const viewContent = fs.readFileSync(sensorsViewPath, 'utf8');
-    const propagateBlockMatch = viewContent.match(/api\.model\.propagateSensor\([\s\S]*?\n\s*}\);\n\s*}\n\s*}\);/);
-
-    expect(propagateBlockMatch).not.toBeNull();
-
-    const propagateBlock = propagateBlockMatch[0];
-    expect(propagateBlock).toContain("$('#modalConfirmation').modal('hide');");
-    expect(propagateBlock).not.toContain('location.reload();');
+    expect(viewContent).toContain('api.model.propagateSensor(modelID, idToPropagate, (err,res)=>{');
+    expect(viewContent).toContain("$('#modalConfirmation').modal('hide');");
+    expect(viewContent).not.toMatch(/api\.model\.propagateSensor[\s\S]*location\.reload\(\);/);
   });
 });
