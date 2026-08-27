@@ -240,19 +240,38 @@ describe('server/controllers/clients – branch coverage', () => {
     it('returns error when access check fails', () => {
       Client.checkDeviceReadAccess.mockImplementation((cid, level, did, cb) => cb('err'));
       const next = jest.fn();
-      const req = { user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
+      const req = { originalUrl: '/api/device/d1/info', user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
       const res = { json: jest.fn() };
       clientsCtrl.checkDeviceReadAccess(req, res, next);
       expect(res.json).toHaveBeenCalledWith({ Error: true, Message: 'err', Result: null });
     });
 
-    it('returns not allowed when access is denied', () => {
+    it('returns not allowed JSON when API access is denied', () => {
       Client.checkDeviceReadAccess.mockImplementation((cid, level, did, cb) => cb(null, false));
       const next = jest.fn();
-      const req = { user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
+      const req = { originalUrl: '/api/device/d1/info', user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
       const res = { json: jest.fn() };
       clientsCtrl.checkDeviceReadAccess(req, res, next);
       expect(res.json).toHaveBeenCalledWith({ Error: true, Message: 'Not allowed', Result: null });
+    });
+
+    it('renders forbidden page when web access is denied', () => {
+      Client.checkDeviceReadAccess.mockImplementation((cid, level, did, cb) => cb(null, false));
+      const next = jest.fn();
+      const req = { originalUrl: '/device/d1/dashboard', user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
+      const res = { status: jest.fn().mockReturnThis(), render: jest.fn() };
+      clientsCtrl.checkDeviceReadAccess(req, res, next);
+      expect(res.status).toHaveBeenCalledWith(httpStatus.FORBIDDEN);
+      expect(res.render).toHaveBeenCalledWith(
+        expect.stringContaining('/server/public/views/pages/forbidden'),
+        expect.objectContaining({
+          user: req.user,
+          page: 'Forbidden',
+          message: 'You do not have permission to access this page.',
+          suggestion: 'Please report this to your administrator.',
+          redirectPath: '/devices'
+        })
+      );
     });
   });
 
@@ -277,7 +296,7 @@ describe('server/controllers/clients – branch coverage', () => {
     it('returns not allowed when access is denied', () => {
       Client.checkDeviceWriteAccess.mockImplementation((cid, level, did, cb) => cb(null, false));
       const next = jest.fn();
-      const req = { user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
+      const req = { originalUrl: '/api/device/d1/field', user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
       const res = { json: jest.fn() };
       clientsCtrl.checkDeviceWriteAccess(req, res, next);
       expect(res.json).toHaveBeenCalledWith({ Error: true, Message: 'Not allowed', Result: null });
@@ -305,7 +324,7 @@ describe('server/controllers/clients – branch coverage', () => {
     it('returns not allowed when access is denied', () => {
       Client.checkDevicePermissionsAccess.mockImplementation((cid, level, did, cb) => cb(null, false));
       const next = jest.fn();
-      const req = { user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
+      const req = { originalUrl: '/api/device/d1', user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
       const res = { json: jest.fn() };
       clientsCtrl.checkDevicePermissionsAccess(req, res, next);
       expect(res.json).toHaveBeenCalledWith({ Error: true, Message: 'Not allowed', Result: null });

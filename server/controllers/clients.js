@@ -1,9 +1,22 @@
-
+var path = require('path');
 var Client = require('../models/clients');
 
 var Joi = require('joi');
 var httpStatus = require('http-status-codes');
 var response = require('./response');
+
+function denyPageAccess(req, res, errorMessage){
+  if(req.originalUrl?.startsWith('/api/'))
+    res.json({"Error" : true, "Message" : errorMessage, "Result" : null});
+  else
+    res.status(httpStatus.FORBIDDEN).render(path.join(__dirname, '../public/views/pages/forbidden'),{
+      user:req.user,
+      page:'Forbidden',
+      message:'You do not have permission to access this page.',
+      suggestion:'Please report this to your administrator.',
+      redirectPath:'/devices'
+    });
+}
 
 
 module.exports = {
@@ -139,8 +152,8 @@ module.exports = {
       return next();
 
     Client.checkDeviceReadAccess(req.user.client_id,req.user.level,req.params.device_id,(err,access)=>{
-      if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
-      else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
+      if(err) denyPageAccess(req,res,err);
+      else if(!access) denyPageAccess(req,res,"Not allowed");
       else next();
     });
   },
@@ -151,8 +164,8 @@ module.exports = {
       return next();
 
     Client.checkDeviceWriteAccess(req.user.client_id,req.user.level,req.params.device_id,(err,access)=>{
-      if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
-      else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
+      if(err) denyPageAccess(req,res,err);
+      else if(!access) denyPageAccess(req,res,"Not allowed");
       else next();
     });
   },
@@ -163,8 +176,8 @@ module.exports = {
       return next();
 
     Client.checkDevicePermissionsAccess(req.user.client_id,req.user.level,req.params.device_id,(err,access)=>{
-      if(err) res.json({"Error" : true, "Message" : err, "Result" : null});
-      else if(!access) res.json({"Error" : true, "Message" : "Not allowed", "Result" : null});
+      if(err) denyPageAccess(req,res,err);
+      else if(!access) denyPageAccess(req,res,"Not allowed");
       else next();
     });
   },
