@@ -495,7 +495,7 @@
         if (index > 0) {
           normalizedTopic = topic.substring(index + deviceUid.length + 1);
           if(normalizedTopic === "firmware"){
-            if(data,hasOwnProperty("version")){
+            if(data.hasOwnProperty("version")){
               normalizedTopic = "version"
               data = data["version"] ;
             }
@@ -614,10 +614,10 @@
       // Update the value based on response data
       if (payload?.data && typeof payload.data === 'object' && payload.data.error) {
         // Handle error response
-        valueCell.textContent = 'Error: ' + payload.data.error;
+        valueCell.value = 'Error: ' + payload.data.error;
         valueCell.style.color = 'red';
         valueCell.setAttribute('title', `Error at ${new Date(payload.timestamp || Date.now()).toLocaleString()}: ${payload.data.error}`);
-      } else if ((payload?.data?.payload !== undefined && payload?.data?.payload !== null) || payload.value !== undefined) {
+      } else if ((payload?.data?.payload !== undefined && payload?.data?.payload !== null) || payload?.value !== undefined) {
         // Handle successful response
         let displayValue = (payload?.data?.payload !== undefined && payload?.data?.payload !== null) ? payload.data.payload : payload.value;
         const text = 
@@ -626,13 +626,13 @@
         valueCell.style.color = '';
         valueCell.setAttribute('title', `Last updated: ${new Date(payload.timestamp || Date.now()).toLocaleString()}`);
         //console.log(`Updated topic ${topic} value to:`, displayValue);
-      }else if (payload){
-        let displayValue = (payload !== undefined && payload !== null) ? payload : 'NA';
+      } else if (payload !== undefined && payload !== null) {
+        let displayValue = payload;
         const text = 
           isObject(displayValue) ? safeJSONStringify(displayValue) : String(displayValue);
         valueCell.value = text;
         valueCell.style.color = '';
-        valueCell.setAttribute('title', `Last updated: ${new Date(payload.timestamp || Date.now()).toLocaleString()}`);
+        valueCell.setAttribute('title', `Last updated: ${new Date().toLocaleString()}`);
         //console.log(`Updated topic ${topic} value to:`, displayValue);
       }
     }
@@ -653,31 +653,32 @@
       mqttTopics.forEach(mqttTopic => {
         console.log(mqttTopic)
         let path = `${mqttTopic.topic}`;
-        let name = mqttTopic.description.attributes.title || 'Unknown';
+        let desc = mqttTopic.description;
+        if (typeof desc === 'string') {
+          try { desc = JSON.parse(desc); } catch(e) { desc = {}; }
+        }
+        desc = desc || {};
+        let localData = mqttTopic.localData;
+        if (typeof localData === 'string') {
+          try { localData = JSON.parse(localData); } catch(e) { localData = null; }
+        }
+        let name = desc?.attributes?.title || 'Unknown';
         let value = '';
         let actions = '';
-        let hasError = false;
-        if (mqttTopic?.remoteData) {
-          if (mqttTopic.remoteData.error && mqttTopic.remoteData.error.trim() !== '') {
-            hasError = true;
-            value = `<span class="error-label" style="color: red; cursor: help;" title="Error: ${mqttTopic.remoteData.error}">error</span>`;
-          } else if (mqttTopic.remoteData?.value && mqttTopic.remoteData?.value !== '') {
-            value = mqttTopic.remoteData.value;
-            if (mqttTopic.description.attributes.units) {
-              value += ' ' + mqttTopic.description.attributes.units;
-            }
-          } else {
-            value = 'N/A';
+        if (localData?.value !== undefined && localData?.value !== null && localData?.value !== '') {
+          value = localData.value;
+          if (desc?.attributes?.units) {
+            value += ' ' + desc.attributes.units;
           }
         } else {
           value = 'N/A';
         }
         // Generate action buttons
         let actionButtons = [];
-        if (mqttTopic.description.attributes.readable) {
+        if (desc?.attributes?.readable) {
           actionButtons.push(`<button class="btn btn-sm btn-outline-primary" onclick="readTopicButton('${mqttTopic.topic}')">Read</button>`);
         }
-        if (mqttTopic.description.attributes.writable) {
+        if (desc?.attributes?.writable) {
           actionButtons.push(`<input type="text" class="form-control form-control-sm d-inline-block" style="width: auto; display: inline-block;" id="input-${mqttTopic.topic}" placeholder="New value">`);
           actionButtons.push(`<button class="btn btn-sm btn-outline-success" onclick="writeTopicButton('${mqttTopic.topic}')">Write</button>`);
         }
@@ -685,13 +686,9 @@
         // Determine tooltip based on data source
         let tooltipText = '';
 
-        let date = mqttTopic.remoteData?.timestamp ? moment(mqttTopic.remoteData.timestamp).format('L LT') : moment(mqttTopic.updatedAt).format('L LT')
+        let date = moment(mqttTopic.updatedAt).format('L LT');
         
-        if (hasError) {
-          tooltipText = `Error occurred at: ${date}`;
-        } else {
-          tooltipText = `Last updated: ${date}`;
-        }
+        tooltipText = `Last updated: ${date}`;
 
         const text = 
           isObject(value) ? safeJSONStringify(value) : String(value);
