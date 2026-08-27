@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include(path+'/partials/head.ejs') %>
+  <%- include('../../partials/head.ejs') %>
   
   <style type="text/css" media="screen">
     .lwm2m-tab-content {
@@ -76,13 +76,13 @@
 </head>
 <body>
 
-  <%- include(path+'/partials/scripts.ejs') %>
-  <%- include(path+'/partials/device/navbar.ejs') %>
+  <%- include('../../partials/scripts.ejs') %>
+  <%- include('../../partials/device/navbar.ejs') %>
   
-  <%- include(path+'/partials/modal/confirmation.ejs') %>
-  <%- include(path+'/partials/modal/error.ejs') %>
-  <%- include(path+'/partials/modal/loading.ejs') %>
-  <%- include(path+'/partials/modal/timeout.ejs') %>
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/loading.ejs') %>
+  <%- include('../../partials/modal/timeout.ejs') %>
 
   <!-- Notification Badges -->
   <div class="notification-badges" id="notificationBadges"></div>
@@ -95,7 +95,7 @@
   <div class="container-fluid">
     <div class="row flex-nowrap">
       
-      <%- include(path+'/partials/device/sidebar.ejs') %>
+      <%- include('../../partials/device/sidebar.ejs') %>
       
       <div class="col py-3">
         <div class="row">
