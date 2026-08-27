@@ -246,6 +246,15 @@ describe('server/controllers/clients – branch coverage', () => {
       expect(res.json).toHaveBeenCalledWith({ Error: true, Message: 'err', Result: null });
     });
 
+    it('does not leak non-string errors when access check fails', () => {
+      Client.checkDeviceReadAccess.mockImplementation((cid, level, did, cb) => cb(new Error('db failure')));
+      const next = jest.fn();
+      const req = { originalUrl: '/api/device/d1/info', user: { type: 'user', client_id: 1, level: 2 }, params: { device_id: 'd1' } };
+      const res = { json: jest.fn() };
+      clientsCtrl.checkDeviceReadAccess(req, res, next);
+      expect(res.json).toHaveBeenCalledWith({ Error: true, Message: 'Access check failed', Result: null });
+    });
+
     it('returns not allowed JSON when API access is denied', () => {
       Client.checkDeviceReadAccess.mockImplementation((cid, level, did, cb) => cb(null, false));
       const next = jest.fn();

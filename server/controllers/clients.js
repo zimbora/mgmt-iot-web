@@ -6,8 +6,10 @@ var httpStatus = require('http-status-codes');
 var response = require('./response');
 
 function denyPageAccess(req, res, errorMessage){
+  const safeErrorMessage = typeof errorMessage === 'string' ? errorMessage : 'Access check failed';
+
   if(req.originalUrl?.startsWith('/api/'))
-    res.json({"Error" : true, "Message" : errorMessage, "Result" : null});
+    res.json({"Error" : true, "Message" : safeErrorMessage, "Result" : null});
   else
     res.status(httpStatus.FORBIDDEN).render(path.join(__dirname, '../public/views/pages/forbidden'),{
       user:req.user,
