@@ -95,8 +95,8 @@ module.exports =  {
       query = "select * from ?? where ?? = ? and ?? = ? and ?? = ? and ?? = ? and ?? = ?";
       table = ["firmwares","version",version,"app_version",app_version,"build_release",release,"model_id",modelId,"variant_id",variantId];
     }else{
-      query = "select * from ?? where ?? = ? and ?? = ? and ?? = ? and ?? = ? and ?? is null";
-      table = ["firmwares","version",version,"app_version",app_version,"build_release",release,"model_id",modelId,"variant_id"];
+      query = "select * from ?? where ?? = ? and ?? = ? and ?? = ? and ?? = ? and variant_id is null";
+      table = ["firmwares","version",version,"app_version",app_version,"build_release",release,"model_id",modelId];
     }
     query = mysql.format(query,table);
 
