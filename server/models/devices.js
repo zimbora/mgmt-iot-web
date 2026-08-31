@@ -1714,13 +1714,13 @@ var self = module.exports =  {
       const payload = `{"url":"${link}"}`;
 
       const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
-      obj = {
+      let obj = {
         device_id : device.id,
         model_id : device.model_id,
         local_version : device.version,
         local_app_version : device.app_version,
-        target_version : lVersion.version,
-        target_app_version : lAppVersion.app_version,
+        target_version : lVersion?.version,
+        target_app_version : lAppVersion?.app_version,
         target_file : firmware.filename,
         nAttempt : device.nAttempts,
         createdAt : timestamp,
