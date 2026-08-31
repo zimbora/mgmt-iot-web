@@ -67,7 +67,7 @@ var Display = {
           fontWeight:'bold',
         },
         data: data.map(function (item) {
-          return moment.utc(item.createdAt).unix();
+          return moment.utc(item.createdAt, 'YYYY-MM-DD HH:mm:ss').unix();
         }),
         axisLabel: {
           formatter: function (value, idx) {
@@ -117,7 +117,7 @@ var Display = {
       if(data?.duration)
         data.duration = 0;
       table_list.row.add([
-        moment.utc(item.createdAt).local().format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
+        moment.utc(item.createdAt, 'YYYY-MM-DD HH:mm:ss').local().format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
       ]).draw(true);
     })
 
@@ -129,14 +129,14 @@ var Display = {
 
     data.slice(1).map((item, i) => {
       // data is newest-first; data[i] is newer, item is older
-      let current = moment.utc(data[i].createdAt).unix();
-      let previous = moment.utc(item.createdAt).unix();
+      let current = moment.utc(data[i].createdAt, 'YYYY-MM-DD HH:mm:ss').unix();
+      let previous = moment.utc(item.createdAt, 'YYYY-MM-DD HH:mm:ss').unix();
 
       item.duration = Display.getDifference(current,previous);
       return;
     });
-    let previous = moment.utc(data[0].createdAt).unix();
-    let current = moment().unix();
+    let previous = moment.utc(data[0].createdAt, 'YYYY-MM-DD HH:mm:ss').unix();
+    let current = moment.utc().unix();
     data[0].duration = Display.getDifference(current,previous);
   },
 

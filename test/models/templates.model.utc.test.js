@@ -25,10 +25,14 @@ describe('server/models/templates UTC timestamps', () => {
   });
 
   it('add() stores createdAt/updatedAt in UTC', async () => {
-    await new Promise((resolve) => {
+    await new Promise((resolve, reject) => {
       templates.add('tag', 'name', 1, 2, (err) => {
-        expect(err).toBeNull();
-        resolve();
+        try {
+          expect(err).toBeNull();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
       });
     });
 
@@ -40,10 +44,14 @@ describe('server/models/templates UTC timestamps', () => {
   });
 
   it('update() stores updatedAt in UTC', async () => {
-    await new Promise((resolve) => {
+    await new Promise((resolve, reject) => {
       templates.update(10, 'tag', 'name', (err) => {
-        expect(err).toBeNull();
-        resolve();
+        try {
+          expect(err).toBeNull();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
       });
     });
 
