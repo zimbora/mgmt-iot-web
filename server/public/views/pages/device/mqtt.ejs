@@ -750,7 +750,7 @@
     function showMqttTopicLogs(mqttId) {
       api.getMqttLogs(deviceID, mqttId, (err, res) => {
         if (err) {
-          console.log(err);
+          console.error(err);
           $('#error').text('Error loading MQTT logs');
           $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
           $('#modalError').modal('show');
