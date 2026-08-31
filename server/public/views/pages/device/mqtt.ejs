@@ -361,10 +361,9 @@
 
     $(document).ready(() => {
 
-      if(sensors.hasOwnProperty("status") && sensors["status"]?.value != null){
-        changeDeviceStatus(sensors["status"]?.value);
-      }
-
+      if(device?.status)
+        changeDeviceStatus(device?.status);
+      
       table_list = $('#table_list').DataTable();
       ctx = echarts.init(document.getElementById('myChart'));
 
