@@ -3,7 +3,6 @@ var key = {}
 try{
   key = require("./keys");
 }catch(e){
-  console.err("gauthweb key not defined !!")
   key = {
     gauthweb : ""
   }
