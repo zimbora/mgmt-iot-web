@@ -3,6 +3,24 @@ var db = require('../controllers/db');
 var CryptoJS = require("crypto-js");
 const moment = require('moment');
 
+function hasDevicePermission(clientId,level,deviceId,minPermissionLevel,cb){
+  if(level >= 4)
+    return cb(null,true);
+
+  let query = `select * from ?? where ?? = ? and ?? = ? and ?? >= ?`;
+  let table = ["permissions","client_id",clientId,"device_id",deviceId,"level",minPermissionLevel];
+  query = mysql.format(query,table);
+
+  db.queryRow(query)
+  .then(rows => {
+    if(rows.length) return cb(null,true);
+    else return cb(null,false);
+  })
+  .catch(error => {
+    return cb(error,false);
+  })
+}
+
 var self = module.exports =  {
 
   get : async (nick,pwd,cb)=>{
@@ -266,66 +284,15 @@ var self = module.exports =  {
   },
 
   checkDeviceReadAccess : async (clientId,level,deviceId,cb)=>{
-
-    if(level >= 1)
-      return cb(null,true);
-    else{
-
-      let query = `select * from ?? where ?? = ? and ?? = ?`;
-      let table = ["permissions","client_id",clientId,"device_id",deviceId];
-      query = mysql.format(query,table);
-
-      db.queryRow(query)
-      .then(rows => {
-        if(rows.length) return cb(null,true);
-        else return cb(null,false);
-      })
-      .catch(error => {
-        return cb(error,false);
-      })
-    }
+    hasDevicePermission(clientId,level,deviceId,1,cb);
   },
 
   checkDeviceWriteAccess : async (clientId,level,deviceId,cb)=>{
-
-    if(level >= 2)
-      return cb(null,true);
-    else{
-
-      let query = `select * from ?? where ?? = ? and ?? = ?`;
-      let table = ["permissions","client_id",clientId,"device_id",deviceId];
-      query = mysql.format(query,table);
-
-      db.queryRow(query)
-      .then(rows => {
-        if(rows.length) return cb(null,true);
-        else return cb(null,false);
-      })
-      .catch(error => {
-        return cb(error,false);
-      })
-    }
+    hasDevicePermission(clientId,level,deviceId,2,cb);
   },
 
   checkDevicePermissionsAccess : async (clientId,level,deviceId,cb)=>{
-
-    if(level >= 4)
-      return cb(null,true);
-    else{
-
-      let query = `select * from ?? where ?? = ? and ?? = ?`;
-      let table = ["permissions","client_id",clientId,"device_id",deviceId];
-      query = mysql.format(query,table);
-
-      db.queryRow(query)
-      .then(rows => {
-        if(rows.length) return cb(null,true);
-        else return cb(null,false);
-      })
-      .catch(error => {
-        return cb(error,false);
-      })
-    }
+    hasDevicePermission(clientId,level,deviceId,4,cb);
   },
 
   getMqttCredentials : async (clientId,cb)=>{
