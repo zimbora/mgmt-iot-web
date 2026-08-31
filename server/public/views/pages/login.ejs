@@ -165,7 +165,7 @@
 
     function handleCredentialResponse(googleUser){
       var id_token = googleUser.credential;
-      $.post(window.location.protocol+"//"+window.location.hostname+"/login/google/user",{token: id_token}, function(data){
+      $.post(window.location.protocol+"//"+window.location.hostname+":"+window.location.port+"/login/google/user",{token: id_token}, function(data){
         if(data.message!='Success'){
           $("#login-msg").text("User not authorized");
         }else{
