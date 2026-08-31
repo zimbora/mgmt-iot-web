@@ -1642,19 +1642,11 @@ var self = module.exports =  {
 
     let device = null;
     try{
-      let query = `SELECT * FROM ?? where id = ?;`
-      let table = ["devices",deviceId]
-      query = mysql.format(query,table);
-      let res = await db.queryRow(query)
-      if(res != null && res.length > 0)
-        device = res[0];
-      else
-        return cb(`device ${deviceId} not found`,null);
-
+      device = await self.getById(deviceId);      
     }catch(error){
-      return cb(error,null)
+      return cb(error,null);
     }
-
+    
     try{
       let query = `SELECT value FROM ?? WHERE device_id = ? AND name = ? LIMIT 1;`
       let table = ["sensors",deviceId,"status"];
@@ -1755,6 +1747,13 @@ var self = module.exports =  {
 
     if(modelName == "sniffer"){
 
+      let device = null;
+      try{
+        device = await self.getById(deviceId);      
+      }catch(error){
+        return cb(error,null);
+      }
+    
       const associatedUID = await self.getUID(device.associatedDevice);
       const associatedProjectName = await self.getProject(device.associatedDevice);
 
@@ -1810,6 +1809,13 @@ var self = module.exports =  {
 
     // !! A different way should thought to trigger message through a different device
     if(modelName == "sniffer"){
+
+      let device = null;
+      try{
+        device = await self.getById(deviceId);      
+      }catch(error){
+        return cb(error,null);
+      }
 
       const associatedUID = await self.getUID(device.associatedDevice);
       const associatedProjectName = await self.getProject(device.associatedDevice);
