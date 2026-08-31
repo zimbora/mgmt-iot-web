@@ -1,5 +1,8 @@
 # Changelog
 
+## version 1.1.6
+  fix(env/index): wrong log, crashing program when gauthweb not defined on file keys
+  
 ## version 1.1.5
   fix: ReferenceError in lwm2m.ejs caused by undefined `path` variable (#125)
   perf(devices): allow query sensor logs without "hour" parameter
