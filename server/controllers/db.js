@@ -17,6 +17,7 @@ var self = module.exports = {
         user     : config.db.user,
         password : config.db.pwd,
         database : config.db.name,
+        timezone : 'Z',
         debug    : false
     });
     pool.getConnection(function(err,connection){
@@ -53,6 +54,7 @@ var self = module.exports = {
         user     : config.db.user,
         password : config.db.pwd,
         database : db_name,
+        timezone : 'Z',
         debug    :  false,
         multipleStatements: true
     });

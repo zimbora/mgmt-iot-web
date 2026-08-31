@@ -40,6 +40,7 @@ describe('server/controllers/db', () => {
     db.connect({ db: { conn_limit: 1, host: 'h', port: 3306, user: 'u', pwd: 'p', name: 'n' } }, callback);
 
     expect(mysql.createPool).toHaveBeenCalled();
+    expect(mysql.createPool).toHaveBeenCalledWith(expect.objectContaining({ timezone: 'Z' }));
     expect(callback).toHaveBeenCalled();
     expect(connection.on).toHaveBeenCalledWith('error', expect.any(Function));
 
@@ -54,6 +55,7 @@ describe('server/controllers/db', () => {
 
     db.connect({ db: { conn_limit: 1, host: 'h', port: 3306, user: 'u', pwd: 'p', name: 'n' } }, jest.fn());
 
+    expect(mysql.createPool).toHaveBeenCalledWith(expect.objectContaining({ timezone: 'Z' }));
     expect(global.log.error).toHaveBeenCalled();
     expect(exitSpy).toHaveBeenCalledWith(1);
     exitSpy.mockRestore();

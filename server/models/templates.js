@@ -53,8 +53,8 @@ var self = module.exports = {
       name : name,
       client_id : client_id,
       project_id : project_id,
-      createdAt : moment().format('YYYY-MM-DD HH:mm:ss'),
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      createdAt : moment.utc().format('YYYY-MM-DD HH:mm:ss'),
+      updatedAt : moment.utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     db.insert(tableName,obj)
@@ -84,7 +84,7 @@ var self = module.exports = {
     let obj = {
       tag : tag,
       name : name,
-      updatedAt : moment().format('YYYY-MM-DD HH:mm:ss')
+      updatedAt : moment.utc().format('YYYY-MM-DD HH:mm:ss')
     };
 
     let filter = {id:template_id};

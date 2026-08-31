@@ -22,7 +22,6 @@ var Display = {
 	showDeviceLogs : (sensor)=>{
 
     const dId = deviceID ?? deviceId;
-    moment.locale('pt');
     api.getDeviceLogs(dId,sensor,(err,res)=>{
       if(err) console(err);
       if(res?.length > 0 && typeof res[0][sensor] === "string" )
@@ -35,7 +34,6 @@ var Display = {
   showFwLogs : (sensor)=>{
 
     const dId = deviceID ?? deviceId;
-    moment.locale('pt');
     api.getFwLogs(dId,sensor,(err,res)=>{
       if(err) console(err);
       if(res?.length > 0 && typeof res[0][sensor] === "string" )
@@ -69,7 +67,7 @@ var Display = {
           fontWeight:'bold',
         },
         data: data.map(function (item) {
-          return moment(item.createdAt).unix();
+          return moment.utc(item.createdAt).unix();
         }),
         axisLabel: {
           formatter: function (value, idx) {
@@ -119,7 +117,7 @@ var Display = {
       if(data?.duration)
         data.duration = 0;
       table_list.row.add([
-        moment(item.createdAt).local().format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
+        moment.utc(item.createdAt).local().format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
       ]).draw(true);
     })
 
@@ -131,13 +129,13 @@ var Display = {
 
     data.slice(1).map((item, i) => {
       // data is newest-first; data[i] is newer, item is older
-      let current = moment(data[i].createdAt).unix();
-      let previous = moment(item.createdAt).unix();
+      let current = moment.utc(data[i].createdAt).unix();
+      let previous = moment.utc(item.createdAt).unix();
 
       item.duration = Display.getDifference(current,previous);
       return;
     });
-    let previous = moment(data[0].createdAt).unix();
+    let previous = moment.utc(data[0].createdAt).unix();
     let current = moment().unix();
     data[0].duration = Display.getDifference(current,previous);
   },
