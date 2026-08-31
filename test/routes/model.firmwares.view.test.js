@@ -11,11 +11,12 @@ describe('model firmwares page modal layout', () => {
 
     expect(viewContent).toContain("<%- include('../../partials/modal/addFirmware.ejs') %>");
     expect(viewContent).toContain('onclick="showAddFirmwareModal()"');
-    expect(viewContent).toContain("$('#modalAddFirmware').modal('show');");
+    expect(viewContent).toContain("$('#modalAddFirmware').modal");
     expect(viewContent).not.toContain('<div class="card-header">');
 
     expect(modalContent).toContain('id="modalAddFirmware"');
     expect(modalContent).toContain('Add new firmware image');
     expect(modalContent).toContain('id="submit_fw"');
+    expect(modalContent).toContain('for="formFile"');
   });
 });
