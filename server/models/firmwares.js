@@ -89,14 +89,21 @@ module.exports =  {
 
   add : async (filename,originalname,version,app_version,release,modelId,variantId,cb)=>{
 
-    let query = "select * from ?? where ?? = ? and ?? = ? and ?? = ? and ?? = ?";
-    let table = ["firmwares","version",version,"app_version",app_version,"build_release",release,"model_id",modelId];
+    let query;
+    let table;
+    if(variantId){
+      query = "select * from ?? where ?? = ? and ?? = ? and ?? = ? and ?? = ? and ?? = ?";
+      table = ["firmwares","version",version,"app_version",app_version,"build_release",release,"model_id",modelId,"variant_id",variantId];
+    }else{
+      query = "select * from ?? where ?? = ? and ?? = ? and ?? = ? and ?? = ? and variant_id is null";
+      table = ["firmwares","version",version,"app_version",app_version,"build_release",release,"model_id",modelId];
+    }
     query = mysql.format(query,table);
 
     db.queryRow(query)
     .then(rows => {
       if(rows.length > 0){
-        return cb("this version and release combination already exists for this model, try increase it or use different release",null)
+        return cb("this version and release combination already exists for this model and variant, try increase it or use different release",null)
       }else{
         var token = "";
         
