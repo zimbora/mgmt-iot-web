@@ -1,0 +1,43 @@
+<!-- Modal -->
+<div class="modal fade" id="modalAddFirmware" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add new firmware image</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group py-2">
+          <label class="input-group-text" for="_version_">FW version</label>
+          <input type="text" id="_version_" class="form-control" placeholder="type your version in format xx.yy.zz">
+        </div>
+        <div class="input-group py-2">
+          <label class="input-group-text" for="_appversion_">App version</label>
+          <input type="text" id="_appversion_" class="form-control" placeholder="type your app version in format xx.yy.zz">
+        </div>
+        <div class="input-group py-2">
+          <label class="input-group-text" for="_release_">Release</label>
+          <select class="form-select" id="_release_">
+            <option value="dev">dev</option>
+            <option value="stage">stage</option>
+            <option value="prod">prod</option>
+            <option value="critical">critical</option>
+          </select>
+        </div>
+        <div class="input-group py-2">
+          <label class="input-group-text" for="_variant_">Variant</label>
+          <select class="form-select" id="_variant_">
+            <option value="">None</option>
+          </select>
+        </div>
+        <div class="py-2">
+          <input class="form-control" type="file" id="formFile">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button id="submit_fw" type="button" class="btn btn-primary">submit</button>
+      </div>
+    </div>
+  </div>
+</div>
