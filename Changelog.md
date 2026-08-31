@@ -1,5 +1,16 @@
 # Changelog
 
+## version 1.1.5
+  fix: ReferenceError in lwm2m.ejs caused by undefined `path` variable (#125)
+  perf(devices): allow query sensor logs without "hour" parameter
+  perf(pages/device/mqtt): remove logs from webpage
+  perf(pages/models/sensors): close propagate modal without page reload (#127)
+  fix: MQTT page Value column not updating on message received (#131)
+  fix: FOTA firmware upload rejecting duplicate version/release across different variants (#134)
+  fix: Tighten device page authorization and render forbidden access state (#129)
+  perf(condif/env/index): print error if gauthweb key is not defined
+  fix(pages/login): fix login gauth for localhost, port not defined
+
 ## version 1.1.4
   fix: assign template, show title on mouse hover for json text
   fix: duration display showing -1:-1:00 and chart legend overflowing modal (#115)
