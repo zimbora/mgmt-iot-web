@@ -371,9 +371,7 @@ module.exports = {
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
       if(!req.query?.hours)
-        req.query['hours'] = 1;
-      if(req.query.hours > 24)
-        req.query.hours = 24
+        req.query['hours'] = null;
       if(req.query?.name){
           device.getSensorLogsByName(req.params?.device_id,req.query?.name,req.query?.hours,(err,rows)=>{
           if(!err) response.send(res,rows);

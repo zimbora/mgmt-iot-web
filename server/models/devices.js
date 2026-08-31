@@ -832,10 +832,12 @@ var self = module.exports =  {
       FROM logs_sensor
       WHERE sensor_id = ?
         AND device_id = ?
-        AND createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)
-      ORDER BY createdAt DESC
-      LIMIT 2000
     `;
+
+      if(hours)
+        query += ` AND createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)`;
+      
+      query += ` ORDER BY createdAt DESC LIMIT 2000`;
     
     query = mysql.format(query,params);
 
