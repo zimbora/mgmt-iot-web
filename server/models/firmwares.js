@@ -158,12 +158,12 @@ module.exports =  {
         .then (rows => {
           let filePath = "";
           if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
-            filePath = "/mgmt-iot/devices/firmwares";
+            filePath = path.join("/mgmt-iot/devices/firmwares", filename);
           }else{
-            file_path = path.join(__dirname, "../public/firmwares/"+filename);
+            filePath = path.join(__dirname, "../public/firmwares/"+filename);
           }
           
-          fs.unlinkSync(file_path)
+          fs.unlinkSync(filePath)
           return cb(null,rows);
         })
         .catch(error => {
