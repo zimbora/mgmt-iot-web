@@ -651,7 +651,7 @@
     function loadMqttTopics() {
       let rowsHtml = '';
       mqttTopics.forEach(mqttTopic => {
-        console.log(mqttTopic)
+        //console.log(mqttTopic)
         let path = `${mqttTopic.topic}`;
         let name = mqttTopic.description.attributes.title || 'Unknown';
         let value = '';
@@ -793,8 +793,8 @@
           }else{
             message.destinationName = project_name+"/"+uid+"/"+topic;
           }
-          console.log(message.destinationName)
-          console.log(message.payloadString)
+          //console.log(message.destinationName)
+          //console.log(message.payloadString)
           message.retained = false;
           client.send(message);
           showNotificationBadge('Message sent', 'success');
