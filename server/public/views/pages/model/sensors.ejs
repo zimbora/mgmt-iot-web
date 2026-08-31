@@ -227,12 +227,11 @@
         const idToPropagate = sensorIdToPropagate;
         sensorIdToPropagate = null;
         api.model.propagateSensor(modelID, idToPropagate, (err,res)=>{
+          $('#modalConfirmation').modal('hide');
           if(err){
             $('#error').text("Your request cannot be executed");
             $('#suggestion').text(err);
             $('#modalError').modal('show');
-          }else{
-            location.reload();
           }
         });
       }
