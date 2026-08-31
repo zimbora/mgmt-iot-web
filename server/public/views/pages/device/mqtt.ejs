@@ -682,6 +682,7 @@
           actionButtons.push(`<input type="text" class="form-control form-control-sm d-inline-block" style="width: auto; display: inline-block;" id="input-${mqttTopic.topic}" placeholder="New value">`);
           actionButtons.push(`<button class="btn btn-sm btn-outline-success" onclick="writeTopicButton('${mqttTopic.topic}')">Write</button>`);
         }
+        actionButtons.push(`<button class="btn btn-sm btn-outline-info" onclick="showMqttTopicLogs('${mqttTopic.id}')">logs</button>`);
         actions = `<div class="action-buttons">${actionButtons.join(' ')}</div>`;
         // Determine tooltip based on data source
         let tooltipText = '';
@@ -744,6 +745,24 @@
       let data = newValue;
       sendRequest(`${topic}/set`, JSON.stringify(data));
       document.getElementById(inputId).value = '';
+    }
+
+    function showMqttTopicLogs(mqttId) {
+      api.getMqttLogs(deviceID, mqttId, (err, res) => {
+        if (err) {
+          console.log(err);
+          $('#error').text('Error loading MQTT logs');
+          $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+          $('#modalError').modal('show');
+          return;
+        }
+
+        if (res?.length > 0) {
+          Display.showList('payload', res);
+        } else {
+          $('#modalNoResults').modal('show');
+        }
+      });
     }
 
     // Badge notification system

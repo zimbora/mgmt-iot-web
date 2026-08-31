@@ -454,6 +454,22 @@ var api = {
       });
     },
 
+    getMqttLogs: (deviceId, mqttId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/mqtt/logs",type: 'GET',
+        data : {
+          mqtt_id: mqttId
+        },
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
     lwm2m: {
 
       // Add new object

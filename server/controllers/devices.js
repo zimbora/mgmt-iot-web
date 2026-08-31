@@ -857,8 +857,23 @@ module.exports = {
     });
   },
 
-  // Add a new MQTT topic
-  addMqttTopic: async (req, res, next) => {
+    getMqttLogs : (req, res, next)=>{
+      const val = Joi.object({
+        mqtt_id: Joi.number().required(),
+      }).validate(req.query);
+
+      if(val.error){
+        response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      }else{
+        device.getMqttLogs(req.params.device_id, req.query.mqtt_id, (err, rows) => {
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }
+    },
+
+    // Add a new MQTT topic
+    addMqttTopic: async (req, res, next) => {
     try {
       const deviceId = req.params.device_id;
 

@@ -1164,6 +1164,20 @@ var self = module.exports =  {
     })
   },
 
+  getMqttLogs : async (deviceId,mqttId,cb)=>{
+    let query = `SELECT mqtt_id, device_id, source, action, payload, createdAt FROM logs_mqtt WHERE device_id = ? AND mqtt_id = ? ORDER BY createdAt DESC`
+    let table = [deviceId,mqttId]
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
   addMqttTopic: async (deviceId, topic, description, defaultData, readInterval, synch, cb) => {
     let obj = {
       device_id: deviceId,

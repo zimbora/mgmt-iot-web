@@ -99,6 +99,14 @@ describe('server/routes/devices', () => {
     expect(response.body.guards).toEqual(['read', 'write']);
   });
 
+  it('GET /device/:device_id/mqtt/logs uses read and write guards', async () => {
+    const response = await request(app).get('/device/abc/mqtt/logs?mqtt_id=12');
+
+    expect(response.status).toBe(200);
+    expect(response.body.route).toBe('getMqttLogs');
+    expect(response.body.guards).toEqual(['read', 'write']);
+  });
+
   it('DELETE /device/:device_id requires read, write and permissions guards', async () => {
     const response = await request(app).delete('/device/abc');
 
