@@ -1,9 +1,48 @@
 jest.mock('../../server/controllers/db', () => ({
-  queryRow: jest.fn()
+  queryRow: jest.fn(),
+  delete: jest.fn(),
+  insert: jest.fn(),
+  update: jest.fn()
+}));
+
+jest.mock('fs', () => ({
+  unlinkSync: jest.fn()
 }));
 
 const db = require('../../server/controllers/db');
+const fs = require('fs');
 const firmwares = require('../../server/models/firmwares');
+
+describe('server/models/firmwares - delete', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('deletes firmware row and file when firmware exists', (done) => {
+    db.queryRow.mockResolvedValue([{ id: 10, filename: 'fw.bin' }]);
+    db.delete.mockResolvedValue({ affectedRows: 1 });
+
+    firmwares.delete(10, (err, rows) => {
+      expect(err).toBeNull();
+      expect(rows).toEqual({ affectedRows: 1 });
+      expect(db.delete).toHaveBeenCalledWith('firmwares', { id: 10 });
+      expect(fs.unlinkSync).toHaveBeenCalledWith(expect.stringContaining('fw.bin'));
+      done();
+    });
+  });
+
+  it('returns empty result and skips file delete when firmware does not exist', (done) => {
+    db.queryRow.mockResolvedValue([]);
+
+    firmwares.delete(99, (err, rows) => {
+      expect(err).toBeNull();
+      expect(rows).toEqual([]);
+      expect(db.delete).not.toHaveBeenCalled();
+      expect(fs.unlinkSync).not.toHaveBeenCalled();
+      done();
+    });
+  });
+});
 
 describe('server/models/firmwares - getLatestVersion', () => {
   beforeEach(() => {
