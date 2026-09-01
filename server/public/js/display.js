@@ -126,16 +126,14 @@ var Display = {
   },
 
   showListMqtt : (reversedData)=>{
-    Display.calculateTimeDifference(reversedData);
-    const data = [...reversedData].reverse();
+    const data = reversedData;
     table_mqtt_list.clear();
     data.forEach((item)=>{
       table_mqtt_list.row.add([
         moment.utc(item.createdAt, 'YYYY-MM-DD HH:mm:ss').local().format('YYYY/MM/DD HH:mm:ss'),
         item.source,
         item.action,
-        item.payload,
-        item.duration
+        item.payload
       ]);
     })
 
