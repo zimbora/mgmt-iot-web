@@ -161,6 +161,9 @@ router.route('/:device_id/lwm2m/resource/:entry_id')
 router.route("/:device_id/mqtt/topics")
   .get(Device.getMqttTopics)
 
+router.route("/:device_id/mqtt/logs")
+  .get(Device.getMqttLogs)
+
 router.route('/:device_id/mqtt/topic')
   .post(Device.addMqttTopic);
 

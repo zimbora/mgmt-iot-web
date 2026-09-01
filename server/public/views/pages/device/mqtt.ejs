@@ -77,6 +77,7 @@
   <%- include('../../partials/modal/timeout.ejs') %>
   <%- include('../../partials/modal/logsChart.ejs') %>
   <%- include('../../partials/modal/logsList.ejs') %>
+  <%- include('../../partials/modal/logsMqttList.ejs') %>
   <%- include('../../partials/modal/noResults.ejs') %>
 
   <!-- Notification Badges -->
@@ -365,6 +366,7 @@
         changeDeviceStatus(device?.status);
       
       table_list = $('#table_list').DataTable();
+      table_mqtt_list = $('#table_mqtt_list').DataTable();
       ctx = echarts.init(document.getElementById('myChart'));
 
       initializeMqtt();
@@ -681,6 +683,7 @@
           actionButtons.push(`<input type="text" class="form-control form-control-sm d-inline-block" style="width: auto; display: inline-block;" id="input-${mqttTopic.topic}" placeholder="New value">`);
           actionButtons.push(`<button class="btn btn-sm btn-outline-success" onclick="writeTopicButton('${mqttTopic.topic}')">Write</button>`);
         }
+        actionButtons.push(`<button class="btn btn-sm btn-outline-info" onclick="showMqttTopicLogs('${mqttTopic.id}')">logs</button>`);
         actions = `<div class="action-buttons">${actionButtons.join(' ')}</div>`;
         // Determine tooltip based on data source
         let tooltipText = '';
@@ -743,6 +746,24 @@
       let data = newValue;
       sendRequest(`${topic}/set`, JSON.stringify(data));
       document.getElementById(inputId).value = '';
+    }
+
+    function showMqttTopicLogs(mqttId) {
+      api.device.getMqttLogs(deviceID, mqttId, (err, res) => {
+        if (err) {
+          console.error(err);
+          $('#error').text('Error loading MQTT logs');
+          $('#suggestion').text(typeof err === 'string' ? err : 'An unexpected error occurred');
+          $('#modalError').modal('show');
+          return;
+        }
+
+        if (res?.length > 0) {
+          Display.showListMqtt(res);
+        } else {
+          $('#modalNoResults').modal('show');
+        }
+      });
     }
 
     // Badge notification system
