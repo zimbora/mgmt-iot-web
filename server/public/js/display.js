@@ -109,10 +109,10 @@ var Display = {
   },
 
 	showList : (sensor,reversedData)=>{
+    Display.calculateTimeDifference(reversedData);
     // Sort the array
     const data = [...reversedData].reverse();
     table_list.clear();
-    Display.calculateTimeDifference(reversedData);
     data.map((item,i)=>{
       if(data?.duration)
         data.duration = 0;
@@ -126,17 +126,17 @@ var Display = {
   },
 
   showListMqtt : (reversedData)=>{
+    Display.calculateTimeDifference(reversedData);
     const data = [...reversedData].reverse();
     table_mqtt_list.clear();
-    Display.calculateTimeDifference(reversedData);
-    data.map((item)=>{
+    data.forEach((item)=>{
       table_mqtt_list.row.add([
         moment.utc(item.createdAt, 'YYYY-MM-DD HH:mm:ss').local().format('YYYY/MM/DD HH:mm:ss'),
         item.source,
         item.action,
         item.payload,
         item.duration
-      ]).draw(true);
+      ]);
     })
 
     table_mqtt_list.order([0, 'desc']).draw();
@@ -145,7 +145,7 @@ var Display = {
 
 	calculateTimeDifference : (data)=>{
 
-    data.slice(1).map((item, i) => {
+    data.slice(1).forEach((item, i) => {
       // data is newest-first; data[i] is newer, item is older
       let current = moment.utc(data[i].createdAt, 'YYYY-MM-DD HH:mm:ss').unix();
       let previous = moment.utc(item.createdAt, 'YYYY-MM-DD HH:mm:ss').unix();
