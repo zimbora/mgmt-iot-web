@@ -748,7 +748,7 @@
     }
 
     function showMqttTopicLogs(mqttId) {
-      api.getMqttLogs(deviceID, mqttId, (err, res) => {
+      api.device.getMqttLogs(deviceID, mqttId, (err, res) => {
         if (err) {
           console.error(err);
           $('#error').text('Error loading MQTT logs');
