@@ -744,7 +744,7 @@
       }
       const format = getSelectedFormat();
       let data = newValue;
-      sendRequest(`${topic}/set`, JSON.stringify(data));
+      sendRequest(`${topic}/set`, data);
       document.getElementById(inputId).value = '';
     }
 
