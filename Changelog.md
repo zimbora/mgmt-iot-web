@@ -1,8 +1,22 @@
 # Changelog
 
+## version 1.1.7
+  fix: resolve unhandled promise rejection in triggerFota when only one firmware version exists (#140)
+  perf: Move firmware upload UI into modal (#138)
+  fix: firmware deletion failure on model firmware page (#136)
+  refix: #140 fota or any mqtt message requested through API was failing for model sniffer
+  perf(pages/device/mqtt): get version and app_version from device struct
+  fix(pages/device/sensors): title message for read sensor
+  fix: Normalize datetime handling to UTC at write-time and localize log timestamps in the browser (#142)
+  fix: handle device status properly for mqtt and sensors page
+  feat: Add per-topic MQTT logs action on Manage page (#144)
+  fix: double JSON encoding of MQTT write payloads in browser (#146)
+  fix(js/display): mqtt log messages order, remove duration
+
+
 ## version 1.1.6
   fix(env/index): wrong log, crashing program when gauthweb not defined on file keys
-  
+
 ## version 1.1.5
   fix: ReferenceError in lwm2m.ejs caused by undefined `path` variable (#125)
   perf(devices): allow query sensor logs without "hour" parameter
