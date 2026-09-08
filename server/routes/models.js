@@ -4,6 +4,7 @@ var express = require('express');
 var Model = require('../controllers/models');
 var Firmware = require('../controllers/firmwares');
 var SensorTemplate = require('../controllers/sensorsTemplate');
+var ActuatorTemplate = require('../controllers/actuatorsTemplate');
 var Variant = require('../controllers/variants');
 
 // send file
@@ -110,6 +111,17 @@ router.route('/:model_id/sensor')
 
 router.route('/:model_id/sensor/propagate')
   .post(SensorTemplate.propagate)
+
+router.route('/:model_id/actuators')
+  .get(ActuatorTemplate.list)
+
+router.route('/:model_id/actuator')
+  .delete(ActuatorTemplate.delete)
+  .put(ActuatorTemplate.update)
+  .post(ActuatorTemplate.add)
+
+router.route('/:model_id/actuator/propagate')
+  .post(ActuatorTemplate.propagate)
 
 router.route('/:model_id/option')
   .put(Model.updateOption)
