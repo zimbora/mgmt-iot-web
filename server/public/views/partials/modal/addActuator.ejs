@@ -1,0 +1,39 @@
+<!-- Modal -->
+<div class="modal fade" id="modalAddActuator" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalErrorHeader">Add Actuator</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <span class="input-group-text" >actuator topic</span>
+          <input type="text" id="_modalActuatorRef_" class="form-control" placeholder="relay/outdoor" aria-label="Password" aria-describedby="basic-addon1" data-toggle="tooltip" data-placement="top" title="exclude project and uid identification">
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text" >name</span>
+          <input type="text" id="_modalActuatorName_" class="form-control" placeholder="Outdoor Relay" aria-label="Password" aria-describedby="basic-addon1">
+        </div>
+        <div class="input-group mb-3">
+          <label class="input-group-text" for="actuatorType">type</label>
+          <select class="form-control" id="actuatorType" name="dataTypes" value=${type}>
+            <option value="set">set</option>
+            <option value="switch">switch</option>
+            <option value="number">number</option>
+            <option value="text">text</option>
+            <option value="json">json</option>
+          </select>
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text" >property key</span>
+          <input type="text" id="_modalActuatorProperty_" class="form-control" placeholder="" aria-label="Password" aria-describedby="basic-addon1" data-toggle="tooltip" data-placement="top" title="property key if json defined">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" onclick="addActuator()" class="btn btn-primary" data-bs-dismiss="modal">Add</button>
+      </div>
+    </div>
+  </div>
+</div>

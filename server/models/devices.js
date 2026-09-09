@@ -793,6 +793,25 @@ var self = module.exports =  {
     })
   },
 
+  // get registered actuators for model
+  getActuators : async (deviceId,cb)=>{
+
+    let query = `SELECT * FROM ?? where device_id = ?`;
+    let table = ["actuators",deviceId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0)
+        return cb(null,null);
+      else
+        return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
   getSensorInfo : async (deviceId,cb)=>{
 
     return cb("Not implemented",null);
