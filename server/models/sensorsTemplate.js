@@ -26,7 +26,11 @@ var self = module.exports = {
     })
   },
 
-  add : async(model_id,ref,name,type,property,cb)=>{
+  add : async(model_id,ref,name,type,property,readable,cb)=>{
+    if (typeof readable === 'function') {
+      cb = readable;
+      readable = undefined;
+    }
 
     let obj = {
       model_id : model_id,
@@ -36,6 +40,10 @@ var self = module.exports = {
       property: property ? property : '',
       createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss'),
       updatedAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    }
+
+    if (readable !== undefined) {
+      obj.readable = readable;
     }
 
     db.insert(Table,obj)

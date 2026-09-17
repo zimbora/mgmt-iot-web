@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 jest.mock('../../server/controllers/response', () => ({
   send: jest.fn(),
   error: jest.fn()
@@ -53,7 +56,7 @@ describe('server/controllers/sensorsTemplate propagate branches', () => {
   });
 
   it('updates existing sensors when found', async () => {
-    SensorTemplate.getById.mockImplementation((id, cb) => cb(null, { id: 1, model_id: 9, ref: 'r', property: 'p', active: true, name: 'n', type: 't' }));
+    SensorTemplate.getById.mockImplementation((id, cb) => cb(null, { id: 1, model_id: 9, ref: 'r', property: 'p', active: true, readable: false, name: 'n', type: 't' }));
     Device.listByModel.mockImplementation((modelId, cb) => cb(null, [{ id: 11 }]));
     Sensor.getByRef.mockImplementation((deviceId, ref, property, cb) => cb(null, [{ id: 99 }]));
     const res = {};
@@ -63,12 +66,18 @@ describe('server/controllers/sensorsTemplate propagate branches', () => {
   });
 
   it('adds sensor when no existing sensor is found', async () => {
-    SensorTemplate.getById.mockImplementation((id, cb) => cb(null, { id: 1, model_id: 9, ref: 'r', property: 'p', active: true, name: 'n', type: 't' }));
+    SensorTemplate.getById.mockImplementation((id, cb) => cb(null, { id: 1, model_id: 9, ref: 'r', property: 'p', active: true, readable: false, name: 'n', type: 't' }));
     Device.listByModel.mockImplementation((modelId, cb) => cb(null, [{ id: 11 }]));
     Sensor.getByRef.mockImplementation((deviceId, ref, property, cb) => cb(null, []));
     const res = {};
 
     await ctrl.propagate({ body: { sensor_id: 1, data: {} } }, res, jest.fn());
     expect(response.send.mock.calls.length + response.error.mock.calls.length).toBeGreaterThan(0);
+  });
+
+  it('includes readable when propagating template sensors', () => {
+    const controllerSource = fs.readFileSync(path.join(__dirname, '../../server/controllers/sensorsTemplate.js'), 'utf8');
+    expect(controllerSource).toContain('readable: sensorT.readable,');
+    expect(controllerSource).toContain('sensorT.readable,');
   });
 });

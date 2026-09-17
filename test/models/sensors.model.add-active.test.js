@@ -83,3 +83,42 @@ describe('server/models/sensors add graph propagation', () => {
     expect(Object.prototype.hasOwnProperty.call(insertObj, 'graph')).toBe(false);
   });
 });
+
+describe('server/models/sensors add readable propagation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('stores readable when provided', async () => {
+    await new Promise((resolve) => {
+      sensors.add(9, 11, 'r', 'n', 't', 'p', true, { type: 'linear' }, false, (err) => {
+        expect(err).toBeNull();
+        resolve();
+      });
+    });
+
+    expect(db.insert).toHaveBeenCalledWith('sensors', expect.objectContaining({
+      model_id: 9,
+      device_id: 11,
+      ref: 'r',
+      name: 'n',
+      type: 't',
+      property: 'p',
+      active: true,
+      graph: { type : 'linear'},
+      readable: false
+    }));
+  });
+
+  it('does not store readable when omitted', async () => {
+    await new Promise((resolve) => {
+      sensors.add(9, 11, 'r', 'n', 't', 'p', true, { type: 'linear' }, (err) => {
+        expect(err).toBeNull();
+        resolve();
+      });
+    });
+
+    const insertObj = db.insert.mock.calls[0][1];
+    expect(Object.prototype.hasOwnProperty.call(insertObj, 'readable')).toBe(false);
+  });
+});

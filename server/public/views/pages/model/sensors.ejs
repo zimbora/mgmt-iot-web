@@ -177,8 +177,9 @@
       const name = $("#_modalName_").val();
       const type = $("#type").val();
       const property = $("#_modalProperty_").val();
+      const readable = $("#_modalReadable_").is(':checked');
 
-      api.model.addSensor(modelID,ref,name,type,property,(err,res)=>{
+      api.model.addSensor(modelID,ref,name,type,property,readable,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);

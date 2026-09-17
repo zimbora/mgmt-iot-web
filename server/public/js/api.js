@@ -232,7 +232,7 @@ var api = {
       });
     },
 
-    addSensor: (modelId,ref,name,type,property,cb)=>{
+    addSensor: (modelId,ref,name,type,property,readable,cb)=>{
       fetch(Settings.api+"/model/"+modelId+"/sensor", {
         method: 'POST',
         headers: {
@@ -242,7 +242,8 @@ var api = {
           ref: ref,
           name: name,
           type: type,
-          property: property
+          property: property,
+          readable: readable
         })
       })
       .then(function (response) {
@@ -326,7 +327,7 @@ var api = {
 
   device: {
 
-    addSensor: (deviceId,ref,name,type,property,cb)=>{
+    addSensor: (deviceId,ref,name,type,property,readable,cb)=>{
       fetch(Settings.api+"/device/"+deviceId+"/sensor", {
         method: 'POST',
         headers: {
@@ -337,6 +338,7 @@ var api = {
           name: name,
           type: type,
           property: property,
+          readable: readable,
         })
       })
       .then(function (response) {

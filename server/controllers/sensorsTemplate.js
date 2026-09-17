@@ -17,6 +17,7 @@ module.exports = {
       name: Joi.string().required(),
       type: Joi.string().required(),
       property: Joi.string().allow('', null),
+      readable: Joi.boolean(),
     }).validate(req.body);
 
     if(val.error){
@@ -28,6 +29,7 @@ module.exports = {
         req.body.name,
         req.body.type,
         req.body?.property,
+        req.body?.readable,
         (err,rows)=>{
           if(!err) response.send(res,rows);
           else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
@@ -128,6 +130,7 @@ module.exports = {
               property: sensorT.property,
               active: sensorT.active,
               graph: sensorT.graph,
+              readable: sensorT.readable,
             }
             const rows = await updateSensor(sensor.id, obj);
             return rows?.[0] ?? null;
@@ -141,6 +144,7 @@ module.exports = {
               sensorT.property,
               sensorT.active,
               sensorT.graph,
+              sensorT.readable,
             );
             return rows?.[0] ?? null;
           }

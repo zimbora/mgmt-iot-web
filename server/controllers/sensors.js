@@ -13,6 +13,7 @@ module.exports = {
       name: Joi.string().required(),
       type: Joi.string().required(),
       property: Joi.string().allow('', null),
+      readable: Joi.boolean(),
     }).validate(req.body);
 
     if(val.error){
@@ -25,6 +26,9 @@ module.exports = {
         req.body.name,
         req.body.type,
         req.body?.property,
+        undefined,
+        undefined,
+        req.body?.readable,
         (err,rows)=>{
           if(!err) response.send(res,rows);
           else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);

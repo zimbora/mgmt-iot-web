@@ -33,7 +33,7 @@ var self = module.exports = {
     })    
   },
 
-  add : async(model_id,device_id,ref,name,type,property,active,graph,cb)=>{
+  add : async(model_id,device_id,ref,name,type,property,active,graph,readable,cb)=>{
     if (typeof active === 'function') {
       cb = active;
       active = undefined;
@@ -41,6 +41,10 @@ var self = module.exports = {
     if (typeof graph === 'function') {
       cb = graph;
       graph = undefined;
+    }
+    if (typeof readable === 'function') {
+      cb = readable;
+      readable = undefined;
     }
 
     let obj = {
@@ -59,6 +63,10 @@ var self = module.exports = {
 
     if (graph !== undefined) {
       obj.graph = graph;
+    }
+
+    if (readable !== undefined) {
+      obj.readable = readable;
     }
 
     db.insert(Table,obj)

@@ -297,6 +297,7 @@
       let state = "";
       if(sensor?.active)
         state = "checked"
+      const canReadSensor = sensor?.readable == null || sensor?.readable === true || sensor?.readable === 1 || sensor?.readable === '1';
       let json = sensor?.type == "json" ? "selected" : '';
       let string = sensor?.type == "string" ? "selected" : '';
       let number = sensor?.type == "number" ? "selected" : '';
@@ -304,11 +305,11 @@
         `<button id="delete-${sensor?.id}" onclick="deleteSensor('${sensor?.id}');" type="button" class="delete btn btn-danger btn-sm">
           <i class="fa-sharp fa-solid fa-trash"></i>
         </button>
-        <button class="btn btn-light btn-sm" type="button"
+        ${canReadSensor ? `<button class="btn btn-light btn-sm" type="button"
             onclick="readSensor('${sensor?.id}','${sensor?.ref}','${sensor?.name}')"
             title="Request value">
             <i class="bi bi-search"></i>
-          </button>`,
+          </button>` : ''}`,
         `<div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" role="switch" id=${sensor?.id} ${state}>
         </div>`,
@@ -355,6 +356,7 @@
       let name = $("#_modalName_").val();
       let type = $("#type").val();
       const property = $("#_modalProperty_").val();
+      const readable = $("#_modalReadable_").is(':checked');
 
       // Validation (optional)
       if (!ref || !name || !type || !deviceId) {
@@ -371,7 +373,7 @@
         return;
       }
 
-      api.device.addSensor(deviceId,ref,name,type,property,(err,res)=>{
+      api.device.addSensor(deviceId,ref,name,type,property,readable,(err,res)=>{
         if(err){
           $('#error').text("Error adding sensor");
           if(err.hasOwnProperty("sqlMessage"))
