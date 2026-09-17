@@ -400,6 +400,7 @@ module.exports = {
       protocol: Joi.string().valid('MQTT', 'LwM2M', 'mqtt', 'lwm2m').required(),
       psk: Joi.string(),
       variant_id: Joi.number().optional().allow(null),
+      accept_release: Joi.string().valid('dev','staging','prod','critical'),
     }).validate(req.body);
 
     // Add client_id from authenticated user to device data

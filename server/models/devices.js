@@ -1298,6 +1298,14 @@ var self = module.exports =  {
       }
     }
 
+    let accept_release = "";
+    if($.config?.web?.domain?.includes(".dev."))
+      accept_release = "dev";
+    else if($.config?.web?.domain?.includes(".staging."))
+      accept_release = "staging";
+    else
+      accept_release = "prod";
+
     const obj = {
       uid : device.uid,
       name : device?.name,
@@ -1305,6 +1313,7 @@ var self = module.exports =  {
       template_id: templateId,
       model_id : modelId,
       variant_id : device?.variant_id || null,
+      accept_release : device?.accept_release ? device?.accept_release : accept_release,
       protocol : device.protocol,
       psk : psk,
       createdAt : timestamp,
