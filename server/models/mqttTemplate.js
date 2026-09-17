@@ -74,7 +74,7 @@ var self = module.exports = {
       obj.defaultData = updateData.defaultData ? JSON.stringify(updateData.defaultData) : null;
     }
     if (updateData.localData !== undefined) {
-      obj.localData = updateData.localData ? JSON.stringify(updateData.defaultData) : null;
+      obj.localData = updateData.localData ? JSON.stringify(updateData.localData) : null;
     }
     if (updateData.readInterval !== undefined) {
       obj.readInterval = updateData.readInterval;
