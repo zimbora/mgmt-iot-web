@@ -389,6 +389,37 @@ module.exports = {
     }
   },
 
+  getActuatorLogs : (req, res, next)=>{
+
+    const val = Joi.object({
+      name: Joi.string().optional(),
+      actuator: Joi.number().optional(),
+      actuatorId: Joi.number().optional(),
+      hours: Joi.number().optional(),
+    }).validate(req.query);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      if(!req.query?.hours)
+        req.query['hours'] = null;
+      if(req.query?.name){
+          device.getActuatorLogsByName(req.params?.device_id,req.query?.name,req.query?.hours,(err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }else if(req.query?.actuator || req.query?.actuatorId){ // keep compatibility, should be actuatorId
+        let actuatorId = req.query?.actuator ? req.query?.actuator : req.query?.actuatorId
+        device.getActuatorLogs(req.params?.device_id,actuatorId,req.query?.hours,(err,rows)=>{
+          if(!err) response.send(res,rows);
+          else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        });
+      }else{
+        response.error(res,httpStatus.INTERNAL_SERVER_ERROR,"no args defined.. Add actuatorId or name to your query!!");
+      }
+    }
+  },
+
   // add device
   add : (req, res, next)=>{
     const val = Joi.object({

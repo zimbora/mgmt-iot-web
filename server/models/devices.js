@@ -906,6 +906,70 @@ var self = module.exports =  {
     })
   },
 
+  getActuatorLogs : async (deviceId,actuatorId,hours,cb)=>{
+
+    const params = [actuatorId,deviceId,hours];
+
+    let query = `
+      SELECT value, createdAt
+      FROM logs_actuator
+      WHERE actuator_id = ?
+        AND device_id = ?
+    `;
+
+      if(hours)
+        query += ` AND createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)`;
+
+      query += ` ORDER BY createdAt DESC LIMIT 2000`;
+
+    query = mysql.format(query,params);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      return cb(null,rows);
+    })
+    .catch(error => {
+      console.error(error)
+      return cb(error,null);
+    })
+  },
+
+  getActuatorLogsByName : async (deviceId,ref,hours,cb)=>{
+
+
+    const params = [ref, deviceId, hours];
+
+    let query = `
+      SELECT la.value,la.createdAt
+      FROM logs_actuator AS la
+      INNER JOIN actuators AS a ON la.actuator_id = a.id
+      WHERE a.name = ?
+        AND la.device_id = ?
+        AND la.createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)
+      ORDER BY la.createdAt DESC
+      LIMIT 2000
+    `;
+
+    query = mysql.format(query, params);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      return cb(null,rows);
+    })
+    .catch(error => {
+      console.error(error)
+      return cb(error,null);
+    })
+  },
+
   getModelInfo : async (deviceId,cb)=>{
 
     let model = await self.getModel(deviceId);

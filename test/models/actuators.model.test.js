@@ -158,3 +158,53 @@ describe('server/models/actuators getById', () => {
     });
   });
 });
+
+describe('server/models/actuators addLog', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('inserts a row into logs_actuator', async () => {
+    await new Promise((resolve) => {
+      actuators.addLog(11, 1, 1, (err, rows) => {
+        expect(err).toBeNull();
+        expect(rows).toEqual({ insertId: 1, affectedRows: 1 });
+        resolve();
+      });
+    });
+
+    expect(db.insert).toHaveBeenCalledWith('logs_actuator', expect.objectContaining({
+      device_id: 11,
+      actuator_id: 1,
+      value: '1'
+    }));
+  });
+
+  it('stringifies object values', async () => {
+    await new Promise((resolve) => {
+      actuators.addLog(11, 1, { a: 1 }, (err) => {
+        expect(err).toBeNull();
+        resolve();
+      });
+    });
+
+    const insertObj = db.insert.mock.calls[0][1];
+    expect(insertObj.value).toBe('{"a":1}');
+  });
+
+  it('propagates errors to the callback when provided', async () => {
+    db.insert.mockRejectedValueOnce(new Error('boom'));
+
+    await new Promise((resolve) => {
+      actuators.addLog(11, 1, 1, (err, rows) => {
+        expect(err).toBeInstanceOf(Error);
+        expect(rows).toBeNull();
+        resolve();
+      });
+    });
+  });
+
+  it('does not throw when called without a callback', async () => {
+    await expect(actuators.addLog(11, 1, 1)).resolves.toBeUndefined();
+  });
+});

@@ -63,8 +63,9 @@ module.exports = {
       if(error) return response.error(res,httpStatus.BAD_REQUEST,error);
 
       Actuator.update(req.body.actuator_id,'value',req.body.value,(err,rows)=>{
-        if(!err) response.send(res,rows);
-        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        if(err) return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+        Actuator.addLog(actuator.device_id,req.body.actuator_id,req.body.value);
+        response.send(res,rows);
       });
     });
   },

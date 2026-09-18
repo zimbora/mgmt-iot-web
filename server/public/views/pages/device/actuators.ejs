@@ -24,6 +24,8 @@
   <%- include('../../partials/modal/addActuator.ejs') %>
   <%- include('../../partials/modal/loading.ejs') %>
   <%- include('../../partials/modal/timeout.ejs') %>
+  <%- include('../../partials/modal/logsChart.ejs') %>
+  <%- include('../../partials/modal/logsList.ejs') %>
   <%- include('../../partials/modal/noResults.ejs') %>
 
   <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
@@ -95,7 +97,9 @@
 
   <script>
 
+    var ctx;
     var t;
+    var table_list;
     var deviceId = api.getDeviceID();
     var device = <%- JSON.stringify(device) %>;
     var mqtt = <%- JSON.stringify(mqtt) %>;
@@ -122,6 +126,8 @@
       $('[data-toggle="tooltip"]').tooltip();
       const app = require('./app.mjs');
       t = $('#actuators').DataTable();
+      table_list = $('#table_list').DataTable();
+      ctx = echarts.init(document.getElementById('myChart'));
 
       let i = 0;
       Object.values(actuators).map((item) => {
@@ -276,6 +282,11 @@
         </select>`,
         actuator?.property,
         `<div class="d-flex align-items-center gap-2">
+          <button class="btn btn-light btn-sm" type="button"
+            onclick="Display.showActuatorsLogs(${actuator?.id}, '${actuator?.type}')"
+            title="View logs">
+            <i class="bi bi-list"></i>
+          </button>
           <input id="actuator-${String(actuator?.id)}" type="text" class="form-control form-control-sm"
             value="${String(actuator?.value != null ? actuator?.value : '')}">
           <button class="btn btn-primary btn-sm" type="button"

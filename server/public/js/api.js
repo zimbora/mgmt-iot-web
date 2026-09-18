@@ -958,6 +958,41 @@ var api = {
     });
   },
 
+  getActuatorLogs : function(deviceID,actuatorId,cb){
+
+    $.ajax({
+      url : Settings.api+'/device/'+deviceID+'/actuator/logs',type: 'GET',
+      data : {
+        actuatorId:actuatorId
+      },
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
+  getActuatorLogsByName : function(deviceID,name,hours,cb){
+
+    $.ajax({
+      url : Settings.api+'/device/'+deviceID+'/actuator/logs',type: 'GET',
+      data : {
+        name:name,
+        hours:hours
+      },
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
   // get clients with access to the device
   getDeviceAutorequests : function(deviceID,cb){
     $.ajax({

@@ -19,6 +19,25 @@ var Display = {
     })
   },
 
+	showActuatorsLogs : (actuatorId,type)=>{
+
+    const dId = deviceID ?? deviceId;
+    api.getActuatorLogs(dId,actuatorId,(err,res)=>{
+      if(err) console(err);
+      else if(res?.length > 0){
+        if(isNumber(res[0].value)){
+          Display.drawLinearChart('value',res);
+        }else if((res[0].value)){
+          Display.showList('value',res);
+        }
+        else console.log("format not supported");
+      }else{
+        console.log("no elements found");
+        $('#modalNoResults').modal('show');
+      }
+    })
+  },
+
 	showDeviceLogs : (sensor)=>{
 
     const dId = deviceID ?? deviceId;

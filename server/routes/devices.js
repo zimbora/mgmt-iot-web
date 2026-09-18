@@ -101,6 +101,10 @@ router.route("/:device_id/actuator")
 router.route("/:device_id/actuators")
   .get(Actuator.list)
 
+router.route("/:device_id/actuator/logs")
+
+  .get(Device.getActuatorLogs)
+
 router.route("/:device_id/autorequests")
 
   .get(Device.getAutorequests)

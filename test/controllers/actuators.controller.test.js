@@ -10,7 +10,8 @@ jest.mock('../../server/models/actuators', () => ({
   add: jest.fn((...args) => args[args.length - 1](null, [{}])),
   update: jest.fn((...args) => args[args.length - 1](null, [{}])),
   delete: jest.fn((...args) => args[args.length - 1](null, [{}])),
-  list: jest.fn((...args) => args[args.length - 1](null, []))
+  list: jest.fn((...args) => args[args.length - 1](null, [])),
+  addLog: jest.fn()
 }));
 
 const ctrl = require('../../server/controllers/actuators');
@@ -82,7 +83,7 @@ describe('server/controllers/actuators update', () => {
   });
 
   it('writes a valid value', () => {
-    Actuator.getById.mockImplementation((id, cb) => cb(null, { id: 1, type: 'switch' }));
+    Actuator.getById.mockImplementation((id, cb) => cb(null, { id: 1, device_id: 11, type: 'switch' }));
     Actuator.validateValue.mockReturnValue(null);
     const req = { body: { actuator_id: 1, property: 'value', value: 1 } };
     const res = {};
@@ -90,7 +91,21 @@ describe('server/controllers/actuators update', () => {
     ctrl.update(req, res, jest.fn());
 
     expect(Actuator.update).toHaveBeenCalledWith(1, 'value', 1, expect.any(Function));
+    expect(Actuator.addLog).toHaveBeenCalledWith(11, 1, 1);
     expect(response.send).toHaveBeenCalled();
+  });
+
+  it('does not log when the value write fails', () => {
+    Actuator.getById.mockImplementation((id, cb) => cb(null, { id: 1, device_id: 11, type: 'switch' }));
+    Actuator.validateValue.mockReturnValue(null);
+    Actuator.update.mockImplementationOnce((...args) => args[args.length - 1]('db error', null));
+    const req = { body: { actuator_id: 1, property: 'value', value: 1 } };
+    const res = {};
+
+    ctrl.update(req, res, jest.fn());
+
+    expect(Actuator.addLog).not.toHaveBeenCalled();
+    expect(response.error).toHaveBeenCalledWith(res, httpStatus.INTERNAL_SERVER_ERROR, 'db error');
   });
 });
 

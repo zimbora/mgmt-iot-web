@@ -221,4 +221,23 @@ var self = module.exports = {
     })
   },
 
+  // records a value write to logs_actuator so its history can be inspected
+  addLog : async (device_id, actuator_id, value, cb)=>{
+
+    let obj = {
+      device_id : device_id,
+      actuator_id : actuator_id,
+      value: (value !== null && typeof value === 'object') ? JSON.stringify(value) : String(value),
+      createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    try{
+      const rows = await db.insert("logs_actuator",obj);
+      if(cb) return cb(null,rows);
+    }catch(error){
+      if(cb) return cb(error,null);
+      else console.error(error);
+    }
+  },
+
 };
