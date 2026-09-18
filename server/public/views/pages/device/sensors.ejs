@@ -147,6 +147,8 @@
         if(i==Object.values(sensors).length-1){
           $('.form-check-input').on('change', function() {
             let id = $(this).attr('id');
+            if( id === "_modalReadable_") // form-check from modal
+              return;
             let active = "0";
             if ($(this).is(':checked'))
               active = "1";
