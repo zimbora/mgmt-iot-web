@@ -84,6 +84,7 @@
                         <tr>
                           <th>delete</th>
                           <th>active</th>
+                          <th>readable</th>
                           <th>ref</th>
                           <th>name</th>
                           <th>type</th>
@@ -145,15 +146,29 @@
         addRowDeviceSensor(item);
 
         if(i==Object.values(sensors).length-1){
-          $('.form-check-input').on('change', function() {
-            let id = $(this).attr('id');
-            if( id === "_modalReadable_") // form-check from modal
-              return;
+          $('.sensor-active-toggle').on('change', function() {
+            let id = $(this).data('sensor-id');
             let active = "0";
             if ($(this).is(':checked'))
               active = "1";
 
             api.device.updateSensor(deviceId,id,"active",active,(err,res)=>{
+              if(err){
+                $('#error').text("Your request cannot be executed");
+                $('#suggestion').text(err);
+                $('#modalError').modal('show');
+              }
+            });
+
+          });
+
+          $('.sensor-readable-toggle').on('change', function() {
+            let id = $(this).data('sensor-id');
+            let readable = "0";
+            if ($(this).is(':checked'))
+              readable = "1";
+
+            api.device.updateSensor(deviceId,id,"readable",readable,(err,res)=>{
               if(err){
                 $('#error').text("Your request cannot be executed");
                 $('#suggestion').text(err);
@@ -300,6 +315,9 @@
       if(sensor?.active)
         state = "checked"
       const canReadSensor = sensor?.readable == null || sensor?.readable === true || sensor?.readable === 1 || sensor?.readable === '1';
+      let readableState = "";
+      if(canReadSensor)
+        readableState = "checked"
       let json = sensor?.type == "json" ? "selected" : '';
       let string = sensor?.type == "string" ? "selected" : '';
       let number = sensor?.type == "number" ? "selected" : '';
@@ -313,7 +331,10 @@
             <i class="bi bi-search"></i>
           </button>` : ''}`,
         `<div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch" id=${sensor?.id} ${state}>
+          <input class="form-check-input sensor-active-toggle" type="checkbox" role="switch" data-sensor-id="${sensor?.id}" id=${sensor?.id} ${state}>
+        </div>`,
+        `<div class="form-check form-switch">
+          <input class="form-check-input sensor-readable-toggle" type="checkbox" role="switch" data-sensor-id="${sensor?.id}" id="readable-${sensor?.id}" ${readableState}>
         </div>`,
         sensor?.ref,
         `<input type="text" class="form-control" id=${sensor?.id} value="${sensor?.name}" oninput="handleNameChange(${sensor?.id},this.value)">`,

@@ -11,6 +11,14 @@ describe('device sensors readable view behavior', () => {
     expect(viewContent).toContain("${canReadSensor ? `<button class=\"btn btn-light btn-sm\" type=\"button\"");
   });
 
+  it('shows a readable column and update toggle on device sensors', () => {
+    const viewContent = fs.readFileSync(sensorsViewPath, 'utf8');
+    expect(viewContent).toContain('<th>readable</th>');
+    expect(viewContent).toContain('class="form-check-input sensor-readable-toggle"');
+    expect(viewContent).toContain('api.device.updateSensor(deviceId,id,"readable",readable');
+    expect(viewContent).toContain("$('.sensor-active-toggle').on('change'");
+  });
+
   it('includes a readable checkbox in the add sensor modal', () => {
     const modalContent = fs.readFileSync(addSensorModalPath, 'utf8');
     expect(modalContent).toContain('id="_modalReadable_" checked');
