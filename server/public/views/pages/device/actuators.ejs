@@ -125,8 +125,11 @@
 
       $('[data-toggle="tooltip"]').tooltip();
       const app = require('./app.mjs');
-      t = $('#actuators').DataTable();
-      table_list = $('#table_list').DataTable();
+      t = $('#actuators').DataTable({
+        columnDefs: [
+          { targets: 6, width: "25%" } // "value" is the 7th column, index 6
+        ]
+      });
       ctx = echarts.init(document.getElementById('myChart'));
 
       let i = 0;
@@ -287,7 +290,7 @@
           <option ${json} value="json">json</option>
         </select>`,
         actuator?.property,
-        `<div class="d-flex align-items-center gap-2">
+        `<div class="d-flex align-items-center gap-1">
           <button class="btn btn-light btn-sm" type="button"
             onclick="Display.showActuatorsLogs(${actuator?.id}, '${actuator?.type}')"
             title="View logs">
@@ -298,7 +301,7 @@
           <button id="actuator-write-${String(actuator?.id)}" class="btn btn-primary btn-sm" type="button" ${disabled}
             onclick="writeActuator('${actuator?.id}','${actuator?.ref}')"
             title="Write value">
-            <i class="bi bi-send"></i>
+            <i class="bi bi-arrow-right-circle"></i>
           </button>
         </div>`,
       ]).draw(true);

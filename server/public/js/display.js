@@ -21,7 +21,7 @@ var Display = {
 
 	showActuatorsLogs : (actuatorId,type)=>{
 
-    const dId = deviceID ?? deviceId;
+    const dId = deviceId;
     api.getActuatorLogs(dId,actuatorId,(err,res)=>{
       if(err) console(err);
       else if(res?.length > 0){
