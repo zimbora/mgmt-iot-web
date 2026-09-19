@@ -321,6 +321,109 @@ var api = {
         return parseError(error,cb);
       });
     },
+
+    getActuators : function(modelId,cb){
+      $.ajax({
+        url : Settings.api+"/model/"+modelId+"/actuators",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    addActuator: (modelId,ref,name,type,property,cb)=>{
+      fetch(Settings.api+"/model/"+modelId+"/actuator", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ref: ref,
+          name: name,
+          type: type,
+          property: property
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    updateActuator : function(modelId,actuatorId,property,value,cb){
+      fetch(Settings.api+"/model/"+modelId+"/actuator", {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          actuator_id: actuatorId,
+          property: property,
+          value: value
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    deleteActuator: (modelId,actuatorId,cb)=>{
+      fetch(Settings.api+"/model/"+modelId+"/actuator", {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          actuator_id: actuatorId,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    propagateActuator: (modelId,actuatorId,cb)=>{
+      fetch(Settings.api+"/model/"+modelId+"/actuator/propagate", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          actuator_id: actuatorId,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
   },
 
   // --- requests related to a device ---
@@ -401,6 +504,90 @@ var api = {
     getSensors: (deviceId, cb)=>{
       $.ajax({
         url : Settings.api+"/device/"+deviceId+"/sensors",type: 'GET',
+        data : {},
+        success: function(data,status,xhr){
+          parseResponse(data,cb);
+        },
+        error: (data,status,xhr)=>{
+          parseError(data,cb);
+        },
+        dataType : "JSON"
+      });
+    },
+
+    addActuator: (deviceId,ref,name,type,property,cb)=>{
+      fetch(Settings.api+"/device/"+deviceId+"/actuator", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ref: ref,
+          name: name,
+          type: type,
+          property: property,
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    updateActuator: (deviceId, actuatorId, property, value, cb )=>{
+
+      fetch(Settings.api+"/device/"+deviceId+"/actuator", {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          actuator_id: actuatorId,
+          property,
+          value
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    deleteActuator: (deviceId, actuatorId, cb )=>{
+
+      fetch(Settings.api+"/device/"+deviceId+"/actuator", {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          actuator_id: actuatorId
+        })
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        return parseResponse(data,cb);
+      })
+      .catch(function (error) {
+        return parseError(error,cb);
+      });
+    },
+
+    getActuators: (deviceId, cb)=>{
+      $.ajax({
+        url : Settings.api+"/device/"+deviceId+"/actuators",type: 'GET',
         data : {},
         success: function(data,status,xhr){
           parseResponse(data,cb);
@@ -759,6 +946,41 @@ var api = {
 
     $.ajax({
       url : Settings.api+'/device/'+deviceID+'/sensor/logs',type: 'GET',
+      data : {
+        name:name,
+        hours:hours
+      },
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
+  getActuatorLogs : function(deviceID,actuatorId,cb){
+
+    $.ajax({
+      url : Settings.api+'/device/'+deviceID+'/actuator/logs',type: 'GET',
+      data : {
+        actuatorId:actuatorId
+      },
+      success: function(data,status,xhr){
+        parseResponse(data,cb);
+      },
+      error: (data,status,xhr)=>{
+        parseError(data,cb);
+      },
+      dataType : "JSON"
+    });
+  },
+
+  getActuatorLogsByName : function(deviceID,name,hours,cb){
+
+    $.ajax({
+      url : Settings.api+'/device/'+deviceID+'/actuator/logs',type: 'GET',
       data : {
         name:name,
         hours:hours

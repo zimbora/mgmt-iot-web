@@ -4,6 +4,7 @@ var config = require('../../config/env');
 var Device = require('../controllers/devices')
 var Client = require('../controllers/clients')
 var Sensor = require('../controllers/sensors')
+var Actuator = require('../controllers/actuators')
 
 const router = express.Router();
 
@@ -91,6 +92,18 @@ router.route("/:device_id/sensor/info")
 router.route("/:device_id/sensor/logs")
 
   .get(Device.getSensorLogs)
+
+router.route("/:device_id/actuator")
+  .post(Actuator.add)
+  .put(Actuator.update)
+  .delete(Actuator.delete)
+
+router.route("/:device_id/actuators")
+  .get(Actuator.list)
+
+router.route("/:device_id/actuator/logs")
+
+  .get(Device.getActuatorLogs)
 
 router.route("/:device_id/autorequests")
 

@@ -19,6 +19,25 @@ var Display = {
     })
   },
 
+	showActuatorsLogs : (actuatorId,type)=>{
+
+    const dId = deviceId;
+    api.getActuatorLogs(dId,actuatorId,(err,res)=>{
+      if(err) console(err);
+      else if(res?.length > 0){
+        if(isNumber(res[0].value)){
+          Display.drawLinearChart('value',res);
+        }else if((res[0].value)){
+          Display.showActuatorList('value',res);
+        }
+        else console.log("format not supported");
+      }else{
+        console.log("no elements found");
+        $('#modalNoResults').modal('show');
+      }
+    })
+  },
+
 	showDeviceLogs : (sensor)=>{
 
     const dId = deviceID ?? deviceId;
@@ -55,7 +74,14 @@ var Display = {
       tooltip: {
         trigger: 'axis',
         formatter: function (params) {
-          return 'date: '+moment.unix(Number(params[0].axisValue)).local().format('YYYY/MM/DD HH:mm') + '<br />' + sensor+': '+params[0].value;
+          const item = data[params[0].dataIndex];
+          let extra = '';
+          if(item && item.confirmed !== undefined){
+            extra = item.confirmed
+              ? ' <span style="color:green">&#10003;</span>'
+              : ' <span style="color:red">&#10007;</span>';
+          }
+          return 'date: '+moment.unix(Number(params[0].axisValue)).local().format('YYYY/MM/DD HH:mm') + '<br />' + sensor+': '+params[0].value + extra;
         }
       },
       dataZoom:[{type:'inside'}],
@@ -118,6 +144,26 @@ var Display = {
         data.duration = 0;
       table_list.row.add([
         moment.utc(item.createdAt, 'YYYY-MM-DD HH:mm:ss').local().format('YYYY/MM/DD HH:mm:ss'),item[sensor],item.duration
+      ]).draw(true);
+    })
+
+    table_list.order([0, 'desc']).draw();
+    $('#modalListLogs').modal('show');
+  },
+
+	showActuatorList : (sensor,reversedData)=>{
+    Display.calculateTimeDifference(reversedData);
+    // Sort the array
+    const data = [...reversedData].reverse();
+    table_list.clear();
+    data.map((item,i)=>{
+      if(data?.duration)
+        data.duration = 0;
+      const confirmed = item.confirmed
+        ? '<i class="bi bi-check-circle-fill" style="color:green" title="confirmed"></i>'
+        : '<i class="bi bi-x-circle-fill" style="color:red" title="not confirmed"></i>';
+      table_list.row.add([
+        moment.utc(item.createdAt, 'YYYY-MM-DD HH:mm:ss').local().format('YYYY/MM/DD HH:mm:ss'),item[sensor],confirmed,item.duration
       ]).draw(true);
     })
 

@@ -434,6 +434,12 @@ app.get('/model/:model_id/sensors',(req,res)=>{
   }
 });
 
+app.get('/model/:model_id/actuators',(req,res)=>{
+  if(req.user.level >= 4 ){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/model/actuators'),{model:req.model,user:req.user,page:'Actuators'});
+  }
+});
+
 app.get('/model/:model_id/firmwares',(req,res)=>{
   if(req.user.level >= 4 && req.model?.fw_enabled){
     res.render(path.join(__dirname, config.public_path+'/views/pages/model/firmwares'),{model:req.model,user:req.user,page:'Firmwares'});
@@ -504,6 +510,28 @@ app.get('/device/:device_id/sensors',(req,res)=>{
       mqtt:data.mqtt,
       user:req.user,
       page:'Sensors'});
+  }else{
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
+  }
+});
+
+app.get('/device/:device_id/actuators',(req,res)=>{
+
+  let data = req.user.data;
+  if(data.device != null && data.mqtt != null && data.model){
+    res.render(path.join(__dirname, config.public_path+'/views/pages/device/actuators'),{
+      project_name:data.project_name,
+      model_name:data.model_name,
+      device:data.device,
+      project:data.project,
+      model:data.model,
+      modelFeat:data.modelFeat,
+      associated:data.associated,
+      fw:data.fw,
+      actuators:data.actuators,
+      mqtt:data.mqtt,
+      user:req.user,
+      page:'Actuators'});
   }else{
     res.redirect(req.protocol + '://' + req.get('host') + "/devices");
   }
@@ -712,6 +740,7 @@ function collectData(req,callback){
     model:null,
     fw:null,
     sensors:null,
+    actuators:null,
     associated:null,
     ar:null,
     alarms:null,
@@ -743,6 +772,21 @@ function collectData(req,callback){
         else{
           rows.map((sensor)=>{
             data.sensors[sensor?.name] = sensor;
+          })
+          next();
+        }
+      });
+    },
+    (next)=>{
+      Device.getActuators(req.params.device_id,(err,rows)=>{
+        data.actuators = {};
+        if(err)
+          next(err)
+        else if(!rows?.length)
+          next();
+        else{
+          rows.map((actuator)=>{
+            data.actuators[actuator?.name] = actuator;
           })
           next();
         }

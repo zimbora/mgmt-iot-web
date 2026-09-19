@@ -793,6 +793,25 @@ var self = module.exports =  {
     })
   },
 
+  // get registered actuators for model
+  getActuators : async (deviceId,cb)=>{
+
+    let query = `SELECT * FROM ?? where device_id = ?`;
+    let table = ["actuators",deviceId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0)
+        return cb(null,null);
+      else
+        return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
   getSensorInfo : async (deviceId,cb)=>{
 
     return cb("Not implemented",null);
@@ -868,6 +887,70 @@ var self = module.exports =  {
         AND ls.device_id = ?
         AND ls.createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)
       ORDER BY ls.createdAt DESC
+      LIMIT 2000
+    `;
+
+    query = mysql.format(query, params);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      return cb(null,rows);
+    })
+    .catch(error => {
+      console.error(error)
+      return cb(error,null);
+    })
+  },
+
+  getActuatorLogs : async (deviceId,actuatorId,hours,cb)=>{
+
+    const params = [actuatorId,deviceId,hours];
+
+    let query = `
+      SELECT value, confirmed, createdAt, updatedAt
+      FROM logs_actuators
+      WHERE actuator_id = ?
+        AND device_id = ?
+    `;
+
+      if(hours)
+        query += ` AND createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)`;
+
+      query += ` ORDER BY createdAt DESC LIMIT 2000`;
+
+    query = mysql.format(query,params);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0 ){
+        return cb(null,null);
+      }
+
+      return cb(null,rows);
+    })
+    .catch(error => {
+      console.error(error)
+      return cb(error,null);
+    })
+  },
+
+  getActuatorLogsByName : async (deviceId,ref,hours,cb)=>{
+
+
+    const params = [ref, deviceId, hours];
+
+    let query = `
+      SELECT la.value,la.confirmed,la.createdAt,la.updatedAt
+      FROM logs_actuators AS la
+      INNER JOIN actuators AS a ON la.actuator_id = a.id
+      WHERE a.name = ?
+        AND la.device_id = ?
+        AND la.createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)
+      ORDER BY la.createdAt DESC
       LIMIT 2000
     `;
 

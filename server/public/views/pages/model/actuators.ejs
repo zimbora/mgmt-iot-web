@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <style>
+
+    .float-right {
+      float: right;
+    }
+
+
+  </style>
+  <%- include('../../partials/head.ejs') %>
+
+</head>
+<body>
+
+  <%- include('../../partials/model/scripts.ejs') %>
+  <%- include('../../partials/model/navbar.ejs') %>
+
+  <%- include('../../partials/modal/confirmation.ejs') %>
+  <%- include('../../partials/modal/error.ejs') %>
+  <%- include('../../partials/modal/addActuator.ejs') %>
+
+  <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
+  <script src="./assets/js/jquery.dataTables.min.js"></script>
+  <script src="./assets/js/fontawesome.js"></script>
+  <script src="./assets/js/ace.js"></script>
+  <script type="module" src="./app.mjs"></script>
+
+  <div class="container-fluid">
+      <div class="row flex-nowrap">
+          <%- include('../../partials/model/sidebar.ejs') %>
+          <div class="col py-3">
+            <div class="content-header">
+              <h3><%= model.name %></h3>
+            </div>
+            <div class="row">
+
+                <div class="card py-3 overflow-auto">
+                  <h5 class="card-title">
+                    Available Actuators
+                    <button type="button" class="btn btn-primary mb-2 float-right" onclick="showAddActuatorModal()"><i class="fa-solid fa-plus"></i></button>
+                  </h5>
+                  <div class="card-body">
+                    <table id="actuators" class="display">
+                      <thead>
+                        <tr>
+                          <th>delete</th>
+                          <th>synch</th>
+                          <th>active</th>
+                          <th>ref</th>
+                          <th>name</th>
+                          <th>type</th>
+                          <th>property</th>
+                          <th>default value</th>
+                          <th>created</th>
+                          <th>updated</th>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
+                </div>
+
+            </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+
+    var t;
+    var modelID = api.getModelID();
+    var model = <%- JSON.stringify(model) %>;
+    var timerInputChange = null;
+
+    $(document).ready(function () {
+
+      $('[data-toggle="tooltip"]').tooltip();
+
+      const app = require('./app.mjs');
+      t = $('#actuators').DataTable();
+
+      api.model.getActuators(modelID,(err,res)=>{
+        if(err) console.log(err)
+        else{
+          res.forEach((item, i) => {
+            addRow(item?.id,item?.ref,item?.name,item?.type,item?.property,item?.value,item?.active,moment(item?.createdAt).format('YY/MM/DD LT'),moment(item?.updatedAt).format('YY/MM/DD LT'));
+
+            if(i==res.length-1){
+              $('.form-check-input').on('change', function() {
+                let id = $(this).attr('id');
+                let active = "0";
+                if ($(this).is(':checked'))
+                    active = "1";
+
+                api.model.updateActuator(modelID,id,"active",active,(err,res)=>{
+                  if(err){
+                    $('#error').text("Your request cannot be executed");
+                    $('#suggestion').text(err);
+                    $('#modalError').modal('show');
+                  }
+                });
+
+              });
+
+              $('.select_type').on('change', function() {
+                  let id = $(this).attr('id');
+                  let type = $(this).val();
+                  api.model.updateActuator(modelID,id,"type",type,(err,res)=>{
+                    if(err){
+                      $('#error').text("Your request cannot be executed");
+                      $('#suggestion').text(err);
+                      $('#modalError').modal('show');
+                    }
+                  });
+              });
+            }
+
+          });
+
+        }
+      })
+    });
+
+    function addRow(id,ref,name,type,property,value,active,created,updated){
+      let state = "";
+      if(active)
+        state = "checked"
+      let set = type == "set" ? "selected" : "";
+      let sw = type == "switch" ? "selected" : "";
+      let number = type == "number" ? "selected" : "";
+      let text = type == "text" ? "selected" : "";
+      let json = type == "json" ? "selected" : "";
+      t.row.add([
+        `<button id="delete-${id}" onclick="deleteActuator('${id}');" type="button" class="delete btn btn-danger btn-sm">
+          <i class="fa-sharp fa-solid fa-trash"></i>
+        </button>`,
+        `<button id="propagate-${id}" onclick="propagateActuator('${id}','${name}');" type="button" class="warn btn btn-warn btn-sm">
+          <i class="fa-sharp fa-solid fa-arrow-right"></i>
+        </button>`,
+        `<div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" id=${id} ${state}>
+        </div>`,
+        ref,
+        `<input type="text" class="form-control" id=${id} value="${name}" oninput="handleNameChange(${id},this.value)">`,
+        `<select class="form-control select_type" id=${id} name="dataTypes" value=${type}>
+          <option value=""></option>
+          <option ${set} value="set">set</option>
+          <option ${sw} value="switch">switch</option>
+          <option ${number} value="number">number</option>
+          <option ${text} value="text">text</option>
+          <option ${json} value="json">json</option>
+        </select>`,
+        property,
+        `<input type="text" class="form-control" id="value-${id}" value="${value != null ? value : ''}" oninput="handleValueChange(${id},this.value)">`,
+        created,
+        updated
+      ]).draw(true);
+
+    }
+
+    function handleNameChange(id,value){
+      clearTimeout(timerInputChange);
+      timerInputChange = setTimeout(function() {
+        api.model.updateActuator(modelID,id,"name",value,(err,res)=>{
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }
+        });
+
+      }, 1000); // 500ms delay
+    }
+
+    var timerValueChange = null;
+
+    function handleValueChange(id,value){
+      clearTimeout(timerValueChange);
+      timerValueChange = setTimeout(function() {
+        api.model.updateActuator(modelID,id,"value",value,(err,res)=>{
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }
+        });
+
+      }, 1000); // 500ms delay
+    }
+
+    function showAddActuatorModal(){
+      $('#modalAddActuator').modal('show');
+    }
+
+    function addActuator(){
+      const ref = $("#_modalActuatorRef_").val();
+      const name = $("#_modalActuatorName_").val();
+      const type = $("#actuatorType").val();
+      const property = $("#_modalActuatorProperty_").val();
+
+      api.model.addActuator(modelID,ref,name,type,property,(err,res)=>{
+        if(err){
+          $('#error').text("Your request cannot be executed");
+          $('#suggestion').text(err);
+          $('#modalError').modal('show');
+        }else{
+          location.reload();
+        }
+      });
+    }
+
+    var actuatorIdToDelete = null;
+
+    function deleteActuator(actuatorId){
+      actuatorIdToDelete = actuatorId;
+      $('#modal_message').text(`You are about to delete actuator with ID: ${actuatorId}`);
+      $('#modalConfirmation').modal('show');
+    }
+
+    $("#modalProceed").click(()=>{
+      if(actuatorIdToDelete){
+        const idToDelete = actuatorIdToDelete;
+        actuatorIdToDelete = null;
+        api.model.deleteActuator(modelID, idToDelete, (err,res)=>{
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }else{
+            location.reload();
+          }
+        });
+      }
+    });
+
+    var actuatorIdToPropagate = null;
+
+    function propagateActuator(actuatorId,name){
+      actuatorIdToPropagate = actuatorId;
+      $('#modal_message').text(`You are propagate actuator ${name} to all devices associated with this model`);
+      $('#modalConfirmation').modal('show');
+    }
+
+    $("#modalProceed").click(()=>{
+      if(actuatorIdToPropagate){
+        const idToPropagate = actuatorIdToPropagate;
+        actuatorIdToPropagate = null;
+        api.model.propagateActuator(modelID, idToPropagate, (err,res)=>{
+          $('#modalConfirmation').modal('hide');
+          if(err){
+            $('#error').text("Your request cannot be executed");
+            $('#suggestion').text(err);
+            $('#modalError').modal('show');
+          }
+        });
+      }
+    });
+
+  </script>
+</body>
+</html>
