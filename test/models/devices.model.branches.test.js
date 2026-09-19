@@ -121,6 +121,7 @@ describe('server/models/devices deep branches', () => {
       type: 'float',
       property: null,
       active: true,
+      readable: false,
       createdAt: 'x',
       updatedAt: 'x'
     }]);
@@ -136,8 +137,10 @@ describe('server/models/devices deep branches', () => {
       type: 'float',
       property: '',
       active: true,
+      readable: false,
     }));
     expect(mockDb.insert.mock.calls[0][1]).toHaveProperty('active');
+    expect(mockDb.insert.mock.calls[0][1]).toHaveProperty('readable', false);
   });
 
   it('add() generates a 9-character psk and returns id, uid, psk', async () => {

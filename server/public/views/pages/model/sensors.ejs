@@ -49,6 +49,7 @@
                           <th>delete</th>
                           <th>synch</th>
                           <th>active</th>
+                          <th>readable</th>
                           <th>ref</th>
                           <th>name</th>
                           <th>type</th>
@@ -84,16 +85,32 @@
         if(err) console.log(err)
         else{
           res.forEach((item, i) => {
-            addRow(item?.id,item?.ref,item?.name,item?.type,item?.property,item?.active,moment(item?.createdAt).format('YY/MM/DD LT'),moment(item?.updatedAt).format('YY/MM/DD LT'));
+            addRow(item?.id,item?.ref,item?.name,item?.type,item?.property,item?.active,item?.readable,moment(item?.createdAt).format('YY/MM/DD LT'),moment(item?.updatedAt).format('YY/MM/DD LT'));
 
             if(i==res.length-1){
-              $('.form-check-input').on('change', function() {
-                let id = $(this).attr('id');
+              $('.sensor-active-toggle').on('change', function() {
+                let id = $(this).data('sensor-id');
                 let active = "0";
                 if ($(this).is(':checked'))
                     active = "1";
 
                 api.model.updateSensor(modelID,id,"active",active,(err,res)=>{
+                  if(err){
+                    $('#error').text("Your request cannot be executed");
+                    $('#suggestion').text(err);
+                    $('#modalError').modal('show');
+                  }
+                });
+
+              });
+
+              $('.sensor-readable-toggle').on('change', function() {
+                let id = $(this).data('sensor-id');
+                let readable = "0";
+                if ($(this).is(':checked'))
+                    readable = "1";
+
+                api.model.updateSensor(modelID,id,"readable",readable,(err,res)=>{
                   if(err){
                     $('#error').text("Your request cannot be executed");
                     $('#suggestion').text(err);
@@ -122,10 +139,13 @@
       })
     });
 
-    function addRow(id,ref,name,type,property,active,created,updated){
+    function addRow(id,ref,name,type,property,active,readable,created,updated){
       let state = "";
       if(active)
         state = "checked"
+      let readableState = "";
+      if(readable == null || readable === true || readable === 1 || readable === '1')
+        readableState = "checked";
       let json = type == "json" ? "selected" : "";
       let string = type == "string" ? "selected" : "";
       let number = type == "number" ? "selected" : "";
@@ -137,7 +157,10 @@
           <i class="fa-sharp fa-solid fa-arrow-right"></i>
         </button>`,
         `<div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch" id=${id} ${state}>
+          <input class="form-check-input sensor-active-toggle" type="checkbox" role="switch" data-sensor-id="${id}" id=${id} ${state}>
+        </div>`,
+        `<div class="form-check form-switch">
+          <input class="form-check-input sensor-readable-toggle" type="checkbox" role="switch" data-sensor-id="${id}" id="readable-${id}" ${readableState}>
         </div>`,
         ref,
         `<input type="text" class="form-control" id=${id} value="${name}" oninput="handleNameChange(${id},this.value)">`,
@@ -177,8 +200,9 @@
       const name = $("#_modalName_").val();
       const type = $("#type").val();
       const property = $("#_modalProperty_").val();
+      const readable = $("#_modalReadable_").is(':checked');
 
-      api.model.addSensor(modelID,ref,name,type,property,(err,res)=>{
+      api.model.addSensor(modelID,ref,name,type,property,readable,(err,res)=>{
         if(err){
           $('#error').text("Your request cannot be executed");
           $('#suggestion').text(err);

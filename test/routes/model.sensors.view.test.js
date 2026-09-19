@@ -10,4 +10,12 @@ describe('model sensors page propagate behavior', () => {
     expect(viewContent).toContain("$('#modalConfirmation').modal('hide');");
     expect(viewContent).not.toMatch(/api\.model\.propagateSensor[\s\S]*location\.reload\(\);/);
   });
+
+  it('shows a readable column and update toggle on template sensors', () => {
+    const viewContent = fs.readFileSync(sensorsViewPath, 'utf8');
+    expect(viewContent).toContain('<th>readable</th>');
+    expect(viewContent).toContain('class="form-check-input sensor-readable-toggle"');
+    expect(viewContent).toContain('api.model.updateSensor(modelID,id,"readable",readable');
+    expect(viewContent).toContain("$('.sensor-active-toggle').on('change'");
+  });
 });
