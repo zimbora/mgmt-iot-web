@@ -221,18 +221,24 @@ var self = module.exports = {
     })
   },
 
-  // records a value write to logs_actuator so its history can be inspected
+  // records a value write to logs_actuators so its history can be inspected.
+  // `confirmed` starts false and is later updated by an external service once
+  // the device acknowledges the write; `createdAt` marks when the write was
+  // sent, `updatedAt` marks when it was acknowledged.
   addLog : async (device_id, actuator_id, value, cb)=>{
 
+    const now = moment().utc().format('YYYY-MM-DD HH:mm:ss');
     let obj = {
       device_id : device_id,
       actuator_id : actuator_id,
       value: (value !== null && typeof value === 'object') ? JSON.stringify(value) : String(value),
-      createdAt : moment().utc().format('YYYY-MM-DD HH:mm:ss')
+      confirmed: false,
+      createdAt : now,
+      updatedAt : now
     };
 
     try{
-      const rows = await db.insert("logs_actuator",obj);
+      const rows = await db.insert("logs_actuators",obj);
       if(cb) return cb(null,rows);
     }catch(error){
       if(cb) return cb(error,null);

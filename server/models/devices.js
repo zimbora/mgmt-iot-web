@@ -911,8 +911,8 @@ var self = module.exports =  {
     const params = [actuatorId,deviceId,hours];
 
     let query = `
-      SELECT value, createdAt
-      FROM logs_actuator
+      SELECT value, confirmed, createdAt, updatedAt
+      FROM logs_actuators
       WHERE actuator_id = ?
         AND device_id = ?
     `;
@@ -944,8 +944,8 @@ var self = module.exports =  {
     const params = [ref, deviceId, hours];
 
     let query = `
-      SELECT la.value,la.createdAt
-      FROM logs_actuator AS la
+      SELECT la.value,la.confirmed,la.createdAt,la.updatedAt
+      FROM logs_actuators AS la
       INNER JOIN actuators AS a ON la.actuator_id = a.id
       WHERE a.name = ?
         AND la.device_id = ?

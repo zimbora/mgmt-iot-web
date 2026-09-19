@@ -164,7 +164,7 @@ describe('server/models/actuators addLog', () => {
     jest.clearAllMocks();
   });
 
-  it('inserts a row into logs_actuator', async () => {
+  it('inserts a row into logs_actuators', async () => {
     await new Promise((resolve) => {
       actuators.addLog(11, 1, 1, (err, rows) => {
         expect(err).toBeNull();
@@ -173,10 +173,11 @@ describe('server/models/actuators addLog', () => {
       });
     });
 
-    expect(db.insert).toHaveBeenCalledWith('logs_actuator', expect.objectContaining({
+    expect(db.insert).toHaveBeenCalledWith('logs_actuators', expect.objectContaining({
       device_id: 11,
       actuator_id: 1,
-      value: '1'
+      value: '1',
+      confirmed: false
     }));
   });
 
@@ -190,6 +191,19 @@ describe('server/models/actuators addLog', () => {
 
     const insertObj = db.insert.mock.calls[0][1];
     expect(insertObj.value).toBe('{"a":1}');
+  });
+
+  it('sets confirmed to false and updatedAt equal to createdAt on insert', async () => {
+    await new Promise((resolve) => {
+      actuators.addLog(11, 1, 1, (err) => {
+        expect(err).toBeNull();
+        resolve();
+      });
+    });
+
+    const insertObj = db.insert.mock.calls[0][1];
+    expect(insertObj.confirmed).toBe(false);
+    expect(insertObj.updatedAt).toBe(insertObj.createdAt);
   });
 
   it('propagates errors to the callback when provided', async () => {

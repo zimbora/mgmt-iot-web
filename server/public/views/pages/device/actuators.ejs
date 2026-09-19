@@ -25,7 +25,7 @@
   <%- include('../../partials/modal/loading.ejs') %>
   <%- include('../../partials/modal/timeout.ejs') %>
   <%- include('../../partials/modal/logsChart.ejs') %>
-  <%- include('../../partials/modal/logsList.ejs') %>
+  <%- include('../../partials/modal/logsListActuator.ejs') %>
   <%- include('../../partials/modal/noResults.ejs') %>
 
   <link href="./assets/css/jquery.dataTables.min.css" rel="stylesheet"></script>
@@ -139,6 +139,11 @@
             let active = "0";
             if ($(this).is(':checked'))
               active = "1";
+
+            const valueInput = document.getElementById(`actuator-${id}`);
+            const writeBtn = document.getElementById(`actuator-write-${id}`);
+            if(valueInput) valueInput.disabled = (active === "0");
+            if(writeBtn) writeBtn.disabled = (active === "0");
 
             api.device.updateActuator(deviceId,id,"active",active,(err,res)=>{
               if(err){
@@ -258,6 +263,7 @@
       let state = "";
       if(actuator?.active)
         state = "checked"
+      let disabled = actuator?.active ? '' : 'disabled';
       let set = actuator?.type == "set" ? "selected" : '';
       let sw = actuator?.type == "switch" ? "selected" : '';
       let number = actuator?.type == "number" ? "selected" : '';
@@ -287,9 +293,9 @@
             title="View logs">
             <i class="bi bi-list"></i>
           </button>
-          <input id="actuator-${String(actuator?.id)}" type="text" class="form-control form-control-sm"
+          <input id="actuator-${String(actuator?.id)}" type="text" class="form-control form-control-sm" ${disabled}
             value="${String(actuator?.value != null ? actuator?.value : '')}">
-          <button class="btn btn-primary btn-sm" type="button"
+          <button id="actuator-write-${String(actuator?.id)}" class="btn btn-primary btn-sm" type="button" ${disabled}
             onclick="writeActuator('${actuator?.id}','${actuator?.ref}')"
             title="Write value">
             <i class="bi bi-send"></i>
