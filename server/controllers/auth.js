@@ -109,28 +109,31 @@ async function authenticate_google(req,res,next){
       audience: clientId
     });
     const data = ticket.getPayload();
-    const userId = await User.getId(config.new_client.user_type);
 
     Client.findGoogleClient(data.email, (err,result)=>{
       if(err) res.json({message:"Failure"});
       else if(result == null){
-        // register user
-        Client.registerGoogleClient(userId,data,(err,result)=>{
-          if(err){
-            console.log(err);
-            res.json({message:"Failure"});
-          }
-          else if(result == null) res.json({message:"Couldn't register user"});
-          else{
-            Client.findGoogleClient(data.email,(err,result)=>{
-              if(err) res.json({message:"Failure"});
-              else if(result == null) res.json({message:"Something went wrong during user registration"});
-              else{
-                req.user = result;
-                next();
-              }
-            });
-          }
+        // register new user and client
+        User.add(config.new_client.user_type, config.new_client.user_pwd, config.new_client.user_lvl, (err, userResult) => {
+          if(err || userResult == null) return res.json({message:"Failure"});
+          const newUserId = userResult.insertId;
+          Client.registerGoogleClient(newUserId,data,(err,result)=>{
+            if(err){
+              log.error(err);
+              res.json({message:"Failure"});
+            }
+            else if(result == null) res.json({message:"Couldn't register user"});
+            else{
+              Client.findGoogleClient(data.email,(err,result)=>{
+                if(err) res.json({message:"Failure"});
+                else if(result == null) res.json({message:"Something went wrong during user registration"});
+                else{
+                  req.user = result;
+                  next();
+                }
+              });
+            }
+          });
         });
       }
       else{
