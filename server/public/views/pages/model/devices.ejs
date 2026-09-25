@@ -42,6 +42,14 @@
         <!--<div class="col-sm-12 mb-3 mb-sm-0">-->
         <div class="card overflow-auto" style="width:100%">
           <div class="card-body">
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label for="variantFilter" class="form-label">Variant</label>
+                <select id="variantFilter" class="form-select form-select-sm">
+                  <option value="">All variants</option>
+                </select>
+              </div>
+            </div>
             <table id="devices" class="display">
               <caption><b>Devices</b></caption>
               <thead>
@@ -75,6 +83,8 @@
 
     $(document).ready(function () {
       t = $('#devices').DataTable();
+      bindVariantFilter();
+      syncVariantFilter(devices || []);
 
       if(devices?.length > 0){
         devices.forEach((item, i) => {
@@ -83,6 +93,41 @@
         });
       }
     });
+
+    function escapeDataTableValue(value){
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function applyExactColumnFilter(columnIndex, value){
+      t.column(columnIndex).search(
+        value ? '^' + escapeDataTableValue(value) + '$' : '',
+        true,
+        false
+      ).draw();
+    }
+
+    function syncVariantFilter(rows){
+      const variantFilter = document.getElementById('variantFilter');
+      const currentValue = variantFilter.value;
+      variantFilter.innerHTML = '<option value="">All variants</option>';
+
+      [...new Set((rows || []).map(item => item.variant).filter(value => value != null && value !== ''))]
+        .sort((a, b) => String(a).localeCompare(String(b)))
+        .forEach(value => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          variantFilter.appendChild(option);
+        });
+
+      variantFilter.value = currentValue;
+    }
+
+    function bindVariantFilter(){
+      document.getElementById('variantFilter').addEventListener('change', function() {
+        applyExactColumnFilter(3, this.value);
+      });
+    }
 
     function addRow(id,uid,project,model,model_id,created,status,version,versionApp,updated,variant){
 

@@ -46,6 +46,26 @@
         <!--<div class="col-sm-12 mb-3 mb-sm-0">-->
         <div class="card overflow-auto" style="width:100%">
           <div class="card-body">
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label for="projectFilter" class="form-label">Project</label>
+                <select id="projectFilter" class="form-select form-select-sm">
+                  <option value="">All projects</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="modelFilter" class="form-label">Model</label>
+                <select id="modelFilter" class="form-select form-select-sm">
+                  <option value="">All models</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="variantFilter" class="form-label">Variant</label>
+                <select id="variantFilter" class="form-select form-select-sm">
+                  <option value="">All variants</option>
+                </select>
+              </div>
+            </div>
             <table id="devices" class="display">
               <thead>
                 <tr>
@@ -173,6 +193,8 @@
 
       const app = require('./app.mjs');
       t = $('#devices').DataTable();
+      bindDeviceFilters();
+      syncDeviceFilters([]);
 
       api.getProjects((err, res) => {
         if (err) {
@@ -244,6 +266,8 @@
           return;
         } 
 
+        syncDeviceFilters(res || []);
+
         if(res == null || res?.length == 0){
           console.error("Error: no devices available");
           return;
@@ -257,6 +281,53 @@
       });
 
     });
+
+    function escapeDataTableValue(value){
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function applyExactColumnFilter(columnIndex, value){
+      t.column(columnIndex).search(
+        value ? '^' + escapeDataTableValue(value) + '$' : '',
+        true,
+        false
+      ).draw();
+    }
+
+    function populateFilterOptions(elementId, values, placeholder){
+      const select = document.getElementById(elementId);
+      const currentValue = select.value;
+      select.innerHTML = `<option value="">All ${placeholder}</option>`;
+
+      [...new Set((values || []).filter(value => value != null && value !== ''))]
+        .sort((a, b) => String(a).localeCompare(String(b)))
+        .forEach(value => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+
+      select.value = currentValue;
+    }
+
+    function syncDeviceFilters(devices){
+      populateFilterOptions('projectFilter', devices.map(item => item.project), 'projects');
+      populateFilterOptions('modelFilter', devices.map(item => item.model), 'models');
+      populateFilterOptions('variantFilter', devices.map(item => item.variant), 'variants');
+    }
+
+    function bindDeviceFilters(){
+      [
+        { elementId: 'projectFilter', columnIndex: 2 },
+        { elementId: 'modelFilter', columnIndex: 3 },
+        { elementId: 'variantFilter', columnIndex: 4 }
+      ].forEach(({ elementId, columnIndex }) => {
+        document.getElementById(elementId).addEventListener('change', function() {
+          applyExactColumnFilter(columnIndex, this.value);
+        });
+      });
+    }
 
     function addRow(id,uid,project,model,model_id,created,status,version,appVersion,updated,variant){
 
