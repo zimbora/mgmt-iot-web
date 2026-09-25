@@ -1507,6 +1507,7 @@ var self = module.exports =  {
       }
       */
       await db.delete("permissions",filter);
+      await db.delete("sniffer",filter);
       await db.delete("fw",filter);
       await db.delete("logs_fw",filter);
       await db.delete("sensors",filter);
