@@ -1,3 +1,4 @@
+var path = require('path');
 var Joi = require('joi');
 var httpStatus = require('http-status-codes');
 const fs = require('fs');
@@ -9,7 +10,7 @@ var response = require('./response');
 var Firmware = require('../models/firmwares');
 var Client = require('../models/clients');
 var Model = require('../models/models');
-const { getFirmwarePath, invalidFilenameError } = require('../utils/firmwareStorage');
+const { getFirmwareDirectory, invalidFilenameError, normalizeFirmwareFilename } = require('../utils/firmwareStorage');
 
 module.exports = {
 
@@ -146,9 +147,17 @@ module.exports = {
   get : (req, res, next)=>{
 
     let filePath = "";
+    let firmwareDirectory = "";
+    let firmwareFilename = "";
 
     try{
-      filePath = getFirmwarePath(req.params.fwId);
+      firmwareDirectory = path.resolve(getFirmwareDirectory());
+      firmwareFilename = normalizeFirmwareFilename(req.params.fwId);
+      filePath = path.resolve(firmwareDirectory, firmwareFilename);
+
+      if (!filePath.startsWith(firmwareDirectory + path.sep)) {
+        throw new Error(invalidFilenameError);
+      }
     }catch(err){
       if(err.message == invalidFilenameError)
         return response.error(res,httpStatus.BAD_REQUEST,err.message);
@@ -167,7 +176,8 @@ module.exports = {
       res.set('Content-CRC16', crc16Modbus.toString(16)); // Convert to hexadecimal string    
       res.sendFile(filePath);
     }catch(err){
-      return response.error(res,httpStatus.NOT_FOUND,err.message);
+      const errorCode = err?.code == "ENOENT" ? httpStatus.NOT_FOUND : httpStatus.INTERNAL_SERVER_ERROR;
+      return response.error(res,errorCode,err.message);
     }
     
   },
