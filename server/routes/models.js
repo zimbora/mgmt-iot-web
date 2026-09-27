@@ -1,4 +1,4 @@
-var path = require('path');
+const fs = require('fs');
 var express = require('express');
 
 var Model = require('../controllers/models');
@@ -6,26 +6,27 @@ var Firmware = require('../controllers/firmwares');
 var SensorTemplate = require('../controllers/sensorsTemplate');
 var ActuatorTemplate = require('../controllers/actuatorsTemplate');
 var Variant = require('../controllers/variants');
+const { ensureFirmwareDirectory, getFirmwarePath } = require('../utils/firmwareStorage');
 
-// send file
-var filePath = "";
-if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
-  filePath = "/mgmt-iot/devices/firmwares";
-}else{
-  filePath = path.join(__dirname, "../public/firmwares");
-}
+const duplicateFilenameError = 'File with the same name already exists.';
 
 // set up multer
 const multer = require('multer')
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    console.log("storage:",filePath);
-    cb(null, filePath);
+    cb(null, ensureFirmwareDirectory());
   },
   filename: (req, file, cb) => {
-    console.log(file);
-    cb(null, file.originalname);
+    const firmwarePath = getFirmwarePath(file.originalname);
+
+    fs.access(firmwarePath, fs.constants.F_OK, (err) => {
+      if (!err) {
+        return cb(new Error(duplicateFilenameError));
+      }
+
+      cb(null, file.originalname);
+    });
   }
 });
 
@@ -58,20 +59,7 @@ router.route('/:model_id/permissions')
 
 router.route('/:model_id/firmwares')
   .get(Firmware.listByModel)
-  .post(async (req, res, next) => {
-
-    const filename = req.file ? req.file.originalname : null;
-
-    // Before calling uploadSingle, check if the filename exists
-    if (filename) {
-      const filePathToCheck = path.join(filePath, filename);
-      const exists = await fileExists(filePathToCheck);
-
-      if (exists) {
-        return res.status(400).json({ success: false, message: 'File with the same name already exists.' });
-      }
-    }
-
+  .post((req, res, next) => {
     const uploadSingle = upload.single('file');
 
     uploadSingle(req, res, (err) => {
@@ -80,6 +68,10 @@ router.route('/:model_id/firmwares')
         return res.status(400).json({ success: false, message: err.message });
       } else if (err) {
         // Other errors
+        if (err.message === duplicateFilenameError) {
+          return res.status(400).json({ success: false, message: err.message });
+        }
+
         return res.status(500).json({ success: false, message: 'An unknown error occurred.' });
       }
       

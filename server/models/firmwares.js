@@ -1,9 +1,9 @@
-var path = require('path');
 const fs = require('fs')
 var mysql = require('mysql2');
 var db = require('../controllers/db');
 var CryptoJS = require("crypto-js");
 const moment = require('moment');
+const { getFirmwarePath } = require('../utils/firmwareStorage');
 
 module.exports =  {
 
@@ -156,12 +156,7 @@ module.exports =  {
         }
         db.delete("firmwares",filter)
         .then (rows => {
-          let filePath = "";
-          if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
-            filePath = path.join("/mgmt-iot/devices/firmwares", filename);
-          }else{
-            filePath = path.join(__dirname, "../public/firmwares/"+filename);
-          }
+          const filePath = getFirmwarePath(filename);
           
           fs.unlinkSync(filePath)
           return cb(null,rows);

@@ -1,4 +1,3 @@
-var path = require('path');
 var Joi = require('joi');
 var httpStatus = require('http-status-codes');
 const fs = require('fs');
@@ -10,6 +9,7 @@ var response = require('./response');
 var Firmware = require('../models/firmwares');
 var Client = require('../models/clients');
 var Model = require('../models/models');
+const { getFirmwarePath } = require('../utils/firmwareStorage');
 
 module.exports = {
 
@@ -146,12 +146,7 @@ module.exports = {
   get : (req, res, next)=>{
 
     // send file
-    var filePath = "";
-    if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
-      filePath = "/mgmt-iot/devices/firmwares/"+req.params.fwId;
-    }else{
-      filePath = path.join(__dirname, "../public/firmwares/"+req.params.fwId);
-    }
+    const filePath = getFirmwarePath(req.params.fwId);
      
     const file = fs.readFileSync(filePath);
     const hash = crypto.createHash('md5').update(file).digest('hex');

@@ -1,4 +1,5 @@
 jest.mock('fs', () => ({
+  existsSync: jest.fn(() => false),
   readFileSync: jest.fn(() => Buffer.from('firmware'))
 }));
 
