@@ -241,9 +241,9 @@ describe('server/models/devices deep branches', () => {
   it('delete() removes dependent sniffer rows before deleting the device', async () => {
     const devices = require('../../server/models/devices');
 
-    jest.spyOn(devices, 'getProject').mockResolvedValue(null);
-    jest.spyOn(devices, 'getProjectLogsTable').mockResolvedValue(null);
-    jest.spyOn(devices, 'getModel').mockResolvedValue('sniffer');
+    jest.spyOn(devices, 'getProject').mockResolvedValueOnce(null);
+    jest.spyOn(devices, 'getProjectLogsTable').mockResolvedValueOnce(null);
+    jest.spyOn(devices, 'getById').mockResolvedValueOnce({ protocol: 'MQTT' });
 
     await new Promise((resolve) => {
       devices.delete(12, (err, result) => {

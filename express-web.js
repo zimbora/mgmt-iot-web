@@ -491,7 +491,9 @@ app.get('/device/:device_id',(req,res)=>{
     res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/dashboard");
 });
 
-//app.get('/device/:device_id/dashboard',(req,res)=>{
+app.get('/device/:device_id/dashboard',(req,res)=>{
+  renderDeviceRuntimePage(req,res,'Dashboard');
+});
 
 app.get('/device/:device_id/sensors',(req,res)=>{
 
@@ -580,46 +582,7 @@ app.get('/device/:device_id/settings',(req,res)=>{
 
 // access should be restrict to device admins!!
 app.get('/device/:device_id/manage',(req,res)=>{
-
-  let data = req.user.data;
-  if(data.device != null && data.mqtt != null && data.model){
-
-    if(data.device?.protocol.toLowerCase() === "lwm2m"){
-      res.render(path.join(__dirname, config.public_path+'/views/pages/device/lwm2m'),{
-        project_name:data.project_name,
-        model_name:data.model_name,
-        variant_name:data.variant_name,
-        device:data.device,
-        project:data.project,
-        model:data.model,
-        modelFeat:data.modelFeat,
-        associated:data.associated,
-        fw:data.fw,
-        sensors:data.sensors,
-        mqtt:data.mqtt,
-        user:req.user,
-        page:'Manage'
-      });
-    }else{
-      res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqtt'),{
-        project_name:data.project_name,
-        model_name:data.model_name,
-        variant_name:data.variant_name,
-        device:data.device,
-        project:data.project,
-        model:data.model,
-        modelFeat:data.modelFeat,
-        associated:data.associated,
-        fw:data.fw,
-        sensors:data.sensors,
-        mqtt:data.mqtt,
-        user:req.user,
-        page:'Manage'
-      });
-    }
-  }else{
-    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
-  }
+  renderDeviceRuntimePage(req,res,'Manage');
 });
 
 app.get('/device/:device_id/access',(req,res)=>{
@@ -803,4 +766,46 @@ function collectData(req,callback){
     if(err) log.error(err);
     return callback(err,data);
   })
+}
+
+function renderDeviceRuntimePage(req,res,page){
+  let data = req.user.data;
+  if(data.device != null && data.mqtt != null && data.model){
+
+    if(data.device?.protocol.toLowerCase() === "lwm2m"){
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/lwm2m'),{
+        project_name:data.project_name,
+        model_name:data.model_name,
+        variant_name:data.variant_name,
+        device:data.device,
+        project:data.project,
+        model:data.model,
+        modelFeat:data.modelFeat,
+        associated:data.associated,
+        fw:data.fw,
+        sensors:data.sensors,
+        mqtt:data.mqtt,
+        user:req.user,
+        page:page
+      });
+    }else{
+      res.render(path.join(__dirname, config.public_path+'/views/pages/device/mqtt'),{
+        project_name:data.project_name,
+        model_name:data.model_name,
+        variant_name:data.variant_name,
+        device:data.device,
+        project:data.project,
+        model:data.model,
+        modelFeat:data.modelFeat,
+        associated:data.associated,
+        fw:data.fw,
+        sensors:data.sensors,
+        mqtt:data.mqtt,
+        user:req.user,
+        page:page
+      });
+    }
+  }else{
+    res.redirect(req.protocol + '://' + req.get('host') + "/devices");
+  }
 }
