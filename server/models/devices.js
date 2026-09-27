@@ -1465,12 +1465,7 @@ var self = module.exports =  {
     let project_logs_table = await self.getProjectLogsTable(project_table);
     
 
-    let model = await self.getModel(deviceId); // not used
-
-    /* deprecated
-    let model_table = await self.getModelTable(model);
-    let model_logs_table = await self.getModelLogsTable(model);
-    */
+    let device = await self.getById(deviceId); // not used
 
     let filter = {
       device_id : deviceId,
@@ -1492,28 +1487,26 @@ var self = module.exports =  {
         }
       }
       
-      /* deprecated
-      if(model_table != null){
-        console.log(`deleting model_table ${model_table}`)
-        if( await db.tableExists(model_table)){
-          await db.delete(model_table,filter);
-        }
-      }
-      if(model_logs_table != null){
-        console.log(`deleting model_logs_table ${model_logs_table}`)
-        if( await db.tableExists(model_logs_table)){
-          await db.delete(model_logs_table,filter);
-        }
-      }
-      */
       await db.delete("permissions",filter);
-      await db.delete("sniffer",filter);
-      await db.delete("fw",filter);
-      await db.delete("logs_fw",filter);
-      await db.delete("sensors",filter);
-      await db.delete("logs_sensor",filter);
+
+      if(device?.protocol === "MQTT"){
+        await db.delete("fw",filter);
+        await db.delete("logs_fw",filter);
+        await db.delete("sensors",filter);
+        await db.delete("logs_sensor",filter);
+        await db.delete("actuators",filter);
+        await db.delete("logs_actuators",filter);
+        await db.delete("mqtt",filter);
+        await db.delete("logs_mqtt",filter);
+        await db.delete("logs_mqtt_msgs",filter);
+        await db.delete("logs_fota",filter);
+      }else if(device?.protocol === "LwM2M"){
+        await db.delete("lwm2m",filter);
+      }
+      
 
     }catch(err){
+      console.log("deleting device id: %d",deviceId);
       console.log(err)
       return cb(err,null);
     }
