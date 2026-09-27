@@ -151,14 +151,20 @@ module.exports =  {
       if(rows.length == 0) return cb(null,rows);
       else{
         filename = rows[0].filename;
+        const filePath = getFirmwarePath(filename);
+
+        try{
+          fs.unlinkSync(filePath)
+        }catch(error){
+          if(error?.code != "ENOENT")
+            return cb(error,null);
+        }
+
         let filter = {
           id : id
         }
         db.delete("firmwares",filter)
         .then (rows => {
-          const filePath = getFirmwarePath(filename);
-          
-          fs.unlinkSync(filePath)
           return cb(null,rows);
         })
         .catch(error => {
