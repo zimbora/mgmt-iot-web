@@ -86,4 +86,38 @@ describe('fotaVersionDetection', () => {
     expect(detection.newVersion).toBeNull();
     expect(detection.newAppVersion).toBeNull();
   });
+
+  it('does not mistake generic value payloads for version updates', () => {
+    const detection = fotaVersionDetection.getReportedVersions(
+      'app/sniffer/3cdc758f41c8/version',
+      { value: 'downloading' },
+      {
+        modelName: 'sniffer',
+        deviceUid: '3cdc758f41c8',
+        sensors: {
+          version: { ref: 'version' }
+        }
+      }
+    );
+
+    expect(detection.failureStatus).toBe(false);
+    expect(detection.newVersion).toBeNull();
+  });
+
+  it('does not mistake generic payload fields for app version updates', () => {
+    const detection = fotaVersionDetection.getReportedVersions(
+      'app/sniffer/3cdc758f41c8/app_version',
+      { payload: 'downloading' },
+      {
+        modelName: 'sniffer',
+        deviceUid: '3cdc758f41c8',
+        sensors: {
+          app_version: { ref: 'app_version' }
+        }
+      }
+    );
+
+    expect(detection.failureStatus).toBe(false);
+    expect(detection.newAppVersion).toBeNull();
+  });
 });

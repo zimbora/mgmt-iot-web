@@ -110,14 +110,14 @@
       normalizedTopic === 'firmware' ||
       normalizedTopic === versionSensor?.ref
     )
-      ? extractVersionValue(data, [versionSensor?.property, 'version', 'value', 'payload'])
+      ? extractVersionValue(data, [versionSensor?.property, 'version'])
       : null;
 
     const newAppVersion = (
       normalizedTopic === 'app_version' ||
       normalizedTopic === appVersionSensor?.ref
     )
-      ? extractVersionValue(data, [appVersionSensor?.property, 'app_version', 'value', 'payload'])
+      ? extractVersionValue(data, [appVersionSensor?.property, 'app_version'])
       : null;
 
     return {
