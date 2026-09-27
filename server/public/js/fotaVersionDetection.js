@@ -61,12 +61,31 @@
     return topic.substring(index + deviceUid.length + 1);
   }
 
+  function isFailureStatusMessage(data) {
+    if (data && typeof data === 'object') {
+      if (typeof data.error === 'string' && data.error.trim() !== '') {
+        return true;
+      }
+    }
+
+    const rawMessage = extractVersionValue(data, ['status', 'message', 'error', 'payload', 'value']);
+    if (!rawMessage) {
+      return false;
+    }
+
+    const message = rawMessage.toLowerCase();
+    return ['fail', 'error', 'timeout', 'abort', 'denied', 'invalid'].some((token) => message.includes(token));
+  }
+
   function getReportedVersions(topic, data, options) {
     const normalizedTopic = normalizeTopic(topic, options?.modelName, options?.deviceUid);
     const versionSensor = options?.sensors?.version;
     const appVersionSensor = options?.sensors?.app_version;
 
-    if (normalizedTopic === 'fw/fota/update/status' || normalizedTopic === 'fota/update/status') {
+    if (
+      (normalizedTopic === 'fw/fota/update/status' || normalizedTopic === 'fota/update/status') &&
+      isFailureStatusMessage(data)
+    ) {
       return {
         normalizedTopic,
         failureStatus: true,
@@ -101,6 +120,7 @@
   const api = {
     compareVersions,
     extractVersionValue,
+    isFailureStatusMessage,
     normalizeTopic,
     getReportedVersions
   };

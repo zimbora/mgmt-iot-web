@@ -52,4 +52,20 @@ describe('fotaVersionDetection', () => {
     expect(detection.failureStatus).toBe(true);
     expect(detection.failureMessage).toBe('download failed');
   });
+
+  it('ignores sniffer fota status topic updates that are not failures', () => {
+    const detection = fotaVersionDetection.getReportedVersions(
+      'app/sniffer/3cdc758f41c8/fota/update/status',
+      'downloading',
+      {
+        modelName: 'sniffer',
+        deviceUid: '3cdc758f41c8',
+        sensors: {}
+      }
+    );
+
+    expect(detection.failureStatus).toBe(false);
+    expect(detection.newVersion).toBeNull();
+    expect(detection.newAppVersion).toBeNull();
+  });
 });
