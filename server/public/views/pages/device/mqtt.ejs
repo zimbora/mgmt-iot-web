@@ -120,6 +120,7 @@
   <script src="./assets/js/ace.js"></script>
   <script src="./assets/js/mqttws31.min.js" type="text/javascript"></script>
   <script type="module" src="./app.mjs"></script>
+  <script><%- include('../../../js/fotaVersionDetection.js') %></script>
 
   <div class="container-fluid">
     <div class="row flex-nowrap">
@@ -473,40 +474,18 @@
       }
     }
 
-    function compareVersions(v1, v2) {
-      if (!v1 || !v2) return 0;
-      const a = String(v1).split('.').map(Number);
-      const b = String(v2).split('.').map(Number);
-      for (let i = 0; i < Math.max(a.length, b.length); i++) {
-        const diff = (a[i] || 0) - (b[i] || 0);
-        if (diff !== 0) return diff;
-      }
-      return 0;
-    }
-
     function checkFotaVersionUpdate(topic, data) {
 
       if (!fotaWaitingForVersion) return;
 
-      // Normalize topic for sniffer devices (strip app/sniffer/{uid}/ prefix)
-      let normalizedTopic = topic;
-      if (model_name === "sniffer") {
-        const deviceUid = device?.uid || '';
-        let index = deviceUid ? topic.indexOf(deviceUid) : -1;
-        if (index > 0) {
-          normalizedTopic = topic.substring(index + deviceUid.length + 1);
-          if(normalizedTopic === "firmware"){
-            if(data.hasOwnProperty("version")){
-              normalizedTopic = "version"
-              data = data["version"] ;
-            }
-          }
-        } else {
-          return;
-        }
-      }
+      const detection = FotaVersionDetection.getReportedVersions(topic, data, {
+        modelName: model_name,
+        deviceUid: device?.uid,
+        sensors
+      });
+      const { normalizedTopic } = detection;
 
-      if(normalizedTopic === "fw/fota/update/status"){
+      if (detection.failureStatus) {
         clearTimeout(fotaTimeoutId);
         fotaWaitingForVersion = false;
         fotaPreviousVersion = null;
@@ -517,36 +496,18 @@
         $('#modalLoading').modal('hide');
 
         $('#error').text('Device failed to update to newer version');
-        const receivedVersion = newVersion || newAppVersion;
-        $('#suggestion').text(`${data}`);
+        $('#suggestion').text(detection.failureMessage || `${data}`);
         $('#modalError').modal('show');
 
         return;
       }
 
-      if(normalizedTopic !== "version" && normalizedTopic != "app_version")
+      if (!normalizedTopic) {
         return;
-
-      const vSensor = sensors?.version;
-      const avSensor = sensors?.app_version;
-
-      // Check if topic matches version sensor ref
-      if (vSensor?.ref && normalizedTopic === vSensor.ref) {
-        if (vSensor.property && typeof data === 'object' && data !== null) {
-          newVersion = data[vSensor.property] !== undefined ? String(data[vSensor.property]) : null;
-        } else if (typeof data === 'string' || typeof data === 'number') {
-          newVersion = String(data);
-        }
       }
 
-      // Check if topic matches app_version sensor ref
-      if (avSensor?.ref && normalizedTopic === avSensor.ref) {
-        if (avSensor.property && typeof data === 'object' && data !== null) {
-          newAppVersion = data[avSensor.property] !== undefined ? String(data[avSensor.property]) : null;
-        } else if (typeof data === 'string' || typeof data === 'number') {
-          newAppVersion = String(data);
-        }
-      }
+      newVersion = detection.newVersion;
+      newAppVersion = detection.newAppVersion;
 
       if (newVersion === null && newAppVersion === null) return;
 
@@ -564,9 +525,9 @@
 
       // If prevVersion is unknown (null), treat any received version as a successful update
       const versionUpdated = newVersion !== null &&
-        (prevVersion == null || compareVersions(newVersion, prevVersion) > 0);
+        (prevVersion == null || FotaVersionDetection.compareVersions(newVersion, prevVersion) > 0);
       const appVersionUpdated = newAppVersion !== null &&
-        (prevAppVersion == null || compareVersions(newAppVersion, prevAppVersion) > 0);
+        (prevAppVersion == null || FotaVersionDetection.compareVersions(newAppVersion, prevAppVersion) > 0);
 
       if (versionUpdated || appVersionUpdated) {
         let msg = 'Device successfully updated';
