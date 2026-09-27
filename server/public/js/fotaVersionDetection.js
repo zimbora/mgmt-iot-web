@@ -34,11 +34,6 @@
           return String(candidate[key]);
         }
       }
-
-      const primitiveValues = Object.values(candidate).filter(isPrimitiveVersionValue);
-      if (primitiveValues.length === 1) {
-        return String(primitiveValues[0]);
-      }
     }
 
     return null;

@@ -68,4 +68,22 @@ describe('fotaVersionDetection', () => {
     expect(detection.newVersion).toBeNull();
     expect(detection.newAppVersion).toBeNull();
   });
+
+  it('does not mistake single-field status payloads for version updates', () => {
+    const detection = fotaVersionDetection.getReportedVersions(
+      'app/sniffer/3cdc758f41c8/version',
+      { status: 'downloading' },
+      {
+        modelName: 'sniffer',
+        deviceUid: '3cdc758f41c8',
+        sensors: {
+          version: { ref: 'version' }
+        }
+      }
+    );
+
+    expect(detection.failureStatus).toBe(false);
+    expect(detection.newVersion).toBeNull();
+    expect(detection.newAppVersion).toBeNull();
+  });
 });
