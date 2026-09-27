@@ -25,16 +25,20 @@ const storage = multer.diskStorage({
     try{
       const firmwarePath = getFirmwarePath(file.originalname);
 
-      fs.access(firmwarePath, fs.constants.F_OK, (err) => {
-        if (!err) {
-          return cb(new Error(duplicateFilenameError));
-        }
-
-        if (err?.code && err.code !== 'ENOENT') {
+      fs.open(firmwarePath, 'wx', (err, fd) => {
+        if (err) {
+          if (err.code == 'EEXIST')
+            return cb(new Error(duplicateFilenameError));
           return cb(err);
         }
 
-        cb(null, file.originalname);
+        fs.close(fd, (closeErr) => {
+          if (closeErr) {
+            return cb(closeErr);
+          }
+
+          cb(null, file.originalname);
+        });
       });
     }catch(err){
       cb(err);

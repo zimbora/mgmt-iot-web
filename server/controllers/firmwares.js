@@ -154,8 +154,9 @@ module.exports = {
       firmwareDirectory = path.resolve(getFirmwareDirectory());
       firmwareFilename = normalizeFirmwareFilename(req.params.fwId);
       filePath = path.resolve(firmwareDirectory, firmwareFilename);
+      const relativePath = path.relative(firmwareDirectory, filePath);
 
-      if (!filePath.startsWith(firmwareDirectory + path.sep)) {
+      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
         throw new Error(invalidFilenameError);
       }
     }catch(err){
