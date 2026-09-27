@@ -41,7 +41,7 @@ describe('fotaVersionDetection', () => {
   it('treats sniffer fota status topic as a failure notification', () => {
     const detection = fotaVersionDetection.getReportedVersions(
       'app/sniffer/3cdc758f41c8/fota/update/status',
-      'download failed',
+      { error: 'download failed' },
       {
         modelName: 'sniffer',
         deviceUid: '3cdc758f41c8',

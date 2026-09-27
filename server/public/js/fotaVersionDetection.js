@@ -68,13 +68,30 @@
       }
     }
 
-    const rawMessage = extractVersionValue(data, ['status', 'message', 'error', 'payload', 'value']);
+    const rawMessage = getStatusMessage(data);
     if (!rawMessage) {
       return false;
     }
 
     const message = rawMessage.toLowerCase();
     return ['fail', 'error', 'timeout', 'abort', 'denied', 'invalid'].some((token) => message.includes(token));
+  }
+
+  function getStatusMessage(data) {
+    const rawMessage = extractVersionValue(data, ['status', 'message', 'error', 'payload', 'value']);
+    if (rawMessage) {
+      return rawMessage;
+    }
+
+    if (data && typeof data === 'object') {
+      try {
+        return JSON.stringify(data);
+      } catch (error) {
+        return null;
+      }
+    }
+
+    return data == null ? null : String(data);
   }
 
   function getReportedVersions(topic, data, options) {
@@ -89,7 +106,7 @@
       return {
         normalizedTopic,
         failureStatus: true,
-        failureMessage: String(data ?? '')
+        failureMessage: getStatusMessage(data)
       };
     }
 
@@ -120,6 +137,7 @@
   const api = {
     compareVersions,
     extractVersionValue,
+    getStatusMessage,
     isFailureStatusMessage,
     normalizeTopic,
     getReportedVersions
