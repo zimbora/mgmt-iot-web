@@ -15,18 +15,30 @@ const multer = require('multer')
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, ensureFirmwareDirectory());
+    try{
+      cb(null, ensureFirmwareDirectory());
+    }catch(err){
+      cb(err);
+    }
   },
   filename: (req, file, cb) => {
-    const firmwarePath = getFirmwarePath(file.originalname);
+    try{
+      const firmwarePath = getFirmwarePath(file.originalname);
 
-    fs.access(firmwarePath, fs.constants.F_OK, (err) => {
-      if (!err) {
-        return cb(new Error(duplicateFilenameError));
-      }
+      fs.access(firmwarePath, fs.constants.F_OK, (err) => {
+        if (!err) {
+          return cb(new Error(duplicateFilenameError));
+        }
 
-      cb(null, file.originalname);
-    });
+        if (err?.code && err.code !== 'ENOENT') {
+          return cb(err);
+        }
+
+        cb(null, file.originalname);
+      });
+    }catch(err){
+      cb(err);
+    }
   }
 });
 
