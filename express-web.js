@@ -490,11 +490,11 @@ app.get('/device/:device_id',(req,res)=>{
   else
     res.redirect(req.protocol + '://' + req.get('host') + req.originalUrl + "/dashboard");
 });
-
+/*
 app.get('/device/:device_id/dashboard',(req,res)=>{
   renderDeviceRuntimePage(req,res,'Dashboard');
 });
-
+*/
 app.get('/device/:device_id/sensors',(req,res)=>{
 
   let data = req.user.data;

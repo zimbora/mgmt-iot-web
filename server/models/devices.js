@@ -1488,7 +1488,6 @@ var self = module.exports =  {
       }
       
       await db.delete("permissions",filter);
-      await db.delete("sniffer",filter);
 
       if(device?.protocol === "MQTT"){
         await db.delete("fw",filter);

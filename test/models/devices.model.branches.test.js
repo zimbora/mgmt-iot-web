@@ -250,7 +250,6 @@ describe('server/models/devices deep branches', () => {
         expect(err).toBeNull();
         expect(result).toEqual({ affectedRows: 1 });
         expect(mockDb.delete).toHaveBeenNthCalledWith(1, 'permissions', { device_id: 12 });
-        expect(mockDb.delete).toHaveBeenNthCalledWith(2, 'sniffer', { device_id: 12 });
         expect(mockDb.delete).toHaveBeenLastCalledWith('devices', { id: 12 });
         resolve();
       });
