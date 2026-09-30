@@ -238,6 +238,24 @@ describe('server/models/devices deep branches', () => {
     });
   });
 
+  it('delete() removes dependent sniffer rows before deleting the device', async () => {
+    const devices = require('../../server/models/devices');
+
+    jest.spyOn(devices, 'getProject').mockResolvedValueOnce(null);
+    jest.spyOn(devices, 'getProjectLogsTable').mockResolvedValueOnce(null);
+    jest.spyOn(devices, 'getById').mockResolvedValueOnce({ protocol: 'MQTT' });
+
+    await new Promise((resolve) => {
+      devices.delete(12, (err, result) => {
+        expect(err).toBeNull();
+        expect(result).toEqual({ affectedRows: 1 });
+        expect(mockDb.delete).toHaveBeenNthCalledWith(1, 'permissions', { device_id: 12 });
+        expect(mockDb.delete).toHaveBeenLastCalledWith('devices', { id: 12 });
+        resolve();
+      });
+    });
+  });
+
   it('triggerFota() rejects when device is offline', async () => {
     const devices = require('../../server/models/devices');
 

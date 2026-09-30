@@ -621,16 +621,14 @@
       } else if ((payload?.data?.payload !== undefined && payload?.data?.payload !== null) || payload?.value !== undefined) {
         // Handle successful response
         let displayValue = (payload?.data?.payload !== undefined && payload?.data?.payload !== null) ? payload.data.payload : payload.value;
-        const text = 
-          isObject(displayValue) ? safeJSONStringify(displayValue) : String(displayValue);
+        const text = formatDisplayValue(displayValue);
         valueCell.value = text;
         valueCell.style.color = '';
         valueCell.setAttribute('title', `Last updated: ${new Date(payload.timestamp || Date.now()).toLocaleString()}`);
         //console.log(`Updated topic ${topic} value to:`, displayValue);
       } else if (payload !== undefined && payload !== null) {
         let displayValue = payload;
-        const text = 
-          isObject(displayValue) ? safeJSONStringify(displayValue) : String(displayValue);
+        const text = formatDisplayValue(displayValue);
         valueCell.value = text;
         valueCell.style.color = '';
         valueCell.setAttribute('title', `Last updated: ${new Date().toLocaleString()}`);
@@ -664,15 +662,10 @@
           try { localData = JSON.parse(localData); } catch(e) { localData = null; }
         }
         let name = desc?.attributes?.title || 'Unknown';
-        let value = '';
+        let value = null;
         let actions = '';
         if (localData?.value !== undefined && localData?.value !== null && localData?.value !== '') {
           value = localData.value;
-          if (desc?.attributes?.units) {
-            value += ' ' + desc.attributes.units;
-          }
-        } else {
-          value = 'N/A';
         }
         // Generate action buttons
         let actionButtons = [];
@@ -692,8 +685,7 @@
         
         tooltipText = `Last updated: ${date}`;
 
-        const text = 
-          isObject(value) ? safeJSONStringify(value) : String(value);
+        const text = value === null ? 'N/A' : formatDisplayValue(value, desc?.attributes?.units);
 
         const escapedValue = escapeAttr(text);
         const escapedTitle = escapeAttr(tooltipText);
@@ -1005,7 +997,7 @@
             ];
             values.forEach((value) => {
               const td = document.createElement('td');
-              td.textContent = String(value);
+              td.textContent = formatDisplayValue(value);
               tr.appendChild(td);
             });
             tbody.appendChild(tr);
@@ -1184,6 +1176,27 @@
       } catch {
         return String(value); // fallback
       }
+    }
+
+    function formatDisplayValue(value, units) {
+      let normalized = value;
+
+      if (typeof normalized === 'string') {
+        const trimmed = normalized.trim();
+        if (
+          (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+          (trimmed.startsWith('[') && trimmed.endsWith(']'))
+        ) {
+          try {
+            normalized = JSON.parse(trimmed);
+          } catch {
+            normalized = value;
+          }
+        }
+      }
+
+      const text = isObject(normalized) ? safeJSONStringify(normalized) : String(normalized);
+      return units ? `${text} ${units}` : text;
     }
 
     const escapeAttr = (s) =>
