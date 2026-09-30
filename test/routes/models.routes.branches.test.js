@@ -100,6 +100,13 @@ describe('server/routes/models – variant and additional routes', () => {
     expect(res.body.route).toBe('listByModel');
   });
 
+  it('POST /model/:model_id/firmwares uses firmware add handler after upload', async () => {
+    const res = await request(app).post('/model/10/firmwares').send({});
+    expect(res.status).toBe(201);
+    expect(res.body.route).toBe('firmwareAdd');
+    expect(res.body.guards).toContain('modelAccess');
+  });
+
   it('GET /model/:model_id/firmware uses firmware get handler', async () => {
     const res = await request(app).get('/model/10/firmware');
     expect(res.status).toBe(200);

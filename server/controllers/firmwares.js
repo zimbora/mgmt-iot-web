@@ -10,6 +10,7 @@ var response = require('./response');
 var Firmware = require('../models/firmwares');
 var Client = require('../models/clients');
 var Model = require('../models/models');
+const { getFirmwareDirectory, invalidFilenameError, normalizeFirmwareFilename } = require('../utils/firmwareStorage');
 
 module.exports = {
 
@@ -145,24 +146,40 @@ module.exports = {
 
   get : (req, res, next)=>{
 
-    // send file
-    var filePath = "";
-    if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
-      filePath = "/mgmt-iot/devices/firmwares/"+req.params.fwId;
-    }else{
-      filePath = path.join(__dirname, "../public/firmwares/"+req.params.fwId);
+    let filePath = "";
+    let firmwareDirectory = "";
+    let firmwareFilename = "";
+
+    try{
+      firmwareDirectory = path.resolve(getFirmwareDirectory());
+      firmwareFilename = normalizeFirmwareFilename(req.params.fwId);
+      filePath = path.resolve(firmwareDirectory, firmwareFilename);
+      const relativePath = path.relative(firmwareDirectory, filePath);
+
+      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+        throw new Error(invalidFilenameError);
+      }
+    }catch(err){
+      if(err.message == invalidFilenameError)
+        return response.error(res,httpStatus.BAD_REQUEST,err.message);
+      return response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err.message);
     }
      
-    const file = fs.readFileSync(filePath);
-    const hash = crypto.createHash('md5').update(file).digest('hex');
-    res.set('Content-MD5', hash);
-    // Calculate CRC32
-    const crc32 = crc.crc32(file).toString(16); // Convert to hexadecimal string
-    res.set('Content-CRC32', crc32);
-    // Calculate CRC16
-    const crc16Modbus = crc.crc16modbus(file); // CRC16 Modbus calculation
-    res.set('Content-CRC16', crc16Modbus.toString(16)); // Convert to hexadecimal string    
-    res.sendFile(filePath);
+    try{
+      const file = fs.readFileSync(filePath);
+      const hash = crypto.createHash('md5').update(file).digest('hex');
+      res.set('Content-MD5', hash);
+      // Calculate CRC32
+      const crc32 = crc.crc32(file).toString(16); // Convert to hexadecimal string
+      res.set('Content-CRC32', crc32);
+      // Calculate CRC16
+      const crc16Modbus = crc.crc16modbus(file); // CRC16 Modbus calculation
+      res.set('Content-CRC16', crc16Modbus.toString(16)); // Convert to hexadecimal string    
+      res.sendFile(filePath);
+    }catch(err){
+      const errorCode = err?.code == "ENOENT" ? httpStatus.NOT_FOUND : httpStatus.INTERNAL_SERVER_ERROR;
+      return response.error(res,errorCode,err.message);
+    }
     
   },
 
