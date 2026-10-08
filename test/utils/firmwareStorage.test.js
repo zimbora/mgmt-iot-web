@@ -48,6 +48,12 @@ describe('server/utils/firmwareStorage', () => {
     expect(fs.mkdirSync).toHaveBeenCalledWith(storage.LOCAL_FIRMWARE_DIR, { recursive: true });
   });
 
+  it('ignores relative firmware directory configuration to avoid path traversal', () => {
+    process.env.FIRMWARES_PATH = '../outside/firmwares';
+
+    expect(storage.getFirmwareDirectory()).toBe(storage.LOCAL_FIRMWARE_DIR);
+  });
+
   it('rejects firmware filenames with path separators', () => {
     expect(() => storage.getFirmwarePath('../fw.bin')).toThrow(storage.invalidFilenameError);
     expect(() => storage.getFirmwarePath('..\\fw.bin')).toThrow(storage.invalidFilenameError);

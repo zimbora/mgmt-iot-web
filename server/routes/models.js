@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 var express = require('express');
 
 var Model = require('../controllers/models');
@@ -37,7 +38,7 @@ const storage = multer.diskStorage({
             return cb(closeErr);
           }
 
-          cb(null, file.originalname);
+          cb(null, path.basename(file.originalname));
         });
       });
     }catch(err){
