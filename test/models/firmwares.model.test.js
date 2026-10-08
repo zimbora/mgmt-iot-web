@@ -6,6 +6,7 @@ jest.mock('../../server/controllers/db', () => ({
 }));
 
 jest.mock('fs', () => ({
+  existsSync: jest.fn(() => false),
   unlinkSync: jest.fn()
 }));
 
@@ -27,6 +28,40 @@ describe('server/models/firmwares - delete', () => {
       expect(rows).toEqual({ affectedRows: 1 });
       expect(db.delete).toHaveBeenCalledWith('firmwares', { id: 10 });
       expect(fs.unlinkSync).toHaveBeenCalledWith(expect.stringContaining('fw.bin'));
+      done();
+    });
+  });
+
+  it('still deletes firmware row when the file is already missing', (done) => {
+    db.queryRow.mockResolvedValue([{ id: 10, filename: 'fw.bin' }]);
+    db.delete.mockResolvedValue({ affectedRows: 1 });
+    fs.unlinkSync.mockImplementation(() => {
+      const error = new Error('missing');
+      error.code = 'ENOENT';
+      throw error;
+    });
+
+    firmwares.delete(10, (err, rows) => {
+      expect(err).toBeNull();
+      expect(rows).toEqual({ affectedRows: 1 });
+      expect(db.delete).toHaveBeenCalledWith('firmwares', { id: 10 });
+      done();
+    });
+  });
+
+  it('returns an error and keeps the firmware row when file removal fails for another reason', (done) => {
+    const unlinkError = new Error('denied');
+    unlinkError.code = 'EACCES';
+
+    db.queryRow.mockResolvedValue([{ id: 10, filename: 'fw.bin' }]);
+    fs.unlinkSync.mockImplementation(() => {
+      throw unlinkError;
+    });
+
+    firmwares.delete(10, (err, rows) => {
+      expect(err).toBe(unlinkError);
+      expect(rows).toBeNull();
+      expect(db.delete).not.toHaveBeenCalled();
       done();
     });
   });

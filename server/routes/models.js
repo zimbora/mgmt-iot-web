@@ -1,4 +1,5 @@
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 var express = require('express');
 
 var Model = require('../controllers/models');
@@ -6,26 +7,43 @@ var Firmware = require('../controllers/firmwares');
 var SensorTemplate = require('../controllers/sensorsTemplate');
 var ActuatorTemplate = require('../controllers/actuatorsTemplate');
 var Variant = require('../controllers/variants');
+const { ensureFirmwareDirectory, getFirmwarePath } = require('../utils/firmwareStorage');
 
-// send file
-var filePath = "";
-if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
-  filePath = "/mgmt-iot/devices/firmwares";
-}else{
-  filePath = path.join(__dirname, "../public/firmwares");
-}
+const duplicateFilenameError = 'File with the same name already exists.';
 
 // set up multer
 const multer = require('multer')
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    console.log("storage:",filePath);
-    cb(null, filePath);
+    try{
+      cb(null, ensureFirmwareDirectory());
+    }catch(err){
+      cb(err);
+    }
   },
   filename: (req, file, cb) => {
-    console.log(file);
-    cb(null, file.originalname);
+    try{
+      const firmwarePath = getFirmwarePath(file.originalname);
+
+      fs.open(firmwarePath, 'wx', (err, fd) => {
+        if (err) {
+          if (err.code == 'EEXIST')
+            return cb(new Error(duplicateFilenameError));
+          return cb(err);
+        }
+
+        fs.close(fd, (closeErr) => {
+          if (closeErr) {
+            return cb(closeErr);
+          }
+
+          cb(null, path.basename(file.originalname));
+        });
+      });
+    }catch(err){
+      cb(err);
+    }
   }
 });
 
@@ -58,20 +76,7 @@ router.route('/:model_id/permissions')
 
 router.route('/:model_id/firmwares')
   .get(Firmware.listByModel)
-  .post(async (req, res, next) => {
-
-    const filename = req.file ? req.file.originalname : null;
-
-    // Before calling uploadSingle, check if the filename exists
-    if (filename) {
-      const filePathToCheck = path.join(filePath, filename);
-      const exists = await fileExists(filePathToCheck);
-
-      if (exists) {
-        return res.status(400).json({ success: false, message: 'File with the same name already exists.' });
-      }
-    }
-
+  .post((req, res, next) => {
     const uploadSingle = upload.single('file');
 
     uploadSingle(req, res, (err) => {
@@ -80,6 +85,10 @@ router.route('/:model_id/firmwares')
         return res.status(400).json({ success: false, message: err.message });
       } else if (err) {
         // Other errors
+        if (err.message === duplicateFilenameError) {
+          return res.status(400).json({ success: false, message: err.message });
+        }
+
         return res.status(500).json({ success: false, message: 'An unknown error occurred.' });
       }
       

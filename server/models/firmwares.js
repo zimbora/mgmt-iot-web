@@ -1,9 +1,9 @@
-var path = require('path');
 const fs = require('fs')
 var mysql = require('mysql2');
 var db = require('../controllers/db');
 var CryptoJS = require("crypto-js");
 const moment = require('moment');
+const { getFirmwarePath } = require('../utils/firmwareStorage');
 
 module.exports =  {
 
@@ -151,19 +151,20 @@ module.exports =  {
       if(rows.length == 0) return cb(null,rows);
       else{
         filename = rows[0].filename;
+        const filePath = getFirmwarePath(filename);
+
+        try{
+          fs.unlinkSync(filePath)
+        }catch(error){
+          if(error?.code != "ENOENT")
+            return cb(error,null);
+        }
+
         let filter = {
           id : id
         }
         db.delete("firmwares",filter)
         .then (rows => {
-          let filePath = "";
-          if( process.env?.NODE_ENV?.toLowerCase().includes("docker") ){
-            filePath = path.join("/mgmt-iot/devices/firmwares", filename);
-          }else{
-            filePath = path.join(__dirname, "../public/firmwares/"+filename);
-          }
-          
-          fs.unlinkSync(filePath)
           return cb(null,rows);
         })
         .catch(error => {

@@ -1,4 +1,5 @@
 jest.mock('fs', () => ({
+  existsSync: jest.fn(() => false),
   readFileSync: jest.fn(() => Buffer.from('firmware'))
 }));
 
@@ -35,6 +36,7 @@ const response = require('../../server/controllers/response');
 const clientsModel = require('../../server/models/clients');
 const firmwaresCtrl = require('../../server/controllers/firmwares');
 const httpStatus = require('http-status-codes');
+const fs = require('fs');
 
 describe('server/controllers/firmwares branch coverage', () => {
   beforeEach(() => {
@@ -71,5 +73,42 @@ describe('server/controllers/firmwares branch coverage', () => {
     expect(res.set).toHaveBeenCalledWith('Content-CRC32', expect.any(String));
     expect(res.set).toHaveBeenCalledWith('Content-CRC16', expect.any(String));
     expect(res.sendFile).toHaveBeenCalled();
+  });
+
+  it('get() rejects invalid firmware filenames', () => {
+    const req = { params: { fwId: '../fw.bin' } };
+    const res = {};
+
+    firmwaresCtrl.get(req, res, jest.fn());
+
+    expect(response.error).toHaveBeenCalledWith(res, httpStatus.BAD_REQUEST, 'Invalid firmware filename.');
+  });
+
+  it('get() returns not found when firmware file is missing', () => {
+    const req = { params: { fwId: 'fw.bin' } };
+    const res = { set: jest.fn().mockReturnThis(), sendFile: jest.fn() };
+    const missingFileError = new Error('missing');
+    missingFileError.code = 'ENOENT';
+    fs.readFileSync.mockImplementationOnce(() => {
+      throw missingFileError;
+    });
+
+    firmwaresCtrl.get(req, res, jest.fn());
+
+    expect(response.error).toHaveBeenCalledWith(res, httpStatus.NOT_FOUND, 'missing');
+  });
+
+  it('get() returns internal server error for unexpected file read failures', () => {
+    const req = { params: { fwId: 'fw.bin' } };
+    const res = { set: jest.fn().mockReturnThis(), sendFile: jest.fn() };
+    const readError = new Error('denied');
+    readError.code = 'EACCES';
+    fs.readFileSync.mockImplementationOnce(() => {
+      throw readError;
+    });
+
+    firmwaresCtrl.get(req, res, jest.fn());
+
+    expect(response.error).toHaveBeenCalledWith(res, httpStatus.INTERNAL_SERVER_ERROR, 'denied');
   });
 });
