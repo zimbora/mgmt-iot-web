@@ -10,7 +10,7 @@ var response = require('./response');
 var Firmware = require('../models/firmwares');
 var Client = require('../models/clients');
 var Model = require('../models/models');
-const { getFirmwareDirectory, invalidFilenameError, normalizeFirmwareFilename } = require('../utils/firmwareStorage');
+const { getFirmwarePath, invalidFilenameError } = require('../utils/firmwareStorage');
 
 module.exports = {
 
@@ -147,18 +147,9 @@ module.exports = {
   get : (req, res, next)=>{
 
     let filePath = "";
-    let firmwareDirectory = "";
-    let firmwareFilename = "";
 
     try{
-      firmwareDirectory = path.resolve(getFirmwareDirectory());
-      firmwareFilename = normalizeFirmwareFilename(req.params.fwId);
-      filePath = path.resolve(firmwareDirectory, firmwareFilename);
-      const relativePath = path.relative(firmwareDirectory, filePath);
-
-      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-        throw new Error(invalidFilenameError);
-      }
+      filePath = getFirmwarePath(req.params.fwId);
     }catch(err){
       if(err.message == invalidFilenameError)
         return response.error(res,httpStatus.BAD_REQUEST,err.message);
