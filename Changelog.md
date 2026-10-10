@@ -1,6 +1,16 @@
 # Changelog
 
+## version 1.1.10
+  revert: recover getSensors request, add getSensorsData
+  fix: logs display
+  Recognize sniffer MQTT version reports as FOTA completion (#160)
+
 ## version 1.1.9
+  known bugs: 
+    device sensors list corrupted
+    logs sensors list not sorted properly
+    fota function failed to detect fota finished
+
   feat: Add device list filters for project, model, and 
   variant (#156)
   fix: Handle sniffer foreign-key cleanup during device deletion (#154)
