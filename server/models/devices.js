@@ -875,7 +875,7 @@ var self = module.exports =  {
       if(hours)
         query += ` AND createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)`;
       
-      query += ` ORDER BY createdAt DESC LIMIT 2000`;
+      query += ` ORDER BY id DESC LIMIT 2000`;
     
     query = mysql.format(query,params);
 

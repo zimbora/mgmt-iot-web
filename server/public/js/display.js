@@ -137,7 +137,7 @@ var Display = {
 	showList : (sensor,reversedData)=>{
     Display.calculateTimeDifference(reversedData);
     // Sort the array
-    const data = [...reversedData].reverse();
+    const data = [...reversedData]
     table_list.clear();
     data.map((item,i)=>{
       if(data?.duration)
