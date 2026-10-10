@@ -1,5 +1,12 @@
 # Changelog
 
+## version 1.1.9
+  feat: Add device list filters for project, model, and 
+  variant (#156)
+  fix: Handle sniffer foreign-key cleanup during device deletion (#154)
+  fix: staging firmware upload path resolution and file handling (#158)
+  feat: support sensors/data and actuators/data request
+
 ## version 1.1.8
   feat: accept arg "accept_release" on device registration
     if not defined, look for server domain name and set it accordingly
@@ -7,7 +14,7 @@
   fix: Persist MQTT template localData edits (#152)
   feat: Add sensor `readable` support and suppress read action for unreadable sensors (#150)
   feat: Add actuators, writable counterpart to Sensors for devices and models (#148)
-  
+
 ## version 1.1.7
   fix: resolve unhandled promise rejection in triggerFota when only one firmware version exists (#140)
   perf: Move firmware upload UI into modal (#138)
