@@ -774,10 +774,10 @@ var self = module.exports =  {
     }
   },
   
-  // get registered sensors for model
+  // get sensors and values of a device
   getSensors : async (deviceId,cb)=>{
 
-    let query = `SELECT * FROM ?? where device_id = ?`;
+    let query = `SELECT name,value,updatedAt,remoteUnixTs FROM ?? where device_id = ?`;
     let table = ["sensors",deviceId];
     query = mysql.format(query,table);
 
@@ -793,7 +793,7 @@ var self = module.exports =  {
     })
   },
 
-  // get registered actuators for model
+  // get actuators of a device
   getActuators : async (deviceId,cb)=>{
 
     let query = `SELECT * FROM ?? where device_id = ?`;
@@ -812,6 +812,7 @@ var self = module.exports =  {
     })
   },
 
+  // deprecated
   getSensorInfo : async (deviceId,cb)=>{
 
     return cb("Not implemented",null);
@@ -1207,7 +1208,6 @@ var self = module.exports =  {
       id: entryId
     };
 
-    console.log(obj)
     db.update("lwm2m", obj, filter)
     .then(rows => {
       return cb(null, rows);
