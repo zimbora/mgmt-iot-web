@@ -1,4 +1,4 @@
-  
+
 var device = require('../models/devices');
 var client = require('../models/clients');
 
@@ -351,6 +351,21 @@ module.exports = {
       response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
     }else{
       device.getSensors(req.params?.device_id,(err,rows)=>{
+        if(!err) response.send(res,rows);
+        else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+      });
+    }
+  },
+
+  getSensorsData : (req,res,next)=>{
+    const val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+    }else{
+      device.getSensorsData(req.params?.device_id,(err,rows)=>{
         if(!err) response.send(res,rows);
         else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
       });

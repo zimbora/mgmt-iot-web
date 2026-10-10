@@ -774,8 +774,26 @@ var self = module.exports =  {
     }
   },
   
-  // get sensors and values of a device
+  // get sensors list
   getSensors : async (deviceId,cb)=>{
+
+    let query = `SELECT * FROM ?? where device_id = ?`;
+    let table = ["sensors",deviceId];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0)
+        return cb(null,null);
+      else
+        return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
+  getSensorsData : async (deviceId,cb)=>{
 
     let query = `SELECT name,value,updatedAt,remoteUnixTs FROM ?? where device_id = ?`;
     let table = ["sensors",deviceId];
