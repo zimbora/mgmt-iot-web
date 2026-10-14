@@ -875,7 +875,7 @@ var self = module.exports =  {
       if(hours)
         query += ` AND createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)`;
       
-      query += ` ORDER BY id DESC LIMIT 2000`;
+      query += ` ORDER BY id DESC LIMIT 200`;
     
     query = mysql.format(query,params);
 
@@ -901,12 +901,13 @@ var self = module.exports =  {
     let query = `
       SELECT ls.value,ls.createdAt,ls.remoteUnixTs
       FROM logs_sensor AS ls
-      INNER JOIN sensors AS s ON ls.sensor_id = s.id
+      LEFT JOIN sensors AS s ON ls.sensor_id = s.id
       WHERE s.name = ?
-        AND ls.device_id = ?
-        AND ls.createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)
-      ORDER BY ls.createdAt DESC
-      LIMIT 2000
+        AND ls.device_id = ? `;
+      if(hours != null)
+        query += `AND ls.createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR) `
+      query += `ORDER BY ls.createdAt DESC 
+      LIMIT 200
     `;
 
     query = mysql.format(query, params);
@@ -939,7 +940,7 @@ var self = module.exports =  {
       if(hours)
         query += ` AND createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)`;
 
-      query += ` ORDER BY createdAt DESC LIMIT 2000`;
+      query += ` ORDER BY createdAt DESC LIMIT 200`;
 
     query = mysql.format(query,params);
 
@@ -970,7 +971,7 @@ var self = module.exports =  {
         AND la.device_id = ?
         AND la.createdAt >= (UTC_TIMESTAMP() - INTERVAL ? HOUR)
       ORDER BY la.createdAt DESC
-      LIMIT 2000
+      LIMIT 200
     `;
 
     query = mysql.format(query, params);
