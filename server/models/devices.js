@@ -607,7 +607,6 @@ var self = module.exports =  {
         data["device"]["sensors"] = res;
       }
 
-      console.log("associatedDevice:",data['device'].associatedDevice);
       if(data['device']?.associatedDevice){
         query = `SELECT * FROM ?? where id = ?;`
         table = ["devices",data['device'].associatedDevice]
