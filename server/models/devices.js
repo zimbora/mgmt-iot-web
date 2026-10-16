@@ -830,35 +830,46 @@ var self = module.exports =  {
     })
   },
 
-  // deprecated
+  // returns sensors from this and associated device
   getSensorInfo : async (deviceId,cb)=>{
 
-    return cb("Not implemented",null);
+    let device = null;
+    let data = {};
 
-    let project = await self.getProject(deviceId);
-    if(project == null)
-      return cb(`no project found for deviceId ${deviceId}`,null);
+    try{
 
-    let model = await self.getModel(deviceId);
-    if(model == null)
-      return cb(null,null);
+      let query = `SELECT * FROM ?? where id = ?;`
+      let table = ["devices",deviceId]
+      query = mysql.format(query,table);
+      let res = await db.queryRow(query)
+      if(res != null && res.length > 0)
+        device = res[0];
+      else
+        return cb("device not found",null);
 
-    let query = `Select * from ?? where device_id = ?;`
-    let table = ["sensors",deviceId]
-    query = mysql.format(query,table);
-
-    db.queryRow(query)
-    .then(rows => {
-      if(rows.length == 0 ){
-        return cb(null,null);
+      if(device?.associatedDevice){
+        query = `SELECT name,value,updatedAt,remoteUnixTs FROM ?? where device_id = ?`;
+        table = ["sensors",device?.associatedDevice]
+        query = mysql.format(query,table);
+        res = await db.queryRow(query);
+        if(res != null && res.length > 0)
+          data["associated"] = res;
       }
 
-      return cb(null,rows[0]);
-    })
-    .catch(error => {
-      console.error(error)
+      query = `SELECT name,value,updatedAt,remoteUnixTs FROM ?? where device_id = ?`;
+      table = ["sensors",deviceId]
+      query = mysql.format(query,table);
+      res = await db.queryRow(query);
+      if(res != null && res.length > 0)
+        data["device"] = res;
+
+    }catch(error){
+      console.log(error)
       return cb(error,null);
-    })
+    }
+
+    return cb(null,data);
+
   },
 
   getSensorLogs : async (deviceId,sensorId,hours,cb)=>{
