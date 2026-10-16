@@ -563,7 +563,78 @@ var self = module.exports =  {
     return cb(null,data);
   },
 
-  // work on this logs!!
+  getInfo2 : async (deviceId,cb)=>{
+
+    let data = {};
+
+    let project = await self.getProject(deviceId);
+    if(project == null)
+      return cb(`no project found for deviceId ${deviceId}`,null);
+
+    let model = await self.getModel(deviceId);
+    if(model == null)
+      return cb(null,null);
+
+    data["project_name"] = project;
+    data["model_name"] = model;
+    data["variant_name"] = "";
+
+    try{
+
+      let query = `SELECT * FROM ?? where id = ?;`
+      let table = ["devices",deviceId]
+      query = mysql.format(query,table);
+      let res = await db.queryRow(query)
+      if(res != null && res.length > 0){
+        data['device'] = res[0];
+      }
+
+      if(data['device']?.variant_id){
+        query = `SELECT name FROM ?? where id = ?;`
+        table = ["variants",data['device'].variant_id]
+        query = mysql.format(query,table);
+        res = await db.queryRow(query);
+        if(res != null && res.length > 0){
+          data["variant_name"] = res[0].name;
+        }
+      }
+    
+      query = `SELECT name,value,updatedAt,remoteUnixTs FROM ?? where device_id = ?;`
+      table = ["sensors",deviceId]
+      query = mysql.format(query,table);
+      res = await db.queryRow(query);
+      if(res != null && res.length > 0){
+        data["device"]["sensors"] = res;
+      }
+
+      console.log("associatedDevice:",data['device'].associatedDevice);
+      if(data['device']?.associatedDevice){
+        query = `SELECT * FROM ?? where id = ?;`
+        table = ["devices",data['device'].associatedDevice]
+        query = mysql.format(query,table);
+        let res = await db.queryRow(query)
+        if(res != null && res.length > 0){
+          data['associated'] = res[0];
+        }
+
+        query = `SELECT name,value,updatedAt,remoteUnixTs FROM ?? where device_id = ?;`
+        table = ["sensors",data['device']?.associatedDevice]
+        query = mysql.format(query,table);
+        res = await db.queryRow(query);
+        if(res != null && res.length > 0){
+          data["associated"]["sensors"] = res;
+        }
+
+      }
+      
+    }catch(error){
+      return cb(error,null);
+    }
+
+    return cb(null,data);
+  },
+
+  // work on this logs!! isn't it duplicated with sensors? Do we need it?
   getLogs : async (deviceId,sensor,cb)=>{
 
     let table = [];
@@ -674,6 +745,7 @@ var self = module.exports =  {
     })
   },
 
+  // deprecated - stop using it (any record on this table should be mapped on table sensors)
   getFwInfo : async (deviceId,cb)=>{
 
     let project = await self.getProject(deviceId);
@@ -702,6 +774,7 @@ var self = module.exports =  {
     })
   },
 
+  // deprecated - stop using it (any record on this table should be mapped on table sensors)
   getFwLogs : async (deviceId,sensor,cb)=>{
 
     let project = await self.getProject(deviceId);
@@ -793,6 +866,7 @@ var self = module.exports =  {
     })
   },
 
+  // get all sensors associated to this device
   getSensorsData : async (deviceId,cb)=>{
 
     let query = `SELECT name,value,updatedAt,remoteUnixTs FROM ?? where device_id = ?`;
