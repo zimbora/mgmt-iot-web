@@ -45,6 +45,9 @@ router.route("/:device_id/info")
 
   .get(Device.getInfo)
 
+router.route("/:device_id/info2")
+  .get(Device.getInfo2)
+
 router.route("/:device_id/logs")
 
   .get(Device.getLogs)
