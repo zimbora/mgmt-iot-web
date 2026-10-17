@@ -15,7 +15,7 @@ describe('model campaigns page', () => {
     expect(html).toContain('Latest version (resolved when campaign starts)');
     expect(html).toContain("Settings.api + '/model/'");
     expect(html).toContain("row.insertCell().textContent");
-    const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+    const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/gi)];
     scripts.forEach(script => expect(() => new vm.Script(script[1])).not.toThrow());
   });
 });
