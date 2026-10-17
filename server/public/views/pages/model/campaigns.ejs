@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/head.ejs') %>
+</head>
+<body>
+  <%- include('../../partials/model/scripts.ejs') %>
+  <%- include('../../partials/model/navbar.ejs') %>
+  <div class="container-fluid">
+    <div class="row flex-nowrap">
+      <%- include('../../partials/model/sidebar.ejs') %>
+      <main class="col py-3">
+        <h3><%= model.name %> - FOTA campaigns</h3>
+        <p id="campaignMessage" role="status"></p>
+        <form id="campaignForm" class="card card-body mb-3">
+          <label for="campaignName" class="form-label">Campaign name</label>
+          <input id="campaignName" class="form-control mb-3" maxlength="255" required>
+          <label for="campaignVariant" class="form-label">Variant</label>
+          <select id="campaignVariant" class="form-select mb-3">
+            <option value="">No variant</option>
+          </select>
+          <label for="campaignRelease" class="form-label">Release</label>
+          <select id="campaignRelease" class="form-select mb-3">
+            <option value="prod">prod</option>
+            <option value="staging">staging</option>
+            <option value="dev">dev</option>
+          </select>
+          <label for="campaignFirmware" class="form-label">Firmware version / app version</label>
+          <select id="campaignFirmware" class="form-select mb-3"></select>
+          <div class="form-check mb-3">
+            <input id="campaignAllDevices" type="checkbox" class="form-check-input" checked>
+            <label for="campaignAllDevices" class="form-check-label">All devices in this model and variant (at campaign creation)</label>
+          </div>
+          <label for="campaignDevices" class="form-label">Or select multiple devices</label>
+          <select id="campaignDevices" class="form-select mb-3" multiple size="8" disabled></select>
+          <p>Starting dispatches the selected firmware immediately. Offline devices and devices at the attempt limit are reported as failed.</p>
+          <button id="startCampaign" class="btn btn-primary" type="submit" disabled>Start campaign</button>
+        </form>
+        <h4>Campaign history</h4>
+        <p>Results describe dispatch only, not confirmed firmware installation. Refreshes automatically.</p>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Name</th><th>Variant</th><th>Firmware / app</th><th>Release</th><th>Dispatch status</th><th>Created (UTC)</th><th>Results</th></tr></thead>
+            <tbody id="campaignHistory"></tbody>
+          </table>
+        </div>
+        <h4>Device dispatch results</h4>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Device</th><th>Status</th><th>Message</th></tr></thead>
+            <tbody id="campaignResults"></tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script>
+    const endpoint = Settings.api + '/model/' + encodeURIComponent(api.getModelID()) + '/campaigns';
+    const form = document.getElementById('campaignForm');
+    const variant = document.getElementById('campaignVariant');
+    const release = document.getElementById('campaignRelease');
+    const firmware = document.getElementById('campaignFirmware');
+    const devices = document.getElementById('campaignDevices');
+    const allDevices = document.getElementById('campaignAllDevices');
+    const start = document.getElementById('startCampaign');
+    const message = document.getElementById('campaignMessage');
+    let options;
+    let activeCampaign;
+
+    async function requestCampaign(path, init) {
+      const res = await fetch(endpoint + path, init);
+      const data = await res.json();
+      if (!res.ok || data.Error) throw new Error(data.Message || 'Campaign request failed');
+      return data.Result;
+    }
+
+    function updateSelection() {
+      const variantId = variant.value === '' ? null : Number(variant.value);
+      devices.replaceChildren();
+      firmware.replaceChildren(new Option('Latest version (resolved when campaign starts)', 'latest'));
+      options.devices.filter(device => device.variant_id === variantId).forEach(device => {
+        devices.add(new Option(device.uid, device.id));
+      });
+      const matching = options.firmwares.filter(item =>
+        item.variant_id === variantId && item.build_release === release.value);
+      matching.forEach(item => firmware.add(new Option(item.version + ' / ' + item.app_version, item.id)));
+      start.disabled = !matching.length || !devices.options.length;
+    }
+
+    function addCells(body, values) {
+      const row = body.insertRow();
+      values.forEach(value => { row.insertCell().textContent = value == null ? '' : String(value); });
+      return row;
+    }
+
+    async function showResults(id) {
+      activeCampaign = id;
+      const results = await requestCampaign('/' + encodeURIComponent(id) + '/devices');
+      if (activeCampaign !== id) return;
+      const body = document.getElementById('campaignResults');
+      body.replaceChildren();
+      results.forEach(item => addCells(body, [item.uid, item.status, item.message]));
+    }
+
+    async function refreshHistory() {
+      const campaigns = await requestCampaign('');
+      const body = document.getElementById('campaignHistory');
+      body.replaceChildren();
+      campaigns.forEach(item => {
+        const variantName = options.variants.find(value => value.id === item.variant_id)?.name;
+        const row = addCells(body, [item.name, variantName || 'No variant',
+          item.version + ' / ' + item.app_version, item.build_release, item.status, item.createdAt]);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-secondary btn-sm';
+        button.textContent = 'View devices';
+        button.addEventListener('click', () => showResults(item.id).catch(err => { message.textContent = err.message; }));
+        row.insertCell().appendChild(button);
+      });
+      if (activeCampaign) await showResults(activeCampaign);
+    }
+
+    variant.addEventListener('change', updateSelection);
+    release.addEventListener('change', updateSelection);
+    allDevices.addEventListener('change', () => {
+      devices.disabled = allDevices.checked;
+      devices.required = !allDevices.checked;
+    });
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      start.disabled = true;
+      try {
+        const campaign = await requestCampaign('', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('campaignName').value,
+            variant_id: variant.value === '' ? null : Number(variant.value),
+            firmware_id: firmware.value === 'latest' ? 'latest' : Number(firmware.value),
+            build_release: release.value,
+            all_devices: allDevices.checked,
+            device_ids: allDevices.checked ? [] : Array.from(devices.selectedOptions, item => Number(item.value))
+          })
+        });
+        message.textContent = 'Campaign started for ' + campaign.device_count + ' devices.';
+        await showResults(campaign.id);
+        await refreshHistory();
+      } catch (err) {
+        message.textContent = err.message;
+      } finally {
+        start.disabled = false;
+      }
+    });
+
+    (async () => {
+      try {
+        options = await requestCampaign('/options');
+        options.variants.forEach(item => variant.add(new Option(item.name, item.id)));
+        updateSelection();
+        await refreshHistory();
+        setInterval(() => refreshHistory().catch(err => { message.textContent = err.message; }), 5000);
+      } catch (err) {
+        message.textContent = err.message;
+      }
+    })();
+  </script>
+</body>
+</html>

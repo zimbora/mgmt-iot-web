@@ -169,3 +169,31 @@ Run coverage report:
 ```
 npm run test:coverage
 ```
+# FOTA campaigns
+
+For firmware-enabled models, administrators (level 4 or 5) can open **Models → FOTA campaigns**.
+Choose a variant (or **No variant**), release, and either a specific firmware/app version
+or **Latest version**. Latest uses the highest numeric app version, then firmware version,
+within that model, variant, and release. The firmware ID and device list are fixed when
+the campaign starts. Select multiple devices or all current devices in that model and variant.
+The selected release explicitly overrides each device's automatic-update release preference.
+
+Apply `migrations/20261017000000-create-fota-campaigns.js` using your existing
+Sequelize CLI database configuration before using campaigns:
+
+```sh
+npx sequelize-cli db:migrate
+```
+
+The migration exports `up` and `down`; rollback drops campaign history only.
+Campaign tables retain snapshot identifiers rather than foreign keys to existing
+models, variants, firmware, or devices, so deleting those records does not block
+existing deletion flows or erase dispatch history.
+
+Campaigns dispatch immediately with at most five devices in parallel, using existing
+FOTA offline and attempt-limit checks. History reports per-device `pending`, `sent`,
+`skipped` (already on that version), or `failed` results. `finished` means dispatch
+finished, not installation confirmed; consult the device's reported versions afterward.
+Dispatch runs in the web process, without automatic retries or restart recovery.
+If the process stops during dispatch, pending targets remain pending; create a new
+campaign for those devices after checking their versions.
