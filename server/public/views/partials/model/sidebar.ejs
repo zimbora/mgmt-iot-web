@@ -111,6 +111,11 @@
                   <% } %>
                   class="nav-link px-0"> <span class="d-sm-none">Fi</span><span class="d-none d-sm-inline">Firmwares</span></a>
                 </li>
+                <li class="w-100">
+                  <a href="./campaigns" class="nav-link px-0<% if(page == 'Campaigns'){%> active<% } %>">
+                    <span class="d-sm-none">Ca</span><span class="d-none d-sm-inline">FOTA campaigns</span>
+                  </a>
+                </li>
                 <%}%>
                 <% if(user.level >= 4){%>
                 <li class="w-100">

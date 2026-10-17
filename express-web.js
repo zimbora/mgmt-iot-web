@@ -446,6 +446,13 @@ app.get('/model/:model_id/firmwares',(req,res)=>{
   }
 });
 
+app.get('/model/:model_id/campaigns',(req,res)=>{
+  if(!(req.user.level >= 4) || !req.model?.fw_enabled) return res.sendStatus(403);
+  res.render(path.join(__dirname, config.public_path+'/views/pages/model/campaigns'),{
+    model:req.model,user:req.user,page:'Campaigns'
+  });
+});
+
 app.get('/model/:model_id/variants',(req,res)=>{
   if(req.user.level >= 4){
     Variant.listByModel(req.params.model_id,(err,variants)=>{

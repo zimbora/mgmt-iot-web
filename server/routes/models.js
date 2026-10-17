@@ -7,6 +7,7 @@ var Firmware = require('../controllers/firmwares');
 var SensorTemplate = require('../controllers/sensorsTemplate');
 var ActuatorTemplate = require('../controllers/actuatorsTemplate');
 var Variant = require('../controllers/variants');
+const Campaign = require('../controllers/campaigns');
 const { ensureFirmwareDirectory, getFirmwarePath } = require('../utils/firmwareStorage');
 
 const duplicateFilenameError = 'File with the same name already exists.';
@@ -108,6 +109,13 @@ router.route('/:model_id/firmware')
 
 router.route('/:model_id/firmware/latest')
   .get(Model.getLatestFirmware)
+
+router.use('/:model_id/campaigns', Campaign.checkAccess);
+router.route('/:model_id/campaigns')
+  .get(Campaign.list)
+  .post(Campaign.create)
+router.get('/:model_id/campaigns/options', Campaign.options);
+router.get('/:model_id/campaigns/:campaign_id/devices', Campaign.targets);
 
 router.route('/:model_id/sensors')
   .get(SensorTemplate.list)

@@ -1841,7 +1841,7 @@ var self = module.exports =  {
     });
   },
 
-  triggerFota : async(deviceId,version,app_version,cb)=>{
+  triggerFota : async(deviceId,version,app_version,cb,firmwareId)=>{
 
     let device = null;
     try{
@@ -1849,6 +1849,7 @@ var self = module.exports =  {
     }catch(error){
       return cb(error,null);
     }
+    if(!device) return cb("device not found",null);
     
     try{
       let query = `SELECT value FROM ?? WHERE device_id = ? AND name = ? LIMIT 1;`
@@ -1878,17 +1879,27 @@ var self = module.exports =  {
 
     let lVersion = null;
     let lAppVersion = null;
+    let firmware = null;
     try{
-      lVersion = await firmwares.getLatestVersion(device.model_id, device.accept_release, device.variant_id);
-      lAppVersion = await firmwares.getLatestAppVersion(device.model_id, device.accept_release, device.variant_id);
+      if(firmwareId != null){
+        const rows = await db.queryRow(mysql.format(
+          'SELECT * FROM firmwares WHERE id = ? AND model_id = ? AND variant_id <=> ?',
+          [firmwareId, device.model_id, device.variant_id]));
+        if(!rows.length) return cb("firmware does not match device model and variant",null);
+        lVersion = lAppVersion = rows[0];
+        if(rows[0].version !== device.version || rows[0].app_version !== device.app_version)
+          firmware = rows[0];
+      }else{
+        lVersion = await firmwares.getLatestVersion(device.model_id, device.accept_release, device.variant_id);
+        lAppVersion = await firmwares.getLatestAppVersion(device.model_id, device.accept_release, device.variant_id);
+      }
     }catch(error){
       return cb(error,null);
     }
 
-    let firmware = null;
-    if(lAppVersion?.app_version && lAppVersion?.app_version !== device.app_version){
+    if(firmwareId == null && lAppVersion?.app_version && lAppVersion?.app_version !== device.app_version){
       firmware = lAppVersion;
-    }else if(lVersion?.version && lVersion.version !== device.version){
+    }else if(firmwareId == null && lVersion?.version && lVersion.version !== device.version){
       firmware = lVersion;
     }
 
@@ -1898,34 +1909,39 @@ var self = module.exports =  {
 
       let topic = "";
 
-      const modelName = await self.getModel(deviceId);
-      if(modelName == "sniffer") // this is temporary..
-        topic = "fota/update/set";
-      else
-        topic = "fw/fota/update/set"; // topic should be always this one !!
-      
-      // for now just supports links to http servers..
-      let link = `${$.config?.web?.protocol}${$.config?.web?.domain}${$.config?.web?.fw_path}${firmware?.filename}/download?token=${firmware?.token}`;
-      const payload = `{"url":"${link}"}`;
+      try{
+        const modelName = await self.getModel(deviceId);
+        if(modelName == "sniffer") // this is temporary..
+          topic = "fota/update/set";
+        else
+          topic = "fw/fota/update/set"; // topic should be always this one !!
 
-      const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
-      let obj = {
-        device_id : device.id,
-        model_id : device.model_id,
-        local_version : device.version,
-        local_app_version : device.app_version,
-        target_version : lVersion?.version,
-        target_app_version : lAppVersion?.app_version,
-        target_file : firmware.filename,
-        nAttempt : device.nAttempts,
-        createdAt : timestamp,
-        updatedAt : timestamp
+        // for now just supports links to http servers..
+        let link = `${$.config?.web?.protocol}${$.config?.web?.domain}${$.config?.web?.fw_path}${firmware?.filename}/download?token=${firmware?.token}`;
+        const payload = JSON.stringify({url: link});
+
+        const timestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+        let obj = {
+          device_id : device.id,
+          model_id : device.model_id,
+          local_version : device.version,
+          local_app_version : device.app_version,
+          target_version : lVersion?.version,
+          target_app_version : lAppVersion?.app_version,
+          target_file : firmware.filename,
+          nAttempt : device.nAttempts,
+          createdAt : timestamp,
+          updatedAt : timestamp
+        }
+        await db.insert("logs_fota",obj);
+
+        await self.sendMqttMessage(deviceId,topic,payload,1,false,(err)=>{
+          if(err) return cb(err,null);
+          return cb(null, `updating fw to ${firmware.filename}`)
+        })
+      }catch(error){
+        return cb(error,null);
       }
-      db.insert("logs_fota",obj);
-
-      await self.sendMqttMessage(deviceId,topic,payload,qos = 1,retain = false,()=>{
-        return cb(null, `updating fw to ${firmware.filename}`)
-      })
 
     }else{
       return cb(null, `no new version available`);
