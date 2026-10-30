@@ -3,6 +3,10 @@
 # Plan to deprecate any table related to project (freeRTOS2, logs_freeRTOS2, controllers, logs_controller)
 # Plan to remove table fw and logs_fw - all sensors should be described on sensor table
 
+## version 1.1.12
+  feat: support device/:device_id/sensor/data
+  style: remove log
+
 ## version 1.1.11
   perf: limit sensor logs to 200, fix query sensor logs by name
   feat: use getSensorsInfo to return all sensors from this and associated device
