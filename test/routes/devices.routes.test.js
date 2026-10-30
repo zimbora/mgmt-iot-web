@@ -24,6 +24,14 @@ jest.mock('../../server/controllers/devices', () => {
     getInfo: (req, res) => {
       res.status(200).json({ route: 'getInfo', guards: req.guards || [], deviceId: req.params.device_id });
     },
+    getSensorData: (req, res) => {
+      res.status(200).json({
+        route: 'getSensorData',
+        guards: req.guards || [],
+        deviceId: req.params.device_id,
+        sensorName: req.query.name
+      });
+    },
     updateDeviceField: (req, res) => {
       res.status(200).json({ route: 'updateDeviceField', guards: req.guards || [], deviceId: req.params.device_id });
     },
@@ -87,6 +95,18 @@ describe('server/routes/devices', () => {
     expect(response.body.route).toBe('getInfo');
     expect(response.body.guards).toEqual(['read']);
     expect(response.body.deviceId).toBe('abc');
+  });
+
+  it('GET /device/:device_id/sensor/data calls the sensor data handler', async () => {
+    const response = await request(app).get('/device/42/sensor/data?name=temperature');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      route: 'getSensorData',
+      guards: ['read'],
+      deviceId: '42',
+      sensorName: 'temperature'
+    });
   });
 
   it('PUT /device/:device_id/field requires read and write guards', async () => {

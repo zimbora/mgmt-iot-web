@@ -91,6 +91,9 @@ router.route("/:device_id/sensors")
 router.route("/:device_id/sensors/data")
   .get(Device.getSensorsData)
 
+router.route("/:device_id/sensor/data")
+  .get(Device.getSensorData)
+
 // deprecated
 router.route("/:device_id/sensor/info")
   .get(Device.getSensorInfo)

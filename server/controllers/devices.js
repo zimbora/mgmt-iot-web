@@ -388,6 +388,32 @@ module.exports = {
     }
   },
 
+  getSensorData : (req,res,next)=>{
+    let val = Joi.object({
+      device_id: Joi.number().required(),
+    }).validate(req.params);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      next();
+    }
+
+    val = Joi.object({
+      name: Joi.string().required(),
+    }).validate(req.query);
+
+    if(val.error){
+      response.error(res,httpStatus.BAD_REQUEST,val.error.details[0].message)
+      next();
+    }
+
+    device.getSensorData(req.params?.device_id,req.query.name,(err,rows)=>{
+      if(!err) response.send(res,rows);
+      else response.error(res,httpStatus.INTERNAL_SERVER_ERROR,err);
+    });
+    
+  },
+
   getActuators : (req,res,next)=>{
     const val = Joi.object({
       device_id: Joi.number().required(),

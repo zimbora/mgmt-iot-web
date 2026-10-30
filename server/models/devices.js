@@ -884,6 +884,24 @@ var self = module.exports =  {
     })
   },
 
+  getSensorData : async (deviceId,name,cb)=>{
+
+    let query = `SELECT name,value,updatedAt,remoteUnixTs FROM ?? where device_id = ? and name = ?`;
+    let table = ["sensors",deviceId,name];
+    query = mysql.format(query,table);
+
+    db.queryRow(query)
+    .then(rows => {
+      if(rows.length == 0)
+        return cb(null,null);
+      else
+        return cb(null,rows);
+    })
+    .catch(error => {
+      return cb(error,null);
+    })
+  },
+
   // get actuators of a device
   getActuators : async (deviceId,cb)=>{
 
