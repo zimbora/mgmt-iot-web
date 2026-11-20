@@ -2251,6 +2251,7 @@ var self = module.exports =  {
         name: sensor.name,
         type: sensor.type,
         property: sensor.property ? sensor.property : '',
+        graph: sensor.graph,
         readable: sensor.readable,
         createdAt: timestamp,
         updatedAt: timestamp
