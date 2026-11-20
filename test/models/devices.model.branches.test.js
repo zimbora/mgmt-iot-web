@@ -121,6 +121,7 @@ describe('server/models/devices deep branches', () => {
       type: 'float',
       property: null,
       active: true,
+      graph: { type: 'linear' },
       readable: false,
       createdAt: 'x',
       updatedAt: 'x'
@@ -137,6 +138,7 @@ describe('server/models/devices deep branches', () => {
       type: 'float',
       property: '',
       active: true,
+      graph: { type: 'linear' },
       readable: false,
     }));
     expect(mockDb.insert.mock.calls[0][1]).toHaveProperty('active');
@@ -171,6 +173,7 @@ describe('server/models/devices deep branches', () => {
         expect(result).toHaveProperty('psk');
         expect(typeof result.psk).toBe('string');
         expect(result.psk).toHaveLength(9);
+        expect(devices.associateSensorsTemplateToDevice).toHaveBeenCalledWith(42, 2);
         resolve();
       });
     });
